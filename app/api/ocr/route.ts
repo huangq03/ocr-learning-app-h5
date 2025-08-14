@@ -1,6 +1,8 @@
 
 import { createWorker } from 'tesseract.js';
 import { NextResponse } from 'next/server';
+import path from 'path';
+import fs from 'fs';
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -10,7 +12,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No file provided' }, { status: 400 });
   }
 
-  const worker = await createWorker('eng');
+  const workerPath = path.join(process.cwd(), 'node_modules', 'tesseract.js', 'dist', 'worker.min.js');
+  const langPath = path.join(process.cwd(), 'node_modules', 'tesseract.js-core');
+
+  if (!fs.existsSync(workerPath)) {
+    return NextResponse.json({ error: 'Tesseract worker not found' }, { status: 500 });
+  }
+
+  const worker = await createWorker('eng', 1, {
+    workerPath,
+    langPath,
+    corePath: path.join(langPath, 'tesseract-core.wasm.js'),
+  });
+
   const ret = await worker.recognize(file);
   await worker.terminate();
 
