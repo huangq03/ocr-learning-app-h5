@@ -27,11 +27,9 @@ export default async function Home() {
   // Check if user has any documents
   const { data: documents } = await supabase.from("documents").select("id").eq("user_id", user.id).limit(1)
 
-  const hasDocuments = documents && documents.length > 0
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-lavender-50">
-      {hasDocuments ? <DashboardInterface user={user} /> : <PhotoCaptureInterface user={user} />}
+      <DashboardInterface user={user} />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -256,7 +257,6 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
           <h1 className="text-3xl font-bold text-purple-800 mb-2">Capture Your Document</h1>
           <p className="text-purple-600">Align the document within the frame and click to scan.</p>
           {error && <p className="text-red-500 mt-4">{error}</p>}
-          {/* Added dashboard link for returning users */}
           <Button
             variant="outline"
             onClick={goToDashboard}
@@ -290,6 +290,13 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                       <Upload className="w-5 h-5 mr-2" />
                       Upload Image
                     </Button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      accept="image/*"
+                    />
                   </div>
                 </div>
               </div>
@@ -298,6 +305,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
             {isCapturing && (
               <div className="relative w-full h-full">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                <canvas ref={canvasRef} className="hidden" />
                 {/* Overlay guide */}
                 <div className="absolute inset-4 border-2 border-white border-dashed rounded-lg opacity-70" />
                 <div className="absolute top-4 left-4 right-4">
