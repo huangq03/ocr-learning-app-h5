@@ -348,8 +348,8 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                 )}
 
                 {showTransformAnimation && ocrResult && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-700 bg-opacity-95 flex items-center justify-center">
-                    <div className="text-center text-white animate-pulse">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white bg-black bg-opacity-30 p-6 rounded-2xl backdrop-blur-sm animate-pulse">
                       <FileText className="w-20 h-20 mx-auto mb-4" />
                       <p className="font-bold text-xl">Text Recognized!</p>
                       <div className="mt-4 max-w-xs">
@@ -362,8 +362,8 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                 )}
 
                 {uploadSuccess && (
-                  <div className="absolute inset-0 bg-green-500 bg-opacity-90 flex items-center justify-center">
-                    <div className="text-center text-white">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white bg-black bg-opacity-30 p-6 rounded-2xl backdrop-blur-sm">
                       <Check className="w-16 h-16 mx-auto mb-2" />
                       <p className="font-semibold">Document Saved!</p>
                     </div>
