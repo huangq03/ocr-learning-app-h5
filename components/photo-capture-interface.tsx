@@ -327,12 +327,12 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                 />
 
                 {isProcessingOCR && (
-                  <div className="absolute inset-0 bg-purple-600 bg-opacity-90 flex items-center justify-center">
-                    <div className="text-center text-white">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white bg-black bg-opacity-30 p-6 rounded-2xl backdrop-blur-sm">
                       <div className="relative">
                         <Sparkles className="w-16 h-16 mx-auto mb-4 animate-pulse" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-20 h-20 border-4 border-white border-t-transparent rounded-full animate-spin opacity-30" />
+                          <div className="w-20 h-20 border-4 border-white border-t-transparent rounded-full animate-spin opacity-50" />
                         </div>
                       </div>
                       <p className="font-semibold text-lg mb-2">Recognizing Text...</p>
