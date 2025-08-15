@@ -33,7 +33,7 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
     redirect("/auth/login")
   }
 
-  // Fetch document and extracted text
+  // Fetch document
   const { data: document, error: docError } = await supabase
     .from("documents")
     .select("*")
@@ -45,22 +45,21 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
     notFound()
   }
 
-  const { data: extractedText, error: textError } = await supabase
-    .from("extracted_texts")
-    .select("*")
-    .eq("document_id", id)
-    .single()
+  // Create a mock extractedText object from the document's recognized_text
+  const extractedText = {
+    id: document.id,
+    document_id: document.id,
+    raw_text: document.recognized_text?.cleaned_text || "",
+    key_phrases: document.recognized_text?.key_phrases || [],
+    sentences: document.recognized_text?.sentences || [],
+    created_at: document.created_at
+  };
 
-  if (textError || !extractedText) {
-    notFound()
-  }
-
-  // Fetch existing text items for this document
+  // Fetch existing selections for this document
   const { data: existingItems } = await supabase
-    .from("text_items")
+    .from("selections")
     .select("*")
-    .eq("extracted_text_id", extractedText.id)
-    .eq("user_id", user.id)
+    .eq("document_id", document.id)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100">
