@@ -1,3 +1,5 @@
+import CopyPlugin from "copy-webpack-plugin";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -10,15 +12,24 @@ const nextConfig = {
     unoptimized: true,
   },
   webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.plugins.push(
+        new CopyPlugin({
+          patterns: [
+            {
+              from: "node_modules/tesseract.js/src/worker-script",
+              to: "worker-script",
+            },
+          ],
+        })
+      );
+    }
+
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
       };
-    } else {
-      config.externals.push({
-        './.next/worker-script/node/index.js': 'commonjs ./.next/worker-script/node/index.js',
-      });
     }
     config.module.rules.push({
       test: /\.node$/,
