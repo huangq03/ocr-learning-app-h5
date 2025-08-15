@@ -20,8 +20,9 @@ export async function POST(request: Request) {
         const formData = await request.formData();
         const file = formData.get('file') as File;
         const service = (formData.get('service') as string) || 'tesseract';
-        const performCleanup = formData.get('cleanup') === 'true';
-        const llmService = (formData.get('llm_service') as string) || 'gemini';
+        //const performCleanup = formData.get('cleanup') === 'true';
+        const performCleanup = true
+        const llmService = (formData.get('llm_service') as string) || 'qwen';
 
         if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
