@@ -1,3 +1,4 @@
+
 import { createWorker } from 'tesseract.js';
 import { NextResponse } from 'next/server';
 import sharp from 'sharp';
@@ -13,6 +14,9 @@ import Ocr20210707 from '@alicloud/ocr-api20210707';
 import * as $OpenApi from '@alicloud/openapi-client';
 import BaiduOcr from 'baidu-aip-sdk'.OcrClient;
 import tencentcloud from 'tencentcloud-sdk-nodejs';
+
+// Google Gemini for Cleanup
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // --- Tesseract Helper ---
 async function runTesseract(imageBuffer: Buffer) {
@@ -86,32 +90,57 @@ async function runTencentOcr(imageBuffer: Buffer) {
     return (result.TextDetections || []).map(d => d.DetectedText).join('\n');
 }
 
+// --- LLM Cleanup Helper ---
+async function runLlmCleanup(rawText: string) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('Gemini API key not found. Please set the GEMINI_API_KEY environment variable.');
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+
+    const prompt = `The following text is raw output from an OCR service. It may contain errors, incorrect spacing, and fragmented lines. Please clean it up. Correct any spelling and grammar mistakes, merge words that are incorrectly split, and format the text for readability. Return the result as a JSON object with the following structure: { "cleaned_text": "The full, corrected text as a single string.", "sentences": ["An array of the corrected sentences."], "key_phrases": ["A list of key words or phrases from the text."] }. Do not include the markdown characters \
+```json\
+ in your response. The raw text is: \n\n${rawText}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const jsonString = response.text();
+    return JSON.parse(jsonString);
+}
+
 // --- Main API Route ---
 export async function POST(request: Request) {
     try {
         const formData = await request.formData();
         const file = formData.get('file') as File;
         const service = (formData.get('service') as string) || 'tesseract';
+        const performCleanup = formData.get('cleanup') === 'true';
 
         if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
         const imageBuffer = Buffer.from(await file.arrayBuffer());
-        let text = '';
+        let rawText = '';
 
         switch (service) {
-            case 'tesseract': text = await runTesseract(imageBuffer); break;
-            case 'google': text = await runGoogleVision(imageBuffer); break;
-            case 'azure': text = await runAzureVision(imageBuffer); break;
-            case 'aws': text = await runAwsTextract(imageBuffer); break;
-            case 'aliyun': text = await runAliyunOcr(imageBuffer); break;
-            case 'baidu': text = await runBaiduOcr(imageBuffer); break;
-            case 'tencent': text = await runTencentOcr(imageBuffer); break;
+            case 'tesseract': rawText = await runTesseract(imageBuffer); break;
+            case 'google': rawText = await runGoogleVision(imageBuffer); break;
+            case 'azure': rawText = await runAzureVision(imageBuffer); break;
+            case 'aws': rawText = await runAwsTextract(imageBuffer); break;
+            case 'aliyun': rawText = await runAliyunOcr(imageBuffer); break;
+            case 'baidu': rawText = await runBaiduOcr(imageBuffer); break;
+            case 'tencent': rawText = await runTencentOcr(imageBuffer); break;
             default: return NextResponse.json({ error: 'Invalid service specified.' }, { status: 400 });
         }
 
-        return NextResponse.json({ text });
+        if (performCleanup) {
+            const cleanedJson = await runLlmCleanup(rawText);
+            return NextResponse.json(cleanedJson);
+        } else {
+            return NextResponse.json({ text: rawText });
+        }
+
     } catch (error: any) {
-        console.error(`Error in OCR processing (${error.service || 'general'}):`, error);
+        console.error(`Error in OCR processing for service: ${error.service || 'unknown'}:`, error);
         return NextResponse.json({ error: error.message || 'An unexpected error occurred.' }, { status: 500 });
     }
 }
