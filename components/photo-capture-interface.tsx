@@ -16,8 +16,9 @@ interface PhotoCaptureInterfaceProps {
 }
 
 interface OCRResult {
-  text: string
-  confidence: number
+  cleaned_text: string
+  key_phrases: string[]
+  sentences: string[]
 }
 
 export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfaceProps) {
@@ -99,8 +100,9 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       const ocrData = await ocrResponse.json()
 
       const result: OCRResult = {
-        text: ocrData.text.trim(),
-        confidence: 100, // Placeholder confidence
+        cleaned_text: ocrData.cleaned_text || '',
+        key_phrases: ocrData.key_phrases || [],
+        sentences: ocrData.sentences || []
       }
 
       setOcrResult(result)
@@ -187,24 +189,20 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       if (uploadError) throw uploadError
 
       // Get public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("documents").getPublicUrl(fileName)
+      const { data: publicUrlData } = supabase.storage.from("documents").getPublicUrl(fileName)
+      const publicUrl = publicUrlData.publicUrl
 
       const { data: documentData, error: dbError } = await supabase
         .from("documents")
         .insert({
           user_id: user.id,
           file_path: publicUrl,
+          recognized_text: ocrResult,
         })
         .select()
         .single()
 
       if (dbError) throw dbError
-
-      const { error: textError } = await supabase.from("documents").update({ recognized_text: ocrResult.text }).eq("id", documentData.id)
-
-      if (textError) throw textError
 
       setSavedDocumentId(documentData.id)
       setUploadSuccess(true)
@@ -354,7 +352,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                       <p className="font-bold text-xl">Text Recognized!</p>
                       <div className="mt-4 max-w-xs">
                         <div className="bg-white bg-opacity-20 rounded-lg p-3">
-                          <p className="text-sm opacity-90 line-clamp-3">{ocrResult.text.substring(0, 100)}...</p>
+                          <p className="text-sm opacity-90 line-clamp-3">{ocrResult.cleaned_text.substring(0, 100)}...</p>
                         </div>
                       </div>
                     </div>

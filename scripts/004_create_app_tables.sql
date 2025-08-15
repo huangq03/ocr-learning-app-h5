@@ -3,8 +3,8 @@
 CREATE TABLE documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) NOT NULL,
-  file_path TEXT NOT NULL,
-  recognized_text TEXT,
+  file_path TEXT,
+  recognized_text JSON,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
