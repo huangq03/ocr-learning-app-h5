@@ -1,4 +1,5 @@
-import CopyPlugin from "copy-webpack-plugin";
+import fs from 'fs';
+import path from 'path';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -13,16 +14,17 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.plugins.push(
-        new CopyPlugin({
-          patterns: [
-            {
-              from: "node_modules/tesseract.js/src/worker-script",
-              to: "worker-script",
-            },
-          ],
-        })
-      );
+      const copyTesseractData = (dir) => {
+        const sourceDir = path.join(config.context, `node_modules/tesseract.js/src/${dir}`);
+        const destDir = path.join(config.context, `.next/${dir}`);
+        if (!fs.existsSync(destDir)) {
+          fs.mkdirSync(destDir, { recursive: true });
+        }
+        fs.cpSync(sourceDir, destDir, { recursive: true });
+      }
+      copyTesseractData('worker-script');
+      copyTesseractData('constants');
+      copyTesseractData('utils');
     }
 
     if (!isServer) {

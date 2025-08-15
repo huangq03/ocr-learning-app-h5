@@ -1,7 +1,6 @@
 
 import { createWorker } from 'tesseract.js';
 import { NextResponse } from 'next/server';
-import path from 'path';
 
 export async function POST(request: Request) {
   try {
@@ -12,11 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const worker = await createWorker('eng', 1, {
-      workerPath: path.resolve('./node_modules/tesseract.js/src/worker/node/index.js'),
-      corePath: path.resolve('./node_modules/tesseract.js-core/tesseract-core.wasm'),
-      logger: m => console.log(m),
-    });
+    const worker = await createWorker('eng');
 
     const imageBuffer = await file.arrayBuffer();
     const { data: { text } } = await worker.recognize(Buffer.from(imageBuffer));
