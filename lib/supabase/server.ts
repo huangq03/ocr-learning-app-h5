@@ -10,7 +10,7 @@ export const isSupabaseConfigured =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0
 
 // Create a cached version of the Supabase client for Server Components
-export const createClient = cache(() => {
+export const createClient = cache(async () => {
   if (!isSupabaseConfigured) {
     console.warn("Supabase environment variables are not set. Using dummy client.")
     return {
@@ -21,5 +21,7 @@ export const createClient = cache(() => {
     }
   }
 
-  return createServerComponentClient({ cookies })
+  // Await cookies as per Next.js requirements
+  const cookieStore = await cookies()
+  return createServerComponentClient({ cookies: () => cookieStore })
 })

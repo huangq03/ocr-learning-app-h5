@@ -10,6 +10,9 @@ interface DocumentPageProps {
 }
 
 export default async function DocumentPage({ params }: DocumentPageProps) {
+  // Await params as per Next.js requirements
+  const { id } = await params;
+
   // If Supabase is not configured, show setup message
   if (!isSupabaseConfigured) {
     return (
@@ -20,7 +23,7 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
   }
 
   // Get the user from the server
-  const supabase = createClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -34,7 +37,7 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
   const { data: document, error: docError } = await supabase
     .from("documents")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id)
     .single()
 
@@ -45,7 +48,7 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
   const { data: extractedText, error: textError } = await supabase
     .from("extracted_texts")
     .select("*")
-    .eq("document_id", params.id)
+    .eq("document_id", id)
     .single()
 
   if (textError || !extractedText) {
