@@ -334,13 +334,12 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                         </div>
                       </div>
                       <p className="font-semibold text-lg mb-2">Recognizing Text...</p>
-                      <div className="w-48 bg-white bg-opacity-20 rounded-full h-2 mx-auto">
-                        <div
-                          className="bg-white h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${ocrProgress}%` }}
-                        />
+                      <div className="flex justify-center my-2">
+                        <div className="w-4 h-4 rounded-full bg-white mx-1 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-4 h-4 rounded-full bg-white mx-1 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-4 h-4 rounded-full bg-white mx-1 animate-bounce" style={{ animationDelay: '300ms' }}></div>
                       </div>
-                      <p className="text-sm mt-2 opacity-80">{ocrProgress}% complete</p>
+                      <p className="text-sm mt-2 opacity-80">Processing...</p>
                     </div>
                   </div>
                 )}
