@@ -23,5 +23,8 @@
   "errorSaveFailed": "Failed to save document. Please try again.",
   "recognizedItems": "Recognized Items",
   "fullTextView": "Full Text View",
-  "newItemBadge": "(new)"
+  "newItemBadge": "(new)",
+  "confirmedItems": "Confirmed Items",
+  "suggestedItems": "Suggested New Items",
+  "add": "Add"
 }

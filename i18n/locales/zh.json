@@ -1,5 +1,5 @@
 {
-  "captureYourDocument": "拍摄您的文档",
+  "captureYourDocument": "请拍摄您的文档",
   "reviewOcrItems": "请检查识别出的文本",
   "alignAndScan": "请将文档对齐并扫描",
   "goToDashboard": "返回主界面",
@@ -13,15 +13,18 @@
   "textReady": "文本识别完成！",
   "cancel": "取消",
   "scanNow": "立即扫描",
-  "confirmItems": "请确认识别的项目",
-  "noItemsRecognized": "未能识别出任何项目",
+  "confirmItems": "请确认识别的知识点",
+  "noItemsRecognized": "未能识别出任何知识点",
   "retake": "重新拍摄",
   "confirmAndSave": "确认并保存",
   "errorCameraAccess": "此浏览器不支持相机访问。请使用HTTPS协议的网站。",
   "errorUnableToAccessCamera": "无法访问相机。请检查权限。",
   "errorOcrFailed": "文本识别失败。",
   "errorSaveFailed": "保存文档失败。请重试。",
-  "recognizedItems": "识别出的项目",
+  "recognizedItems": "识别出的知识点",
   "fullTextView": "全文预览",
-  "newItemBadge": "(新)"
+  "newItemBadge": "(新)",
+  "confirmedItems": "已确认知识点",
+  "suggestedItems": "建议新知识点",
+  "add": "添加"
 }
