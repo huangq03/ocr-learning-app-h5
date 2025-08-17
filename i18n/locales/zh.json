@@ -20,5 +20,7 @@
   "errorCameraAccess": "此浏览器不支持相机访问。请使用HTTPS协议的网站。",
   "errorUnableToAccessCamera": "无法访问相机。请检查权限。",
   "errorOcrFailed": "文本识别失败。",
-  "errorSaveFailed": "保存文档失败。请重试。"
+  "errorSaveFailed": "保存文档失败。请重试。",
+  "recognizedItems": "识别出的项目",
+  "fullTextView": "全文预览"
 }

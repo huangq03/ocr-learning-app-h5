@@ -20,5 +20,7 @@
   "errorCameraAccess": "Camera access is not available on this browser. Please use an HTTPS connection.",
   "errorUnableToAccessCamera": "Unable to access camera. Please check permissions.",
   "errorOcrFailed": "Failed to process text recognition.",
-  "errorSaveFailed": "Failed to save document. Please try again."
+  "errorSaveFailed": "Failed to save document. Please try again.",
+  "recognizedItems": "Recognized Items",
+  "fullTextView": "Full Text View"
 }

@@ -9,4 +9,5 @@ important: do not translate the Chinese content, leave it as is
 important: make sure the items in sentences attribute are complete sentences but not phrases or words
 important: make sure sentences and verb_or_phrases attribures contain only English
 important: every item can only be a verb_phrase or a sentence, but not both
+important: insert proper new lines to the cleanded_text for readability
 The raw text is:`

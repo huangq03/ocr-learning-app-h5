@@ -3,7 +3,8 @@
 import type React from "react"
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Camera, Upload, RotateCcw, Check, X, Sparkles, Gift } from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
@@ -261,22 +262,38 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
             )}
 
             {isConfirming && ocrResult && (
-              <div className="absolute inset-0 p-6 z-10">
-                <h3 className="text-center font-semibold text-lg mb-3 text-gray-800">{t('textReady')}</h3>
-                <ScrollArea className="h-48 md:h-56">
-                  <ul className="space-y-2 p-2">
-                    {ocrResult.items.map((item, index) => (
-                      <li
-                        key={index}
-                        className="bg-white bg-opacity-80 backdrop-blur-sm p-2 rounded-md text-purple-900 text-sm shadow-lg animate-burst-in"
-                        style={{ animationDelay: `${500 + index * 70}ms` }}
-                      >
-                        {item}
-                      </li>
-                    ))}
-                    {ocrResult.items.length === 0 && <p className="text-gray-500 text-center">{t('noItemsRecognized')}</p>}
-                  </ul>
-                </ScrollArea>
+              <div className="absolute inset-0 p-2 z-10 flex flex-col animate-burst-in" style={{ animationDelay: '400ms' }}>
+                <Tabs defaultValue="full-text" className="w-full h-full flex flex-col">
+                  <TabsList className="grid w-full grid-cols-2 shrink-0">
+                    <TabsTrigger value="full-text">{t('fullTextView')}</TabsTrigger>
+                    <TabsTrigger value="items">{t('recognizedItems')}</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="full-text" className="flex-grow mt-2">
+                    <Card className="h-full w-full bg-white/80 backdrop-blur-sm">
+                      <CardContent className="p-3">
+                        <ScrollArea className="h-[240px]">
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{ocrResult.cleaned_text}</p>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="items" className="flex-grow mt-2">
+                    <Card className="h-full w-full bg-white/80 backdrop-blur-sm">
+                      <CardContent className="p-3">
+                        <ScrollArea className="h-[240px]">
+                          <ul className="space-y-1">
+                            {ocrResult.items.map((item, index) => (
+                              <li key={index} className="bg-purple-50/90 p-2 rounded-md text-purple-900 text-xs shadow-sm">
+                                {item}
+                              </li>
+                            ))}
+                            {ocrResult.items.length === 0 && <p className="text-gray-500 text-center text-xs p-2">{t('noItemsRecognized')}</p>}
+                          </ul>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </div>
             )}
           </div>
