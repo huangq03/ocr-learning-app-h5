@@ -50,7 +50,7 @@ export default function DashboardInterface({ user, totalDocuments }: DashboardIn
     const fetchDashboardData = async () => {
       try {
         // Fetch user progress (we no longer need total_documents from here)
-        const { data: userProgress } = await supabase.from("user_progress").select("*").eq("user_id", user.id).single()
+        const { data: userProgress } = await supabase.from("user_progress").select("*").eq("user_id", user.id).maybeSingle()
 
         // Fetch items due today
         const today = new Date().toISOString().split("T")[0]
