@@ -123,7 +123,17 @@ export default function DashboardInterface({ user, totalDocuments }: DashboardIn
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="p-4 bg-white shadow-lg border-0"><div className="flex items-center space-x-3"><div className="p-2 bg-blue-100 rounded-lg"><FileText className="w-5 h-5 text-blue-600" /></div><div><div className="text-2xl font-bold text-blue-800">{totalDocuments}</div><div className="text-sm text-blue-600">{t('documentsLabel')}</div></div></div></Card>
+          <Card className="p-4 bg-white shadow-lg border-0 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/documents')}>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileText className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-blue-800">{totalDocuments}</div>
+                <div className="text-sm text-blue-600">{t('documentsLabel')}</div>
+              </div>
+            </div>
+          </Card>
           <Card className="p-4 bg-white shadow-lg border-0"><div className="flex items-center space-x-3"><div className="p-2 bg-purple-100 rounded-lg"><BookOpen className="w-5 h-5 text-purple-600" /></div><div><div className="text-2xl font-bold text-purple-800">{stats.totalItems}</div><div className="text-sm text-purple-600">{t('totalItemsLabel')}</div></div></div></Card>
           <Card className="p-4 bg-white shadow-lg border-0"><div className="flex items-center space-x-3"><div className="p-2 bg-red-100 rounded-lg"><Clock className="w-5 h-5 text-red-600" /></div><div><div className="text-2xl font-bold text-red-800">{stats.itemsDue}</div><div className="text-sm text-red-600">{t('dueTodayLabel')}</div></div></div></Card>
           <Card className="p-4 bg-white shadow-lg border-0"><div className="flex items-center space-x-3"><div className="p-2 bg-green-100 rounded-lg"><Trophy className="w-5 h-5 text-green-600" /></div><div><div className="text-2xl font-bold text-green-800">{stats.masteredItems}</div><div className="text-sm text-green-600">{t('masteredLabel')}</div></div></div></Card>
