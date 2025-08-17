@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     try {
         const formData = await request.formData();
         const file = formData.get('file') as File;
-        const service = (formData.get('service') as string) || 'tesseract';
+        const service = (formData.get('service') as string) || 'aliyun';
         //const performCleanup = formData.get('cleanup') === 'true';
         const performCleanup = true
         const llmService = (formData.get('llm_service') as string) || 'qwen';
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
             case 'tencent': rawText = await runTencentOcr(imageBuffer); break;
             default: return NextResponse.json({ error: 'Invalid service specified.' }, { status: 400 });
         }
+        console.log('OCR raw result: ', rawText);
 
         if (performCleanup) {
             let cleanedJson;
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
                 case 'doubao': cleanedJson = await runDoubao(rawText); break;
                 default: return NextResponse.json({ error: 'Invalid LLM service specified.' }, { status: 400 });
             }
+            console.log('cleaned json: ', cleanedJson);
             return NextResponse.json(cleanedJson);
         } else {
             return NextResponse.json({ text: rawText });
