@@ -9,6 +9,8 @@ import { Camera, Upload, RotateCcw, Check, X, Sparkles, Gift } from "lucide-reac
 import { supabase } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
+import { useTranslation } from 'react-i18next';
+import '@/i18n'; // Initialize i18n
 
 interface PhotoCaptureInterfaceProps {
   user: User
@@ -22,6 +24,7 @@ interface OCRResult {
 type CaptureStatus = "idle" | "capturing" | "processing" | "animating" | "confirming" | "saving"
 
 export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfaceProps) {
+  const { t, i18n } = useTranslation();
   const router = useRouter()
   const [status, setStatus] = useState<CaptureStatus>("idle")
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -33,9 +36,13 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
   const startCamera = useCallback(async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setError("Camera access is not available on this browser. Please use an HTTPS connection.")
+      setError(t('errorCameraAccess'));
       return
     }
     try {
@@ -53,10 +60,10 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
         setStatus("capturing")
       }
     } catch (err) {
-      setError("Unable to access camera. Please check permissions.")
+      setError(t('errorUnableToAccessCamera'));
       console.error("Camera error:", err)
     }
-  }, [])
+  }, [t])
 
   const stopCamera = useCallback(() => {
     if (stream) {
@@ -78,7 +85,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
 
       if (!ocrResponse.ok) {
         const errorData = await ocrResponse.json().catch(() => ({}))
-        throw new Error(errorData.error || "OCR request failed")
+        throw new Error(errorData.error || t('errorOcrFailed'))
       }
 
       const ocrData = await ocrResponse.json()
@@ -88,11 +95,11 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       // Animation sequence
       setTimeout(() => setStatus("confirming"), 2000) // Total animation time
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to process text recognition.")
+      setError(err instanceof Error ? err.message : t('errorOcrFailed'))
       setStatus("idle")
       setCapturedImage(null)
     }
-  }, [])
+  }, [t])
 
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return
@@ -154,11 +161,11 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       if (dbError) throw dbError
       router.push(`/documents/${documentData.id}`)
     } catch (err) {
-      setError("Failed to save document. Please try again.")
+      setError(t('errorSaveFailed'));
       console.error("Upload error:", err)
       setStatus("confirming")
     }
-  }, [capturedImage, ocrResult, user.id, router])
+  }, [capturedImage, ocrResult, user.id, router, t])
 
   const resetCapture = useCallback(() => {
     setCapturedImage(null)
@@ -187,13 +194,19 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 p-4">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8 pt-8">
-          <h1 className="text-3xl font-bold text-purple-800 mb-2">Capture Your Document</h1>
+           <div className="flex justify-center items-center mb-4 gap-4">
+            <h1 className="text-3xl font-bold text-purple-800">{t('captureYourDocument')}</h1>
+            <div className="flex gap-1">
+              <Button size="sm" variant={i18n.language === 'en' ? 'default' : 'outline'} onClick={() => changeLanguage('en')}>EN</Button>
+              <Button size="sm" variant={i18n.language === 'zh' ? 'default' : 'outline'} onClick={() => changeLanguage('zh')}>ZH</Button>
+            </div>
+          </div>
           <p className="text-purple-600">
-            {isConfirming ? "Review the recognized text below." : "Align the document and scan."}
+            {isConfirming ? t('reviewOcrItems') : t('alignAndScan')}
           </p>
           {error && <p className="text-red-500 mt-4">{error}</p>}
           <Button variant="outline" onClick={goToDashboard} className="mt-4">
-            Go to Dashboard
+            {t('goToDashboard')}
           </Button>
         </div>
 
@@ -204,10 +217,10 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                 <Camera className="w-16 h-16 text-purple-400 mx-auto mb-4" />
                 <div className="space-y-3">
                   <Button onClick={startCamera} className="w-full bg-purple-800 hover:bg-purple-700 text-white">
-                    <Camera className="w-5 h-5 mr-2" /> Open Camera
+                    <Camera className="w-5 h-5 mr-2" /> {t('openCamera')}
                   </Button>
                   <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full">
-                    <Upload className="w-5 h-5 mr-2" /> Upload Image
+                    <Upload className="w-5 h-5 mr-2" /> {t('uploadImage')}
                   </Button>
                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
                 </div>
@@ -234,7 +247,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
               <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                 <div className="bg-black/60 backdrop-blur-sm text-white p-6 rounded-2xl flex flex-col items-center gap-2">
                   <Sparkles className="w-12 h-12 animate-pulse" />
-                  <p className="font-semibold text-base">{isSaving ? "Saving Document..." : "Recognizing Text..."}</p>
+                  <p className="font-semibold text-base">{isSaving ? t('savingDocumentStatus') : t('recognizingStatus')}</p>
                 </div>
               </div>
             )}
@@ -249,7 +262,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
 
             {isConfirming && ocrResult && (
               <div className="absolute inset-0 p-6 z-10">
-                <h3 className="text-center font-semibold text-lg mb-3 text-gray-800">Your text is ready!</h3>
+                <h3 className="text-center font-semibold text-lg mb-3 text-gray-800">{t('textReady')}</h3>
                 <ScrollArea className="h-48 md:h-56">
                   <ul className="space-y-2 p-2">
                     {ocrResult.items.map((item, index) => (
@@ -261,6 +274,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                         {item}
                       </li>
                     ))}
+                    {ocrResult.items.length === 0 && <p className="text-gray-500 text-center">{t('noItemsRecognized')}</p>}
                   </ul>
                 </ScrollArea>
               </div>
@@ -271,10 +285,10 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
             {isCapturing && (
               <div className="flex gap-3">
                 <Button variant="outline" onClick={stopCamera} className="flex-1">
-                  <X className="w-4 h-4 mr-2" /> Cancel
+                  <X className="w-4 h-4 mr-2" /> {t('cancel')}
                 </Button>
                 <Button onClick={capturePhoto} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white">
-                  <Camera className="w-4 h-4 mr-2" /> Scan Now
+                  <Camera className="w-4 h-4 mr-2" /> {t('scanNow')}
                 </Button>
               </div>
             )}
@@ -282,13 +296,13 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
             {isConfirming && (
               <div className="flex gap-3">
                 <Button variant="outline" onClick={resetCapture} className="flex-1" disabled={isSaving}>
-                  <RotateCcw className="w-4 h-4 mr-2" /> Retake
+                  <RotateCcw className="w-4 h-4 mr-2" /> {t('retake')}
                 </Button>
                 <Button onClick={handleConfirmAndSave} className="flex-1 bg-green-600 hover:bg-green-700 text-white" disabled={isSaving}>
                   {isSaving ? (
-                    <><div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                    <><div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('savingStatus')}</>
                   ) : (
-                    <><Check className="w-4 h-4 mr-2" /> Confirm & Save</>
+                    <><Check className="w-4 h-4 mr-2" /> {t('confirmAndSave')}</>
                   )}
                 </Button>
               </div>
