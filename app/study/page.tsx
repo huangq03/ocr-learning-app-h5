@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Volume2, ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import '@/i18n';
 
 interface StudySession {
   type: 'recitation' | 'dictation';
@@ -14,8 +16,8 @@ interface StudySession {
   documentId: string;
 }
 
-// --- Recitation Component ---
 const RecitationInterface = ({ items, onComplete }: { items: string[]; onComplete: () => void }) => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const progress = ((currentIndex + 1) / items.length) * 100;
 
@@ -36,8 +38,8 @@ const RecitationInterface = ({ items, onComplete }: { items: string[]; onComplet
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Recitation</CardTitle>
-        <p className="text-gray-500">Read the item aloud.</p>
+        <CardTitle>{t('recitationTitle')}</CardTitle>
+        <p className="text-gray-500">{t('recitationSubtitle')}</p>
         <Progress value={progress} className="mt-2" />
       </CardHeader>
       <CardContent className="text-center">
@@ -46,10 +48,10 @@ const RecitationInterface = ({ items, onComplete }: { items: string[]; onComplet
         </div>
         <div className="flex justify-between mt-4">
           <Button variant="outline" onClick={handlePrev} disabled={currentIndex === 0}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Previous
+            <ArrowLeft className="w-4 h-4 mr-2" /> {t('previousButton')}
           </Button>
           <Button onClick={handleNext}>
-            {currentIndex === items.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="w-4 h-4 ml-2" />
+            {currentIndex === items.length - 1 ? t('finishButton') : t('nextButton')} <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </CardContent>
@@ -57,8 +59,8 @@ const RecitationInterface = ({ items, onComplete }: { items: string[]; onComplet
   );
 };
 
-// --- Dictation Component ---
 const DictationInterface = ({ items, onComplete }: { items: string[]; onComplete: () => void }) => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
@@ -88,36 +90,35 @@ const DictationInterface = ({ items, onComplete }: { items: string[]; onComplete
   };
 
   useEffect(() => {
-    // Automatically play the sound for the first item
     speak(items[currentIndex]);
   }, [currentIndex, items]);
 
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Dictation</CardTitle>
-        <p className="text-gray-500">Listen and type what you hear.</p>
+        <CardTitle>{t('dictationTitle')}</CardTitle>
+        <p className="text-gray-500">{t('dictationSubtitle')}</p>
         <Progress value={progress} className="mt-2" />
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <Button variant="outline" onClick={() => speak(items[currentIndex])} className="w-full">
-            <Volume2 className="w-5 h-5 mr-2" /> Play Sound
+            <Volume2 className="w-5 h-5 mr-2" /> {t('playSoundButton')}
           </Button>
           <Input
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
-            placeholder="Type here..."
+            placeholder={t('typeHerePlaceholder')}
             className={feedback ? (feedback === 'correct' ? 'border-green-500' : 'border-red-500') : ''}
           />
           {feedback && (
             <div className={`flex items-center p-2 rounded-md ${feedback === 'correct' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
               {feedback === 'correct' ? <Check className="w-4 h-4 mr-2" /> : <X className="w-4 h-4 mr-2" />}
-              {feedback === 'correct' ? 'Correct!' : `Correct answer: ${items[currentIndex]}`}
+              {feedback === 'correct' ? t('correctFeedback') : t('incorrectFeedback', { answer: items[currentIndex] })}
             </div>
           )}
           <Button onClick={feedback ? handleNext : handleCheck} className="w-full">
-            {feedback ? (currentIndex === items.length - 1 ? 'Finish' : 'Next') : 'Check'}
+            {feedback ? (currentIndex === items.length - 1 ? t('finishButton') : t('nextButton')) : t('checkButton')}
           </Button>
         </div>
       </CardContent>
@@ -125,8 +126,8 @@ const DictationInterface = ({ items, onComplete }: { items: string[]; onComplete
   );
 };
 
-// --- Main Study Page Component ---
 export default function StudyPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [session, setSession] = useState<StudySession | null>(null);
   const [isFinished, setIsFinished] = useState(false);
@@ -136,7 +137,6 @@ export default function StudyPage() {
     if (savedSession) {
       setSession(JSON.parse(savedSession));
     } else {
-      // If no session is found, maybe redirect to home or documents list
       router.push('/');
     }
   }, [router]);
@@ -149,12 +149,12 @@ export default function StudyPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
         <Card className="text-center p-8">
-          <CardTitle className="text-3xl font-bold mb-4">🎉 Well Done!</CardTitle>
+          <CardTitle className="text-3xl font-bold mb-4">{t('completionTitle')}</CardTitle>
           <CardContent>
-            <p className="text-gray-600 mb-6">You have completed your study session.</p>
+            <p className="text-gray-600 mb-6">{t('completionSubtitle')}</p>
             <div className="flex gap-4">
-              <Button onClick={() => router.push(`/documents/${session?.documentId}`)}>Review Document</Button>
-              <Button variant="outline" onClick={() => router.push('/')}>Go to Dashboard</Button>
+              <Button onClick={() => router.push(`/documents/${session?.documentId}`)}>{t('reviewDocumentButton')}</Button>
+              <Button variant="outline" onClick={() => router.push('/')}>{t('goToDashboard')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -163,7 +163,7 @@ export default function StudyPage() {
   }
 
   if (!session) {
-    return <div className="min-h-screen flex items-center justify-center"><p>Loading study session...</p></div>;
+    return <div className="min-h-screen flex items-center justify-center"><p>{t('loadingSession')}</p></div>;
   }
 
   return (

@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BookOpen, Headphones, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import '@/i18n';
 
-// Define the type for our document data
 interface Document {
   id: string;
   user_id: string;
@@ -21,6 +22,7 @@ interface Document {
 }
 
 export default function StudySessionCreator({ document }: { document: Document }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const allItems = document.recognized_text?.items || [];
@@ -39,7 +41,7 @@ export default function StudySessionCreator({ document }: { document: Document }
 
   const handleStartSession = (type: 'recitation' | 'dictation') => {
     if (selectedItems.length === 0) {
-      alert('Please select at least one item to study.');
+      alert(t('selectItemsAlert'));
       return;
     }
     const studySession = { type, items: selectedItems, documentId: document.id };
@@ -52,12 +54,12 @@ export default function StudySessionCreator({ document }: { document: Document }
       <div className="max-w-2xl mx-auto">
         <Button variant="outline" onClick={() => router.back()} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          {t('backButton')}
         </Button>
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-gray-800">Create Study Session</CardTitle>
-            <p className="text-gray-500">Select the items you want to practice from your document.</p>
+            <CardTitle className="text-2xl font-bold text-gray-800">{t('createStudySessionTitle')}</CardTitle>
+            <p className="text-gray-500">{t('createStudySessionSubtitle')}</p>
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg p-4 space-y-4">
@@ -67,7 +69,7 @@ export default function StudySessionCreator({ document }: { document: Document }
                   checked={selectedItems.length > 0 && selectedItems.length === allItems.length}
                   onCheckedChange={handleToggleAll}
                 />
-                <label htmlFor="select-all" className="text-sm font-medium">Select All Items</label>
+                <label htmlFor="select-all" className="text-sm font-medium">{t('selectAllItems')}</label>
               </div>
               <ScrollArea className="h-64 w-full border-t pt-4">
                 <div className="space-y-2">
@@ -87,11 +89,11 @@ export default function StudySessionCreator({ document }: { document: Document }
             <div className="mt-6 flex flex-col sm:flex-row gap-4">
               <Button onClick={() => handleStartSession('recitation')} className="flex-1 bg-blue-600 hover:bg-blue-700">
                 <BookOpen className="w-5 h-5 mr-2" />
-                Start Recitation
+                {t('startRecitation')}
               </Button>
               <Button onClick={() => handleStartSession('dictation')} className="flex-1 bg-purple-600 hover:bg-purple-700">
                 <Headphones className="w-5 h-5 mr-2" />
-                Start Dictation
+                {t('startDictation')}
               </Button>
             </div>
           </CardContent>

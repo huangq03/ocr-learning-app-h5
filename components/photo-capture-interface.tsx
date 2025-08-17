@@ -77,7 +77,7 @@ const HighlightedText = ({ text, wordsToHighlight, onAdd }: { text: string; word
 
 // --- MAIN COMPONENT ---
 export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfaceProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter()
   const [status, setStatus] = useState<CaptureStatus>("idle")
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -88,10 +88,6 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
 
   const handleAddItem = useCallback((itemToAdd: string) => {
     setOcrResult(prevResult => {
@@ -224,13 +220,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 p-4">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8 pt-8">
-           <div className="flex justify-center items-center mb-4 gap-4">
-            <h1 className="text-3xl font-bold text-purple-800">{t('captureYourDocument')}</h1>
-            <div className="flex gap-1">
-              <Button size="sm" variant={i18n.language === 'en' ? 'default' : 'outline'} onClick={() => changeLanguage('en')}>EN</Button>
-              <Button size="sm" variant={i18n.language === 'zh' ? 'default' : 'outline'} onClick={() => changeLanguage('zh')}>ZH</Button>
-            </div>
-          </div>
+           <h1 className="text-3xl font-bold text-purple-800 mb-4">{t('captureYourDocument')}</h1>
           <p className="text-purple-600">{isConfirming ? t('reviewOcrItems') : t('alignAndScan')}</p>
           {error && <p className="text-red-500 mt-4">{error}</p>}
           <Button variant="outline" onClick={goToDashboard} className="mt-4">{t('goToDashboard')}</Button>
