@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { createWorker } from 'tesseract.js';
+import sharp from 'sharp';
 
 // OCR Service Imports
 import { runTesseract } from './services/tesseract';
@@ -14,21 +16,46 @@ import { runGeminiCleanup } from './services/gemini';
 import { runOpenAi, runDeepseek, runDoubao } from './services/openai';
 import { runQwenCleanup } from './services/qwen';
 
+// --- Helper Function for Image Preprocessing ---
+async function correctImageOrientation(imageBuffer: Buffer): Promise<Buffer> {
+    try {
+        // Use Tesseract to detect orientation
+        const detectionWorker = await createWorker('osd', { oem: 0 });
+        const { data: { orientation_degrees } } = await detectionWorker.detect(imageBuffer);
+        await detectionWorker.terminate();
+
+        if (orientation_degrees && orientation_degrees !== 0) {
+            console.log(`Correcting image orientation by ${orientation_degrees} degrees.`);
+            return sharp(imageBuffer).rotate(orientation_degrees).toBuffer();
+        }
+        // If no rotation needed, return original buffer
+        return imageBuffer;
+    } catch (error) {
+        console.error("Error during image orientation correction:", error);
+        // Return original buffer if correction fails
+        return imageBuffer;
+    }
+}
+
 // --- Main API Route ---
 export async function POST(request: Request) {
     try {
         const formData = await request.formData();
         const file = formData.get('file') as File;
         const service = (formData.get('service') as string) || 'aliyun';
-        //const performCleanup = formData.get('cleanup') === 'true';
-        const performCleanup = true
+        const performCleanup = true;
         const llmService = (formData.get('llm_service') as string) || 'qwen';
 
         if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
-        const imageBuffer = Buffer.from(await file.arrayBuffer());
+        const initialBuffer = Buffer.from(await file.arrayBuffer());
+        
+        // --- Apply orientation correction to all images ---
+        const imageBuffer = await correctImageOrientation(initialBuffer);
+
         let rawText = '';
 
+        // Pass the corrected buffer to all services
         switch (service) {
             case 'tesseract': rawText = await runTesseract(imageBuffer); break;
             case 'google': rawText = await runGoogleVision(imageBuffer); break;
