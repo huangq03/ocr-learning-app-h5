@@ -15,8 +15,8 @@ interface Document {
 }
 
 // Server Component that fetches data and passes it to the client component
-// Server Component that fetches data and passes it to the client component
-export default async function DocumentPage({ params: { id } }: { params: { id: string } }) {
+export default async function DocumentPage({ params }: { params: { id: string } }) {
+  const id = params.id;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
