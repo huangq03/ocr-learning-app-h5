@@ -22,5 +22,6 @@
   "errorOcrFailed": "Failed to process text recognition.",
   "errorSaveFailed": "Failed to save document. Please try again.",
   "recognizedItems": "Recognized Items",
-  "fullTextView": "Full Text View"
+  "fullTextView": "Full Text View",
+  "newItemBadge": "(new)"
 }

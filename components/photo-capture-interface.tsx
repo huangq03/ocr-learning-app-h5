@@ -13,6 +13,71 @@ import { useRouter } from "next/navigation"
 import { useTranslation } from 'react-i18next';
 import '@/i18n'; // Initialize i18n
 
+// --- HELPER COMPONENTS & FUNCTIONS ---
+
+const enrichOcrResult = (result: Omit<OCRResult, 'newlyFoundItems'>): OCRResult => {
+  const { cleaned_text, items } = result;
+
+  // Create a Set of existing items for quick, case-insensitive lookup.
+  const existingItemsSet = new Set(items.map(item => item.toLowerCase()));
+
+  // Split text into lines to process them individually.
+  const lines = cleaned_text.split('\n');
+  const newlyFoundPhrases: string[] = [];
+
+  for (const line of lines) {
+    // Find sequences of English words and spaces, which constitute phrases.
+    const potentialPhrases = line.match(/([a-zA-Z'-]+\s*)+/g) || [];
+
+    for (const phrase of potentialPhrases) {
+      const trimmedPhrase = phrase.trim();
+
+      // Basic filtering: ignore short or trivial phrases.
+      if (trimmedPhrase.length <= 2) continue;
+
+      // Check if the exact phrase already exists as an item.
+      if (!existingItemsSet.has(trimmedPhrase.toLowerCase())) {
+        newlyFoundPhrases.push(trimmedPhrase);
+      }
+    }
+  }
+
+  // Remove duplicates and combine with original items.
+  const uniqueNewItems = [...new Set(newlyFoundPhrases)];
+  const allItems = [...items, ...uniqueNewItems].sort((a, b) => a.localeCompare(b));
+
+  return {
+    cleaned_text,
+    items: allItems,
+    newlyFoundItems: uniqueNewItems,
+  };
+};
+
+const HighlightedText = ({ text, wordsToHighlight }: { text: string; wordsToHighlight: string[] }) => {
+  if (!wordsToHighlight || wordsToHighlight.length === 0) {
+    return <p className="text-sm text-gray-700 whitespace-pre-wrap">{text}</p>;
+  }
+
+  const regex = new RegExp(`(${wordsToHighlight.join('|')})`, 'gi');
+  const parts = text.split(regex);
+
+  return (
+    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+      {parts.map((part, index) =>
+        wordsToHighlight.some(word => word.toLowerCase() === part.toLowerCase()) ? (
+          <mark key={index} className="bg-yellow-200 rounded-sm px-1 mx-px">
+            {part}
+          </mark>
+        ) : (
+          <span key={index}>{part}</span>
+        )
+      )}
+    </p>
+  );
+};
+
+// --- MAIN COMPONENT ---
+
 interface PhotoCaptureInterfaceProps {
   user: User
 }
@@ -20,6 +85,7 @@ interface PhotoCaptureInterfaceProps {
 interface OCRResult {
   cleaned_text: string
   items: string[]
+  newlyFoundItems?: string[]
 }
 
 type CaptureStatus = "idle" | "capturing" | "processing" | "animating" | "confirming" | "saving"
@@ -90,11 +156,13 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       }
 
       const ocrData = await ocrResponse.json()
-      setOcrResult({ cleaned_text: ocrData.cleaned_text || "", items: ocrData.items || [] })
+      const initialResult = { cleaned_text: ocrData.cleaned_text || "", items: ocrData.items || [] };
+      const enrichedResult = enrichOcrResult(initialResult);
+      
+      setOcrResult(enrichedResult)
       setStatus("animating")
 
-      // Animation sequence
-      setTimeout(() => setStatus("confirming"), 2000) // Total animation time
+      setTimeout(() => setStatus("confirming"), 2000)
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errorOcrFailed'))
       setStatus("idle")
@@ -272,7 +340,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                     <Card className="h-full w-full bg-white/80 backdrop-blur-sm">
                       <CardContent className="p-3">
                         <ScrollArea className="h-[240px]">
-                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{ocrResult.cleaned_text}</p>
+                          <HighlightedText text={ocrResult.cleaned_text} wordsToHighlight={ocrResult.newlyFoundItems || []} />
                         </ScrollArea>
                       </CardContent>
                     </Card>
@@ -283,8 +351,11 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                         <ScrollArea className="h-[240px]">
                           <ul className="space-y-1">
                             {ocrResult.items.map((item, index) => (
-                              <li key={index} className="bg-purple-50/90 p-2 rounded-md text-purple-900 text-xs shadow-sm">
-                                {item}
+                              <li key={index} className="bg-purple-50/90 p-2 rounded-md text-purple-900 text-xs shadow-sm flex justify-between items-center">
+                                <span>{item}</span>
+                                {ocrResult.newlyFoundItems?.includes(item) && (
+                                  <span className="text-green-600 font-semibold text-xs">{t('newItemBadge')}</span>
+                                )}
                               </li>
                             ))}
                             {ocrResult.items.length === 0 && <p className="text-gray-500 text-center text-xs p-2">{t('noItemsRecognized')}</p>}

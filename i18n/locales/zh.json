@@ -22,5 +22,6 @@
   "errorOcrFailed": "文本识别失败。",
   "errorSaveFailed": "保存文档失败。请重试。",
   "recognizedItems": "识别出的项目",
-  "fullTextView": "全文预览"
+  "fullTextView": "全文预览",
+  "newItemBadge": "(新)"
 }
