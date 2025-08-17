@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Camera, BookOpen, Brain, Trophy, Calendar, Plus, ArrowRight, Clock, Keyboard } from "lucide-react"
+import { Camera, BookOpen, Brain, Trophy, Calendar, Plus, ArrowRight, Clock, Keyboard, FileText } from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 
+// This interface no longer needs totalDocuments, as it's passed via props
 interface DashboardStats {
-  totalDocuments: number
   totalItems: number
   itemsDue: number
   masteredItems: number
@@ -20,19 +20,23 @@ interface DashboardStats {
 
 interface RecentDocument {
   id: string
-  title: string
   created_at: string
-  image_url: string
+  file_path: string | null
+  recognized_text: {
+    cleaned_text?: string
+  } | null
 }
 
+// Props now include the live totalDocuments count from the server
 interface DashboardInterfaceProps {
   user: User
+  totalDocuments: number
 }
 
-export default function DashboardInterface({ user }: DashboardInterfaceProps) {
+export default function DashboardInterface({ user, totalDocuments }: DashboardInterfaceProps) {
   const router = useRouter()
+  // totalDocuments is removed from the initial state here
   const [stats, setStats] = useState<DashboardStats>({
-    totalDocuments: 0,
     totalItems: 0,
     itemsDue: 0,
     masteredItems: 0,
@@ -45,14 +49,14 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch user progress
+        // Fetch user progress (we no longer need total_documents from here)
         const { data: userProgress } = await supabase.from("user_progress").select("*").eq("user_id", user.id).single()
 
         // Fetch items due today
         const today = new Date().toISOString().split("T")[0]
         const { data: dueItems } = await supabase
           .from("spaced_repetition_schedule")
-          .select("id")
+          .select("id", { count: 'exact', head: true })
           .eq("user_id", user.id)
           .eq("is_active", true)
           .lte("next_review_date", today)
@@ -60,7 +64,7 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
         // Fetch mastered items
         const { data: masteredItems } = await supabase
           .from("spaced_repetition_schedule")
-          .select("id")
+          .select("id", { count: 'exact', head: true })
           .eq("user_id", user.id)
           .gte("ease_factor", 2.5)
           .gte("repetition_number", 3)
@@ -68,13 +72,13 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
         // Fetch recent documents
         const { data: documents } = await supabase
           .from("documents")
-          .select("id, title, created_at, image_url")
+          .select("id, created_at, file_path, recognized_text")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(3)
 
+        // Set stats, omitting totalDocuments as it comes from props
         setStats({
-          totalDocuments: userProgress?.total_documents || 0,
           totalItems: userProgress?.total_text_items || 0,
           itemsDue: dueItems?.length || 0,
           masteredItems: masteredItems?.length || 0,
@@ -125,8 +129,20 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
           </Button>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats Grid - Now using totalDocuments from props */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          <Card className="p-4 bg-white shadow-lg border-0">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileText className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-blue-800">{totalDocuments}</div>
+                <div className="text-sm text-blue-600">Documents</div>
+              </div>
+            </div>
+          </Card>
+
           <Card className="p-4 bg-white shadow-lg border-0">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -264,21 +280,24 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
           <Card className="p-6 bg-white shadow-lg border-0">
             <h3 className="text-xl font-bold text-purple-800 mb-4">Recent Documents</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {recentDocuments.map((doc) => (
-                <div key={doc.id} onClick={() => router.push(`/documents/${doc.id}`)} className="cursor-pointer group">
-                  <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden mb-3 group-hover:shadow-md transition-shadow">
-                    <img
-                      src={doc.image_url || "/placeholder.svg"}
-                      alt={doc.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                    />
+              {recentDocuments.map((doc) => {
+                const title = doc.recognized_text?.cleaned_text?.substring(0, 50) || "Untitled Document";
+                return (
+                  <div key={doc.id} onClick={() => router.push(`/documents/${doc.id}`)} className="cursor-pointer group">
+                    <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden mb-3 group-hover:shadow-md transition-shadow">
+                      <img
+                        src={doc.file_path || "/placeholder.svg"}
+                        alt={title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
+                    <h4 className="font-medium text-gray-800 group-hover:text-purple-600 transition-colors truncate">
+                      {title}
+                    </h4>
+                    <p className="text-sm text-gray-500">{new Date(doc.created_at).toLocaleDateString()}</p>
                   </div>
-                  <h4 className="font-medium text-gray-800 group-hover:text-purple-600 transition-colors">
-                    {doc.title}
-                  </h4>
-                  <p className="text-sm text-gray-500">{new Date(doc.created_at).toLocaleDateString()}</p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </Card>
         )}

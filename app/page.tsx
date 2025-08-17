@@ -1,10 +1,8 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import PhotoCaptureInterface from "@/components/photo-capture-interface"
 import DashboardInterface from "@/components/dashboard-interface"
 
 export default async function Home() {
-  // If Supabase is not configured, show setup message
   if (!isSupabaseConfigured) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -13,23 +11,24 @@ export default async function Home() {
     )
   }
 
-  // Get the user from the server
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // If no user, redirect to login
   if (!user) {
     redirect("/auth/login")
   }
 
-  // Check if user has any documents
-  const { data: documents } = await supabase.from("documents").select("id").eq("user_id", user.id).limit(1)
+  // Fetch the live document count directly.
+  const { count: totalDocuments, error: countError } = await supabase
+    .from('documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-lavender-50">
-      <DashboardInterface user={user} />
+      <DashboardInterface user={user} totalDocuments={totalDocuments || 0} />
     </div>
   )
 }

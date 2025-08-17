@@ -1,81 +1,90 @@
-# Multi-Cloud OCR Service API
+# OCR Learning App
 
-This project is a Next.js API that provides a unified interface for performing Optical Character Recognition (OCR) and subsequent cleanup using Large Language Models (LLMs). It allows you to easily switch between a local Tesseract.js engine and various major cloud-based services to compare results and choose the best provider for your needs.
+This is a full-stack web application built with Next.js that allows users to capture text from images, create study lists from that text, and practice using interactive study sessions. It's designed to help users quickly turn physical documents or screenshots into digital learning materials.
 
 ## Features
 
-- **Unified API:** A single `/api/ocr` endpoint for all services.
-- **Dynamic Service Selection:** Choose your OCR engine and LLM cleanup service on a per-request basis.
-- **Automatic Orientation Correction:** For the local Tesseract engine, the API automatically detects text orientation and rotates the image for improved accuracy.
-- **Multi-language Support:** Configured for both English and Simplified Chinese.
+- **Document Capture**: Upload images or use the device camera to capture documents.
+- **OCR Processing**: Extracts text from images using a backend OCR engine.
+- **Smart Item Detection**: Intelligently scans the extracted text to find and suggest potential items (words and phrases) for study, highlighting them for review.
+- **Interactive Approval**: Users can click on highlighted text or use an "Add" button to approve suggested items and build their study list.
+- **Study Session Creation**: Users can select which items from a document they want to study.
+- **Multiple Study Modes**:
+  - **Recitation**: A flashcard-style mode for reading and reviewing items.
+  - **Dictation**: An interactive mode that uses browser speech synthesis to read items aloud for spelling and listening practice.
+- **Dashboard**: An overview of user statistics, including total documents, total items, and recent activity.
+- **Internationalization (i18n)**: Full support for English and Chinese, switchable at runtime.
 
-### Supported OCR Services
+## Tech Stack
 
-- **Local:**
-  - Tesseract.js (`tesseract`) - *Default*
-- **Western Cloud Providers:**
-  - Google Cloud Vision (`google`)
-  - Microsoft Azure Computer Vision (`azure`)
-  - Amazon Web Services (AWS) Textract (`aws`)
-- **Chinese Cloud Providers:**
-  - Aliyun (Alibaba Cloud) (`aliyun`)
-  - Baidu Cloud (`baidu`)
-  - Tencent Cloud (`tencent`)
-
-### Supported LLM Cleanup Services
-
-- Google Gemini (`gemini`) - *Default*
-- OpenAI (`openai`)
-- Qwen (Aliyun) (`qwen`)
-- DeepSeek (`deepseek`)
-- Doubao (`doubao`)
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Backend & DB**: [Supabase](https://supabase.com/) (Authentication, Postgres Database, Storage)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Internationalization**: [react-i18next](https://react.i18next.com/)
 
 ## Setup and Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository_url>
-   cd <project_directory>
-   ```
+### 1. Prerequisites
 
-2. **Install dependencies:**
-   This project uses `pnpm` as the package manager.
-   ```bash
-   pnpm install
-   ```
+- [Node.js](https://nodejs.org/en) (v18 or later)
+- [pnpm](https://pnpm.io/) (or npm/yarn)
 
-3. **Configure Environment Variables:**
-   Copy the `.env.example` file to a new file named `.env.local`:
-   ```bash
-   cp .env.example .env.local
-   ```
-   Open `.env.local` and fill in the necessary API credentials for the cloud services you wish to use. See the `.env.example` file for the full list of required variables.
-
-4. **Run the development server:**
-   ```bash
-   next dev
-   ```
-
-## API Usage
-
-Make a `POST` request to the `/api/ocr` endpoint with `multipart/form-data`.
-
-### Parameters
-
-- `file`: The image file you want to process.
-- `service` (optional): The OCR engine to use. Defaults to `tesseract`.
-- `cleanup` (optional): Set to `true` to enable LLM cleanup of the OCR output.
-- `llm_service` (optional): The LLM engine to use for cleanup. Defaults to `gemini`. Possible values are `gemini`, `openai`, `qwen`, `deepseek`, `doubao`.
-
-### Example Request with `curl`
+### 2. Clone the Repository
 
 ```bash
-# Using the default Tesseract engine
-curl -X POST -F "file=@/path/to/your/image.png" http://localhost:3000/api/ocr
-
-# Using Google Cloud Vision with Gemini cleanup
-curl -X POST -F "file=@/path/to/your/image.png" -F "service=google" -F "cleanup=true" -F "llm_service=gemini" http://localhost:3000/api/ocr
-
-# Using Tesseract with OpenAI cleanup
-curl -X POST -F "file=@/path/to/your/image.png" -F "cleanup=true" -F "llm_service=openai" http://localhost:3000/api/ocr
+git clone <repository_url>
+cd ocr-learning-app
 ```
+
+### 3. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 4. Set up Supabase
+
+1.  **Create a Supabase Project**: Go to [supabase.com](https://supabase.com), create a new project, and save your project's URL and `anon` key.
+2.  **Configure Environment Variables**: Create a new file named `.env.local` in the root of the project by copying the example file:
+    ```bash
+    cp .env.example .env.local
+    ```
+3.  **Add Supabase Keys**: Open `.env.local` and add your Supabase project URL and anon key:
+    ```
+    NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+    ```
+
+### 5. Set up Database Schema
+
+This is a critical step. You must run the SQL scripts in the `/scripts` directory in the correct order to set up your database tables, storage, and functions.
+
+Navigate to the **SQL Editor** in your Supabase project dashboard and run the contents of the following files **one by one, in this specific order**:
+
+1.  `scripts/001_create_initial_schema.sql`
+2.  `scripts/002_create_storage_bucket.sql`
+3.  `scripts/003_create_functions_and_triggers.sql`
+4.  `scripts/004_create_app_tables.sql`
+5.  `scripts/005_create_progress_table.sql`
+
+After running these scripts, your database will be ready.
+
+## Running the Application
+
+To start the development server, run:
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+## Project Structure
+
+- `/app`: Contains the pages of the application, following the Next.js App Router structure.
+- `/components`: Contains all React components, including UI components from shadcn/ui.
+- `/lib`: Contains helper functions, Supabase client configurations, and type definitions.
+- `/scripts`: Contains all the SQL scripts needed to initialize the database schema.
+- `/i18n`: Contains the configuration and locale files for internationalization.
