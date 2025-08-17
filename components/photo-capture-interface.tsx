@@ -17,8 +17,7 @@ interface PhotoCaptureInterfaceProps {
 
 interface OCRResult {
   cleaned_text: string
-  key_phrases: string[]
-  sentences: string[]
+  items: string[]
 }
 
 export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfaceProps) {
@@ -101,8 +100,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
 
       const result: OCRResult = {
         cleaned_text: ocrData.cleaned_text || '',
-        key_phrases: ocrData.key_phrases || [],
-        sentences: ocrData.sentences || []
+        items: ocrData.items || [],
       }
 
       setOcrResult(result)
