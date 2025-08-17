@@ -15,7 +15,8 @@ interface Document {
 }
 
 // Server Component that fetches data and passes it to the client component
-export default async function DocumentPage({ params }: { params: { id: string } }) {
+// Server Component that fetches data and passes it to the client component
+export default async function DocumentPage({ params: { id } }: { params: { id: string } }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -26,7 +27,7 @@ export default async function DocumentPage({ params }: { params: { id: string } 
   const { data: document, error } = await supabase
     .from('documents')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', user.id)
     .single();
 
