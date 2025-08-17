@@ -1,80 +1,161 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { supabase } from "@/lib/supabase/client"
-import type { User } from "@supabase/supabase-js"
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
+import { BarChart, Smile, Meh, Frown, Angry } from 'lucide-react';
+
+// SM-2 Algorithm Implementation
+const calculateSm2 = (item: any, quality: number) => {
+    let { repetition_number, ease_factor, interval_days } = item;
+
+    if (quality < 3) {
+        repetition_number = 0;
+        interval_days = 1;
+    } else {
+        if (repetition_number === 0) {
+            interval_days = 1;
+        } else if (repetition_number === 1) {
+            interval_days = 6;
+        } else {
+            interval_days = Math.round(interval_days * ease_factor);
+        }
+        repetition_number += 1;
+    }
+
+    ease_factor = ease_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+    if (ease_factor < 1.3) {
+        ease_factor = 1.3;
+    }
+
+    const next_review_date = new Date();
+    next_review_date.setDate(next_review_date.getDate() + interval_days);
+
+    return {
+        repetition_number,
+        ease_factor,
+        interval_days,
+        next_review_date: next_review_date.toISOString().split('T')[0],
+        last_reviewed_at: new Date().toISOString(),
+        quality_score: quality,
+    };
+};
 
 interface StudyInterfaceProps {
-  user: User
-  dueItems: any[]
+    initialItems: any[];
+    user: User;
 }
 
-export default function StudyInterface({ user, dueItems }: StudyInterfaceProps) {
-  const [reviews, setReviews] = useState(dueItems)
-  const [currentReviewIndex, setCurrentReviewIndex] = useState(0)
+interface SessionStats {
+    again: number;
+    hard: number;
+    good: number;
+    easy: number;
+}
 
-  const handleReview = useCallback(async (ease: "easy" | "good" | "hard") => {
-    const currentReview = reviews[currentReviewIndex]
-    if (!currentReview) return
+export default function StudyInterface({ initialItems, user }: StudyInterfaceProps) {
+    const router = useRouter();
+    const [items, setItems] = useState(initialItems);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isFlipped, setIsFlipped] = useState(false);
+    const [showSummary, setShowSummary] = useState(false);
+    const [sessionStats, setSessionStats] = useState<SessionStats>({ again: 0, hard: 0, good: 0, easy: 0 });
 
-    let newIntervalDays: number
-    let newEaseFactor: number
+    const handleFlip = () => setIsFlipped(true);
 
-    if (ease === "easy") {
-      newIntervalDays = currentReview.interval_days * 4
-      newEaseFactor = currentReview.ease_factor + 0.15
-    } else if (ease === "good") {
-      newIntervalDays = currentReview.interval_days * currentReview.ease_factor
-      newEaseFactor = currentReview.ease_factor
-    } else { // hard
-      newIntervalDays = Math.max(1, currentReview.interval_days / 2)
-      newEaseFactor = Math.max(1.3, currentReview.ease_factor - 0.2)
+    const handleRating = async (quality: number) => {
+        const currentItem = items[currentIndex];
+        const updatedSchedule = calculateSm2(currentItem, quality);
+
+        // Update stats
+        if (quality === 0) setSessionStats(prev => ({ ...prev, again: prev.again + 1 }));
+        else if (quality === 3) setSessionStats(prev => ({ ...prev, hard: prev.hard + 1 }));
+        else if (quality === 4) setSessionStats(prev => ({ ...prev, good: prev.good + 1 }));
+        else if (quality === 5) setSessionStats(prev => ({ ...prev, easy: prev.easy + 1 }));
+
+        const { error } = await supabase
+            .from('spaced_repetition_schedule')
+            .update(updatedSchedule)
+            .eq('id', currentItem.id);
+
+        if (error) {
+            console.error('Error updating schedule:', error);
+        } else {
+            if (currentIndex < items.length - 1) {
+                setCurrentIndex(currentIndex + 1);
+                setIsFlipped(false);
+            } else {
+                setShowSummary(true);
+            }
+        }
+    };
+
+    if (items.length === 0) {
+        return (
+            <div className="text-center p-8">
+                <h2 className="text-2xl font-bold mb-4">No items due for review today!</h2>
+                <p className="text-gray-600 mb-6">Great job staying on top of your studies.</p>
+                <Button onClick={() => router.push('/')}>Back to Dashboard</Button>
+            </div>
+        );
     }
 
-    const newDueDate = new Date(Date.now() + newIntervalDays * 24 * 60 * 60 * 1000)
-
-    const { error } = await supabase
-      .from("reviews")
-      .update({
-        due_date: newDueDate.toISOString(),
-        last_reviewed_at: new Date().toISOString(),
-        interval_days: newIntervalDays,
-        ease_factor: newEaseFactor,
-      })
-      .eq("id", currentReview.id)
-
-    if (error) {
-      console.error("Failed to update review:", error)
-    } else {
-      setCurrentReviewIndex(currentReviewIndex + 1)
+    if (showSummary) {
+        return (
+            <div className="p-4 max-w-2xl mx-auto">
+                <Card className="p-6 text-center">
+                    <h2 className="text-3xl font-bold mb-4 text-purple-700">Session Complete!</h2>
+                    <p className="text-gray-600 mb-6">You reviewed {items.length} items in this session.</p>
+                    <div className="flex justify-around my-6">
+                        <div className="flex flex-col items-center"><Angry className="w-8 h-8 text-red-500" /><span>{sessionStats.again} Again</span></div>
+                        <div className="flex flex-col items-center"><Frown className="w-8 h-8 text-orange-500" /><span>{sessionStats.hard} Hard</span></div>
+                        <div className="flex flex-col items-center"><Meh className="w-8 h-8 text-yellow-500" /><span>{sessionStats.good} Good</span></div>
+                        <div className="flex flex-col items-center"><Smile className="w-8 h-8 text-green-500" /><span>{sessionStats.easy} Easy</span></div>
+                    </div>
+                    <Button onClick={() => router.push('/')}>Back to Dashboard</Button>
+                </Card>
+            </div>
+        );
     }
-  }, [reviews, currentReviewIndex])
 
-  if (reviews.length === 0) {
-    return <p>No reviews due today.</p>
-  }
+    const currentItem = items[currentIndex];
+    const progress = ((currentIndex + 1) / items.length) * 100;
 
-  if (currentReviewIndex >= reviews.length) {
-    return <p>All reviews completed for today!</p>
-  }
-
-  const currentReview = reviews[currentReviewIndex]
-
-  return (
-    <div className="p-4">
-      <Card className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Study Session</h2>
-        <div className="text-center text-3xl font-bold my-8">
-          {currentReview.text_items.content}
+    return (
+        <div className="p-4 max-w-2xl mx-auto">
+            <Card className="w-full">
+                <CardHeader>
+                    <CardTitle>Study Session</CardTitle>
+                    <Progress value={progress} className="mt-2" />
+                </CardHeader>
+                <CardContent className="min-h-[200px] flex items-center justify-center text-center">
+                    {!isFlipped ? (
+                        <p className="text-3xl font-bold">{currentItem.text_items.content}</p>
+                    ) : (
+                        <div>
+                            <p className="text-2xl font-bold mb-2">{currentItem.text_items.content}</p>
+                            <p className="text-lg text-gray-600">{currentItem.text_items.context}</p>
+                            <p className="text-md text-gray-500 italic">{currentItem.text_items.user_definition}</p>
+                        </div>
+                    )}
+                </CardContent>
+                <CardFooter className="flex flex-col items-center">
+                    {!isFlipped ? (
+                        <Button onClick={handleFlip}>Show Answer</Button>
+                    ) : (
+                        <div className="flex justify-around w-full">
+                            <Button variant="destructive" onClick={() => handleRating(0)}>Again</Button>
+                            <Button variant="outline" onClick={() => handleRating(3)}>Hard</Button>
+                            <Button variant="outline" onClick={() => handleRating(4)}>Good</Button>
+                            <Button onClick={() => handleRating(5)}>Easy</Button>
+                        </div>
+                    )}
+                </CardFooter>
+            </Card>
         </div>
-        <div className="flex justify-around">
-          <Button onClick={() => handleReview("hard")} variant="destructive">Hard</Button>
-          <Button onClick={() => handleReview("good")}>Good</Button>
-          <Button onClick={() => handleReview("easy")} className="bg-green-500">Easy</Button>
-        </div>
-      </Card>
-    </div>
-  )
+    );
 }
