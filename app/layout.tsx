@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
-import { ThemeProvider } from "@/components/theme-provider"
-import SiteHeader from "@/components/site-header"
 import { Providers } from "./providers"
 
 export const metadata: Metadata = {
@@ -28,19 +26,7 @@ html {
         `}</style>
       </head>
       <body>
-        <Providers>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <div className="relative flex min-h-screen flex-col">
-              <SiteHeader />
-              <main className="flex-1">{children}</main>
-            </div>
-          </ThemeProvider>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
