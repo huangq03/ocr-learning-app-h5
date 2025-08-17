@@ -38,6 +38,7 @@ export default function DocumentManagementPage() {
         .from('documents')
         .select('*')
         .eq('user_id', user.id)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -51,41 +52,22 @@ export default function DocumentManagementPage() {
     getUserAndDocuments();
   }, [router, supabase]);
 
-  const handleDelete = async (documentId: string, filePath: string) => {
+  const handleDelete = async (documentId: string) => {
     if (!user) return;
-    if (!confirm('Are you sure you want to delete this document permanently?')) {
+    if (!confirm('Are you sure you want to delete this document?')) {
       return;
     }
 
-    // Extract the file name from the full URL path
-    const fileName = filePath.split('/').pop();
-    if (!fileName) {
-        alert("Could not determine file name to delete.");
-        return;
-    }
-
-    // 1. Delete from storage
-    const { error: storageError } = await supabase.storage
+    const { error } = await supabase
       .from('documents')
-      .remove([`${user.id}/${fileName}`]);
+      .update({ is_deleted: true })
+      .eq('id', documentId)
+      .eq('user_id', user.id);
 
-    if (storageError) {
-      console.error('Error deleting file from storage:', storageError);
-      alert('Failed to delete the document file. Please try again.');
-      return;
-    }
-
-    // 2. Delete from database
-    const { error: dbError } = await supabase
-      .from('documents')
-      .delete()
-      .eq('id', documentId);
-
-    if (dbError) {
-      console.error('Error deleting document from database:', dbError);
-      alert('Failed to delete the document record. Please try again.');
+    if (error) {
+      console.error('Error soft-deleting document:', error);
+      alert('Failed to delete the document. Please try again.');
     } else {
-      // Update UI
       setDocuments(documents.filter(doc => doc.id !== documentId));
     }
   };
@@ -129,7 +111,7 @@ export default function DocumentManagementPage() {
                 <Button variant="outline" size="sm" onClick={() => router.push(`/documents/${doc.id}`)}>
                   <Edit className="w-4 h-4 mr-2" /> Edit / Study
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(doc.id, doc.file_path)}>
+                <Button variant="destructive" size="sm" onClick={() => handleDelete(doc.id)}>
                   <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </Button>
               </div>
