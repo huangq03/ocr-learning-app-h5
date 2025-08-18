@@ -6,15 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BookOpen, Headphones, ArrowLeft } from 'lucide-react';
+import { BookOpen, Headphones, ArrowLeft, BrainCircuit } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
+import { supabase } from '@/lib/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Document {
   id: string;
   user_id: string;
   created_at: string;
-  file_path: string;
+  image_path: string;
   recognized_text: {
     items: string[];
     cleaned_text: string;
@@ -24,7 +26,9 @@ interface Document {
 export default function StudySessionCreator({ document }: { document: Document }) {
   const { t } = useTranslation();
   const router = useRouter();
+  const { toast } = useToast();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const allItems = document.recognized_text?.items || [];
 
   const handleToggleAll = (checked: boolean) => {
@@ -41,12 +45,34 @@ export default function StudySessionCreator({ document }: { document: Document }
 
   const handleStartSession = (type: 'recitation' | 'dictation') => {
     if (selectedItems.length === 0) {
-      alert(t('selectItemsAlert'));
+      toast({ title: t('selectItemsAlert'), variant: 'destructive' });
       return;
     }
     const studySession = { type, items: selectedItems, documentId: document.id };
     localStorage.setItem('studySession', JSON.stringify(studySession));
     router.push('/study');
+  };
+
+  const handleAddToStudyPlan = async () => {
+    if (selectedItems.length === 0) {
+      toast({ title: t('selectItemsAlert'), variant: 'destructive' });
+      return;
+    }
+    setIsLoading(true);
+    const { error } = await supabase.rpc('add_to_study_plan', {
+      p_user_id: document.user_id,
+      p_document_id: document.id,
+      p_items: selectedItems,
+    });
+
+    setIsLoading(false);
+    if (error) {
+      console.error('Error adding items to study plan:', error);
+      toast({ title: t('errorAddToStudyPlan'), description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: t('successAddToStudyPlan'), description: t('successAddToStudyPlanDesc', { count: selectedItems.length }) });
+      setSelectedItems([]);
+    }
   };
 
   return (
@@ -86,14 +112,18 @@ export default function StudySessionCreator({ document }: { document: Document }
                 </div>
               </ScrollArea>
             </div>
-            <div className="mt-6 flex flex-col sm:flex-row gap-4">
-              <Button onClick={() => handleStartSession('recitation')} className="flex-1 bg-blue-600 hover:bg-blue-700">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Button onClick={() => handleStartSession('recitation')} className="bg-blue-600 hover:bg-blue-700">
                 <BookOpen className="w-5 h-5 mr-2" />
                 {t('startRecitation')}
               </Button>
-              <Button onClick={() => handleStartSession('dictation')} className="flex-1 bg-purple-600 hover:bg-purple-700">
+              <Button onClick={() => handleStartSession('dictation')} className="bg-purple-600 hover:bg-purple-700">
                 <Headphones className="w-5 h-5 mr-2" />
                 {t('startDictation')}
+              </Button>
+              <Button onClick={handleAddToStudyPlan} disabled={isLoading} className="sm:col-span-2 bg-green-600 hover:bg-green-700">
+                <BrainCircuit className="w-5 h-5 mr-2" />
+                {isLoading ? t('addingToStudyPlan') : t('addToStudyPlan')}
               </Button>
             </div>
           </CardContent>

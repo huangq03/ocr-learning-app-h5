@@ -22,7 +22,7 @@ interface DashboardStats {
 interface RecentDocument {
   id: string
   created_at: string
-  file_path: string | null
+  image_path: string | null
   recognized_text: {
     cleaned_text?: string
   } | null
@@ -67,7 +67,7 @@ export default function DashboardInterface({ user, totalDocuments }: DashboardIn
 
         const { data: documents } = await supabase
           .from("documents")
-          .select("id, created_at, file_path, recognized_text")
+          .select("id, created_at, image_path, recognized_text")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(3)
@@ -155,7 +155,7 @@ export default function DashboardInterface({ user, totalDocuments }: DashboardIn
                 return (
                   <div key={doc.id} onClick={() => router.push(`/documents/${doc.id}`)} className="cursor-pointer group">
                     <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden mb-3 group-hover:shadow-md transition-shadow">
-                      <img src={doc.file_path || "/placeholder.svg"} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
+                      <img src={doc.image_path || "/placeholder.svg"} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
                     </div>
                     <h4 className="font-medium text-gray-800 group-hover:text-purple-600 transition-colors truncate">{title}</h4>
                     <p className="text-sm text-gray-500">{new Date(doc.created_at).toLocaleDateString()}</p>

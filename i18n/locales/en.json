@@ -70,5 +70,10 @@
   "loadingSession": "Loading study session...",
   "completionTitle": "🎉 Well Done!",
   "completionSubtitle": "You have completed your study session.",
-  "reviewDocumentButton": "Review Document"
+  "reviewDocumentButton": "Review Document",
+  "addToStudyPlan": "Add to Study Plan",
+  "addingToStudyPlan": "Adding to Study Plan...",
+  "errorAddToStudyPlan": "Error adding items to study plan",
+  "successAddToStudyPlan": "Items added to study plan",
+  "successAddToStudyPlanDesc": "{{count}} items have been added to your study plan."
 }

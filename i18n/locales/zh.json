@@ -70,5 +70,10 @@
   "loadingSession": "正在加载学习环节...",
   "completionTitle": "🎉 太棒了！",
   "completionSubtitle": "您已完成本次学习环节。",
-  "reviewDocumentButton": "回顾文档"
+  "reviewDocumentButton": "回顾文档",
+  "addToStudyPlan": "添加到学习计划",
+  "addingToStudyPlan": "正在添加到学习计划...",
+  "errorAddToStudyPlan": "添加到学习计划失败",
+  "successAddToStudyPlan": "已添加到学习计划",
+  "successAddToStudyPlanDesc": "{{count}} 个项目已添加到您的学习计划。"
 }

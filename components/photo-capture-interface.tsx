@@ -190,7 +190,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       const { data: publicUrlData } = supabase.storage.from("documents").getPublicUrl(fileName)
       const { data: documentData, error: dbError } = await supabase
         .from("documents")
-        .insert({ user_id: user.id, file_path: publicUrlData.publicUrl, recognized_text: { ...ocrResult, newlyFoundItems: undefined } })
+        .insert({ user_id: user.id, image_url: publicUrlData.publicUrl, image_path: fileName, recognized_text: { ...ocrResult, newlyFoundItems: undefined } })
         .select("id").single()
       if (dbError) throw dbError
       router.push(`/documents/${documentData.id}`)

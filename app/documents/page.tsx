@@ -12,7 +12,7 @@ import { Trash2, Edit, PlusCircle, ArrowLeft } from 'lucide-react';
 interface Document {
   id: string;
   created_at: string;
-  file_path: string;
+  image_path: string;
   recognized_text: {
     items: string[];
     cleaned_text: string;
@@ -95,7 +95,7 @@ export default function DocumentManagementPage() {
           {documents.map(doc => (
             <Card key={doc.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <img 
-                src={doc.file_path}
+                src={doc.image_path}
                 alt="Document thumbnail"
                 className="w-full sm:w-32 h-auto sm:h-24 object-cover rounded-md border"
               />

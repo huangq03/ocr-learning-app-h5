@@ -8,32 +8,21 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE documents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    title VARCHAR(255),
     image_url TEXT NOT NULL, -- URL to the stored image in Supabase Storage
     image_path TEXT NOT NULL, -- Path in storage bucket
     file_size INTEGER,
     mime_type VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Extracted text table - stores OCR results from documents
-CREATE TABLE extracted_texts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
-    raw_text TEXT NOT NULL, -- Full extracted text from OCR
-    confidence_score DECIMAL(5,4), -- OCR confidence level (0-1)
-    language_code VARCHAR(10) DEFAULT 'en', -- Detected language
-    processing_status VARCHAR(20) DEFAULT 'pending', -- pending, processing, completed, failed
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    recognized_text JSONB, -- Store OCR results directly in the document
+    is_deleted BOOLEAN DEFAULT false NOT NULL
 );
 
 -- Text items table - stores user-selected words, phrases, strings for learning
 CREATE TABLE text_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    extracted_text_id UUID NOT NULL REFERENCES extracted_texts(id) ON DELETE CASCADE,
+    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     content TEXT NOT NULL, -- The selected text (word, phrase, or string)
     item_type VARCHAR(20) NOT NULL CHECK (item_type IN ('word', 'phrase', 'sentence')),
     start_position INTEGER, -- Position in original text where selection starts
@@ -42,7 +31,8 @@ CREATE TABLE text_items (
     user_definition TEXT, -- User's custom definition or notes
     difficulty_level INTEGER DEFAULT 1 CHECK (difficulty_level BETWEEN 1 AND 5),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_text_item UNIQUE (user_id, document_id, content)
 );
 
 -- Spaced repetition schedule table - implements Ebbinghaus forgetting curve
@@ -79,8 +69,7 @@ CREATE TABLE dictation_exercises (
 
 -- User progress tracking table - overall learning statistics
 CREATE TABLE user_progress (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     total_documents INTEGER DEFAULT 0,
     total_text_items INTEGER DEFAULT 0,
     items_mastered INTEGER DEFAULT 0, -- Items with high ease factor
@@ -90,19 +79,15 @@ CREATE TABLE user_progress (
     total_study_time_minutes INTEGER DEFAULT 0,
     last_study_date DATE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create indexes for better query performance
 CREATE INDEX idx_documents_user_id ON documents(user_id);
 CREATE INDEX idx_documents_created_at ON documents(created_at DESC);
 
-CREATE INDEX idx_extracted_texts_document_id ON extracted_texts(document_id);
-CREATE INDEX idx_extracted_texts_status ON extracted_texts(processing_status);
-
 CREATE INDEX idx_text_items_user_id ON text_items(user_id);
-CREATE INDEX idx_text_items_extracted_text_id ON text_items(extracted_text_id);
+CREATE INDEX idx_text_items_document_id ON text_items(document_id);
 CREATE INDEX idx_text_items_type ON text_items(item_type);
 
 CREATE INDEX idx_spaced_repetition_user_id ON spaced_repetition_schedule(user_id);
@@ -115,7 +100,6 @@ CREATE INDEX idx_dictation_exercises_completed ON dictation_exercises(completed_
 
 -- Enable Row Level Security (RLS) for all tables
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE extracted_texts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE text_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spaced_repetition_schedule ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dictation_exercises ENABLE ROW LEVEL SECURITY;
@@ -123,16 +107,7 @@ ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies to ensure users can only access their own data
 CREATE POLICY "Users can only see their own documents" ON documents
-    FOR ALL USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can only see extracted texts from their documents" ON extracted_texts
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM documents 
-            WHERE documents.id = extracted_texts.document_id 
-            AND documents.user_id = auth.uid()
-        )
-    );
+    FOR ALL USING (auth.uid() = user_id AND is_deleted = false);
 
 CREATE POLICY "Users can only see their own text items" ON text_items
     FOR ALL USING (auth.uid() = user_id);

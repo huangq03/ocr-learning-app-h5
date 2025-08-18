@@ -15,10 +15,6 @@ CREATE TRIGGER update_documents_updated_at
     BEFORE UPDATE ON documents 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_extracted_texts_updated_at 
-    BEFORE UPDATE ON extracted_texts 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 CREATE TRIGGER update_text_items_updated_at 
     BEFORE UPDATE ON text_items 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
