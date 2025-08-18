@@ -93,5 +93,7 @@
   "paperModeMarkedComplete": "Marked as completed!",
   "autoMode": "Auto Mode",
   "autoModeTimeout": "Timeout:",
+  "autoModeCountdown": "Get ready...",
+  "startAutoSession": "Start Auto Session",
   "seconds": "seconds"
 }

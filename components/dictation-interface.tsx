@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { AutoModeSettings } from "@/components/auto-mode-settings"
+import { DictationModeSettings } from "@/components/dictation-mode-settings"
 import type { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase/client"
 import { BarChart, CheckCircle, XCircle, Volume2, HelpCircle, Timer } from "lucide-react"
@@ -72,22 +72,27 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([])
   const [showSummary, setShowSummary] = useState(false)
   const [startTime, setStartTime] = useState(Date.now())
-  const [mode, setMode] = useState<DictationMode>('typing') // New state for dictation mode
+  const [mode, setMode] = useState<DictationMode>('paper') // Default to paper mode
   const [paperInputChecked, setPaperInputChecked] = useState(false) // For paper mode verification
   
   // Auto mode states
-  const [autoMode, setAutoMode] = useState(false)
+  const [autoMode, setAutoMode] = useState(true) // Default to auto mode enabled
   const [timeoutValue, setTimeoutValue] = useState(5) // Default 5 seconds
   const [timeLeft, setTimeLeft] = useState(0)
+  const [countdown, setCountdown] = useState<number | null>(null) // Countdown before playing audio
+  const [autoSessionStarted, setAutoSessionStarted] = useState(false) // Track if auto session has started
   const autoTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const countdownRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     setStartTime(Date.now())
-    // Reset timer when changing items
-    if (autoMode) {
+    // Reset timer when changing items (skip first item as it's handled by the start button)
+    if (autoMode && autoSessionStarted && currentSelectionIndex > 0) {
       setTimeLeft(timeoutValue)
+      // Auto play with countdown when changing items in auto mode
+      autoPlayWithCountdown()
     }
-  }, [currentSelectionIndex, autoMode, timeoutValue])
+  }, [currentSelectionIndex, autoMode, autoSessionStarted, timeoutValue])
 
   const handleCheck = useCallback(() => {
     const currentSelection = selections[currentSelectionIndex]
@@ -175,10 +180,14 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   }
 
   const handleRestart = () => {
-    // Clear any existing timer
+    // Clear any existing timers
     if (autoTimerRef.current) {
       clearTimeout(autoTimerRef.current)
       autoTimerRef.current = null
+    }
+    if (countdownRef.current) {
+      clearTimeout(countdownRef.current)
+      countdownRef.current = null
     }
     
     setCurrentSelectionIndex(0)
@@ -191,6 +200,8 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     setPaperInputChecked(false) // Reset paper mode verification
     setAutoMode(false) // Reset auto mode
     setTimeLeft(0) // Reset timer
+    setCountdown(null) // Reset countdown
+    setAutoSessionStarted(false) // Reset auto session
   }
 
   const handleListen = () => {
@@ -201,6 +212,52 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     window.speechSynthesis.speak(utterance)
   }
 
+  // Auto play audio in auto mode with countdown
+  const autoPlayWithCountdown = () => {
+    if (!autoMode) return;
+    
+    // Clear any existing countdown
+    if (countdownRef.current) {
+      clearTimeout(countdownRef.current)
+      countdownRef.current = null
+    }
+    
+    // Start 3-second countdown
+    setCountdown(3)
+    countdownRef.current = setTimeout(() => {
+      setCountdown(2)
+      countdownRef.current = setTimeout(() => {
+        setCountdown(1)
+        countdownRef.current = setTimeout(() => {
+          setCountdown(null)
+          handleListen()
+        }, 1000)
+      }, 1000)
+    }, 1000)
+  }
+
+  // Start auto session
+  const startAutoSession = () => {
+    setAutoSessionStarted(true)
+    setStartTime(Date.now())
+    setTimeLeft(timeoutValue)
+    autoPlayWithCountdown()
+  }
+
+  // Reset auto session
+  const resetAutoSession = () => {
+    setAutoSessionStarted(false)
+    setCountdown(null)
+    if (countdownRef.current) {
+      clearTimeout(countdownRef.current)
+      countdownRef.current = null
+    }
+    if (autoTimerRef.current) {
+      clearTimeout(autoTimerRef.current)
+      autoTimerRef.current = null
+    }
+  }
+
   useEffect(() => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.getVoices()
@@ -209,14 +266,21 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
   // Initialize timeLeft when autoMode is enabled
   useEffect(() => {
-    if (autoMode && timeLeft === 0) {
+    if (autoMode && autoSessionStarted && timeLeft === 0) {
       setTimeLeft(timeoutValue)
     }
-  }, [autoMode, timeoutValue, timeLeft])
+  }, [autoMode, timeoutValue, timeLeft, autoSessionStarted])
+
+  // Reset auto session when auto mode is disabled
+  useEffect(() => {
+    if (!autoMode) {
+      resetAutoSession();
+    }
+  }, [autoMode]);
 
   // Auto mode timer effect
   useEffect(() => {
-    if (!autoMode || showSummary) return
+    if (!autoMode || showSummary || !autoSessionStarted) return
 
     if (timeLeft > 0) {
       autoTimerRef.current = setTimeout(() => {
@@ -225,6 +289,9 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     } else if (timeLeft === 0 && currentSelectionIndex < selections.length - 1) {
       // Auto advance to next item when timer reaches 0
       handleNext()
+    } else if (timeLeft === 0 && currentSelectionIndex === selections.length - 1) {
+      // For the last item, we still call handleNext to finish the session
+      handleNext()
     }
 
     return () => {
@@ -232,7 +299,19 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         clearTimeout(autoTimerRef.current)
       }
     }
-  }, [autoMode, timeLeft, currentSelectionIndex, selections.length, showSummary])
+  }, [autoMode, timeLeft, currentSelectionIndex, selections.length, showSummary, autoSessionStarted])
+
+  // Cleanup effect for countdown timer
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearTimeout(countdownRef.current)
+      }
+      if (autoTimerRef.current) {
+        clearTimeout(autoTimerRef.current)
+      }
+    }
+  }, [])
 
   if (selections.length === 0) {
     return <p className="text-center p-8">No text items available for dictation.</p>
@@ -298,11 +377,11 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   const currentSelection = selections[currentSelectionIndex]
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-2xl mx-auto relative">
       <Card className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">{t('dictationTitle')}</h2>
-          <AutoModeSettings 
+          <DictationModeSettings 
             autoMode={autoMode}
             setAutoMode={setAutoMode}
             timeoutValue={timeoutValue}
@@ -314,61 +393,111 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         </div>
         
         <p className="text-sm text-gray-500 mb-6">{t('itemCounter', { current: currentSelectionIndex + 1, total: selections.length })}</p>
-        <div className="text-center my-8 p-4 bg-purple-50 rounded-lg">
-          <Button onClick={handleListen} size="lg" variant="outline">
-            <Volume2 className="w-6 h-6 mr-2" />
-            {t('playSoundButton')}
-          </Button>
-          <p className="text-sm text-gray-500 mt-2">{t('clickToHearAudio')}</p>
-        </div>
-
-        {mode === 'typing' ? (
-          <>
-            <Textarea
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder={t('typeHerePlaceholder')}
-              className="mb-4 text-lg"
-              rows={4}
-              disabled={isCorrect === true || autoMode} // Disable in auto mode
-            />
-            {isCorrect !== null && (
-              <div className="mb-4 p-4 border rounded-lg bg-gray-50">
-                <h3 className="font-bold text-lg">{t('comparison')}</h3>
-                <p className="font-semibold text-gray-700">{t('originalText')} <span className="font-normal">{currentSelection.content}</span></p>
-                <p className="font-semibold text-gray-700">{t('yourInput')} <span className="font-normal">{userInput}</span></p>
+        
+        {/* Countdown overlay */}
+        {countdown !== null && (
+          <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+            <div className="bg-blue-500 rounded-full w-32 h-32 flex items-center justify-center shadow-lg">
+              <div className="text-4xl font-bold text-white">
+                {countdown}
               </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="mb-4 p-4 border rounded-lg bg-gray-50">
-              <h3 className="font-bold text-lg mb-2">{t('paperModeTitle')}</h3>
-              <p className="text-gray-700">
-                {t('paperModeInstructions')}
-              </p>
             </div>
-            {paperInputChecked && (
-              <div className="mb-4 p-4 border rounded-lg bg-green-50">
-                <CheckCircle className="w-5 h-5 text-green-500 inline mr-2" />
-                <span className="text-green-700">{t('paperModeCompleted')}</span>
-              </div>
+            <p className="absolute top-1/2 mt-24 text-gray-700 text-lg font-medium">{t('autoModeCountdown')}</p>
+          </div>
+        )}
+        
+        {/* Hide content during countdown in auto mode */}
+        {(!autoMode || autoSessionStarted || countdown === null) && (
+          <>
+            <div className="text-center my-8 p-4 bg-purple-50 rounded-lg">
+              <Button 
+                onClick={autoMode ? autoPlayWithCountdown : handleListen} 
+                size="lg" 
+                variant="outline"
+                disabled={countdown !== null || (autoMode && !autoSessionStarted)} // Disable during countdown or before starting auto session
+              >
+                <Volume2 className="w-6 h-6 mr-2" />
+                {t('playSoundButton')}
+              </Button>
+              <p className="text-sm text-gray-500 mt-2">{t('clickToHearAudio')}</p>
+            </div>
+
+            {mode === 'typing' ? (
+              <>
+                <Textarea
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  placeholder={t('typeHerePlaceholder')}
+                  className="mb-4 text-lg"
+                  rows={4}
+                  disabled={isCorrect === true || autoMode} // Disable in auto mode
+                />
+                {isCorrect !== null && (
+                  <div className="mb-4 p-4 border rounded-lg bg-gray-50">
+                    <h3 className="font-bold text-lg">{t('comparison')}</h3>
+                    <p className="font-semibold text-gray-700">{t('originalText')} <span className="font-normal">{currentSelection.content}</span></p>
+                    <p className="font-semibold text-gray-700">{t('yourInput')} <span className="font-normal">{userInput}</span></p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="mb-4 p-4 border rounded-lg bg-gray-50">
+                  <h3 className="font-bold text-lg mb-2">{t('paperModeTitle')}</h3>
+                  <p className="text-gray-700">
+                    {t('paperModeInstructions')}
+                  </p>
+                </div>
+                {paperInputChecked && (
+                  <div className="mb-4 p-4 border rounded-lg bg-green-50">
+                    <CheckCircle className="w-5 h-5 text-green-500 inline mr-2" />
+                    <span className="text-green-700">{t('paperModeCompleted')}</span>
+                  </div>
+                )}
+              </>
             )}
+
+            <div className="flex justify-around items-center">
+              {/* Show appropriate buttons based on mode */}
+              {autoMode ? (
+                !autoSessionStarted ? (
+                  // Show Start Auto Session button
+                  <Button onClick={startAutoSession} size="lg">
+                    {t('startAutoSession')}
+                  </Button>
+                ) : (
+                  // Show Mark as Completed and Finish buttons in auto mode with timer
+                  <>
+                    <div className="flex flex-col items-center">
+                      <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
+                        {t('markAsCompletedButton')}
+                      </Button>
+                      <p className="text-sm text-gray-500 mt-1">{timeLeft}s</p>
+                    </div>
+                    <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
+                      {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
+                    </Button>
+                  </>
+                )
+              ) : (
+                // Show regular buttons in manual mode
+                <>
+                  <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
+                    {mode === 'paper' ? t('markAsCompletedButton') : t('checkButton')}
+                  </Button>
+                  <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
+                    {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
+                  </Button>
+                </>
+              )}
+            </div>
           </>
         )}
-
-        <div className="flex justify-around items-center">
-          <Button onClick={handleCheck} size="lg" disabled={isCorrect === true || autoMode}>
-            {mode === 'paper' ? t('markAsCompletedButton') : t('checkButton')}
-          </Button>
-          <Button onClick={handleNext} disabled={isCorrect !== true && !autoMode} size="lg">
-            {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
-          </Button>
-        </div>
+        
         <div className="mt-4 h-6 text-center">
           {isCorrect === true && mode === 'typing' && <p className="text-green-500 font-bold">{t('correctFeedback')}</p>}
           {isCorrect === true && mode === 'paper' && <p className="text-green-500 font-bold">{t('paperModeMarkedComplete')}</p>}
-          {isCorrect === false && <p className="text-red-500 font-bold">{t('incorrectFeedback')}</p>}
+          {isCorrect === false && mode === 'typing' && <p className="text-red-500 font-bold">{t('incorrectFeedback')}</p>}
         </div>
       </Card>
     </div>
