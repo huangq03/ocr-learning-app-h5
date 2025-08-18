@@ -47,6 +47,8 @@ interface DictationInterfaceProps {
   textItems: any[]
 }
 
+type DictationMode = 'typing' | 'paper';
+
 interface SessionResult {
   text_item_id: string
   original_text: string
@@ -66,6 +68,8 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([])
   const [showSummary, setShowSummary] = useState(false)
   const [startTime, setStartTime] = useState(Date.now())
+  const [mode, setMode] = useState<DictationMode>('typing') // New state for dictation mode
+  const [paperInputChecked, setPaperInputChecked] = useState(false) // For paper mode verification
 
   useEffect(() => {
     setStartTime(Date.now())
@@ -75,30 +79,53 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     const currentSelection = selections[currentSelectionIndex]
     if (!currentSelection) return
 
-    setAttempts(prev => prev + 1)
-    if (userInput.trim().toLowerCase() === currentSelection.content.toLowerCase()) {
-      setIsCorrect(true)
+    if (mode === 'typing') {
+      setAttempts(prev => prev + 1)
+      if (userInput.trim().toLowerCase() === currentSelection.content.toLowerCase()) {
+        setIsCorrect(true)
+      } else {
+        setIsCorrect(false)
+      }
     } else {
-      setIsCorrect(false)
+      // In paper mode, we just mark it as checked
+      setPaperInputChecked(true)
+      setIsCorrect(true)
     }
-  }, [userInput, selections, currentSelectionIndex])
+  }, [userInput, selections, currentSelectionIndex, mode])
 
   const handleNext = async () => {
     const endTime = Date.now()
     const completionTime = Math.round((endTime - startTime) / 1000)
     const currentSelection = selections[currentSelectionIndex]
-    const isCorrectOnFirstTry = attempts === 1 && isCorrect
-    const characterAccuracy = calculateAccuracy(currentSelection.content, userInput.trim())
 
-    const result: SessionResult = {
-      text_item_id: currentSelection.id,
-      original_text: currentSelection.content,
-      user_input: userInput.trim(),
-      attempts: attempts,
-      is_correct_on_first_try: isCorrectOnFirstTry,
-      character_accuracy: characterAccuracy,
-      completion_time_seconds: completionTime,
+    let result: SessionResult;
+
+    if (mode === 'typing') {
+      const isCorrectOnFirstTry = attempts === 1 && isCorrect
+      const characterAccuracy = calculateAccuracy(currentSelection.content, userInput.trim())
+
+      result = {
+        text_item_id: currentSelection.id,
+        original_text: currentSelection.content,
+        user_input: userInput.trim(),
+        attempts: attempts,
+        is_correct_on_first_try: isCorrectOnFirstTry,
+        character_accuracy: characterAccuracy,
+        completion_time_seconds: completionTime,
+      }
+    } else {
+      // For paper mode, we don't have actual user input to compare
+      result = {
+        text_item_id: currentSelection.id,
+        original_text: currentSelection.content,
+        user_input: "[Written on paper]",
+        attempts: 1,
+        is_correct_on_first_try: true, // Assume correct for paper mode
+        character_accuracy: 100, // Assume 100% for paper mode
+        completion_time_seconds: completionTime,
+      }
     }
+
     setSessionResults([...sessionResults, result])
 
     await supabase.from("dictation_exercises").insert({
@@ -106,8 +133,8 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       text_item_id: result.text_item_id,
       target_text: result.original_text,
       user_input: result.user_input,
-      accuracy_score: characterAccuracy,
-      mistakes_count: attempts - 1,
+      accuracy_score: result.character_accuracy,
+      mistakes_count: mode === 'typing' ? attempts - 1 : 0,
       completion_time_seconds: completionTime,
       completed_at: new Date().toISOString(),
     })
@@ -117,6 +144,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       setUserInput("")
       setIsCorrect(null)
       setAttempts(0)
+      setPaperInputChecked(false) // Reset paper mode verification
     } else {
       setShowSummary(true)
     }
@@ -129,6 +157,8 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     setAttempts(0)
     setSessionResults([])
     setShowSummary(false)
+    setMode('typing') // Reset to default typing mode
+    setPaperInputChecked(false) // Reset paper mode verification
   }
 
   const handleListen = () => {
@@ -211,7 +241,20 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <Card className="p-6">
-        <h2 className="text-2xl font-bold mb-2">Dictation Practice</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Dictation Practice</h2>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">Mode:</span>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value as DictationMode)}
+              className="border rounded p-1 text-sm"
+            >
+              <option value="typing">Type</option>
+              <option value="paper">Paper</option>
+            </select>
+          </div>
+        </div>
         <p className="text-sm text-gray-500 mb-6">Item {currentSelectionIndex + 1} of {selections.length}</p>
         <div className="text-center my-8 p-4 bg-purple-50 rounded-lg">
           <Button onClick={handleListen} size="lg" variant="outline">
@@ -220,29 +263,54 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
           </Button>
           <p className="text-sm text-gray-500 mt-2">Click to hear the audio</p>
         </div>
-        <Textarea
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          placeholder="Type what you hear..."
-          className="mb-4 text-lg"
-          rows={4}
-          disabled={isCorrect === true}
-        />
-        {isCorrect !== null && (
-          <div className="mb-4 p-4 border rounded-lg bg-gray-50">
-            <h3 className="font-bold text-lg">Comparison</h3>
-            <p className="font-semibold text-gray-700">Original: <span className="font-normal">{currentSelection.content}</span></p>
-            <p className="font-semibold text-gray-700">Your input: <span className="font-normal">{userInput}</span></p>
-          </div>
+
+        {mode === 'typing' ? (
+          <>
+            <Textarea
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Type what you hear..."
+              className="mb-4 text-lg"
+              rows={4}
+              disabled={isCorrect === true}
+            />
+            {isCorrect !== null && (
+              <div className="mb-4 p-4 border rounded-lg bg-gray-50">
+                <h3 className="font-bold text-lg">Comparison</h3>
+                <p className="font-semibold text-gray-700">Original: <span className="font-normal">{currentSelection.content}</span></p>
+                <p className="font-semibold text-gray-700">Your input: <span className="font-normal">{userInput}</span></p>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="mb-4 p-4 border rounded-lg bg-gray-50">
+              <h3 className="font-bold text-lg mb-2">Paper Mode</h3>
+              <p className="text-gray-700">
+                Listen to the audio and write your answer on paper.
+                After writing, click "Check" to mark this item as completed.
+              </p>
+            </div>
+            {paperInputChecked && (
+              <div className="mb-4 p-4 border rounded-lg bg-green-50">
+                <CheckCircle className="w-5 h-5 text-green-500 inline mr-2" />
+                <span className="text-green-700">Marked as completed. You wrote your answer on paper.</span>
+              </div>
+            )}
+          </>
         )}
+ 
         <div className="flex justify-around items-center">
-          <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>Check</Button>
+          <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
+            {mode === 'paper' ? 'Mark as Completed' : 'Check'}
+          </Button>
           <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
             {currentSelectionIndex < selections.length - 1 ? "Next" : "Finish"}
           </Button>
         </div>
         <div className="mt-4 h-6 text-center">
-          {isCorrect === true && <p className="text-green-500 font-bold">Correct!</p>}
+          {isCorrect === true && mode === 'typing' && <p className="text-green-500 font-bold">Correct!</p>}
+          {isCorrect === true && mode === 'paper' && <p className="text-green-500 font-bold">Marked as completed!</p>}
           {isCorrect === false && <p className="text-red-500 font-bold">Incorrect. Please try again.</p>}
         </div>
       </Card>
