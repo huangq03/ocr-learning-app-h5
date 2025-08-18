@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import '@/i18n';
 
 interface DashboardStats {
+  totalDocuments: number
   totalItems: number
   itemsDue: number
   masteredItems: number
@@ -30,13 +31,13 @@ interface RecentDocument {
 
 interface DashboardInterfaceProps {
   user: User
-  totalDocuments: number
 }
 
-export default function DashboardInterface({ user, totalDocuments }: DashboardInterfaceProps) {
+export default function DashboardInterface({ user }: DashboardInterfaceProps) {
   const { t } = useTranslation();
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
+    totalDocuments: 0,
     totalItems: 0,
     itemsDue: 0,
     masteredItems: 0,
@@ -73,6 +74,7 @@ export default function DashboardInterface({ user, totalDocuments }: DashboardIn
           .limit(3)
 
         setStats({
+          totalDocuments: userProgress?.total_documents || 0,
           totalItems: userProgress?.total_text_items || 0,
           itemsDue: dueItemsCount || 0,
           masteredItems: masteredItemsCount || 0,
@@ -129,7 +131,7 @@ export default function DashboardInterface({ user, totalDocuments }: DashboardIn
                 <FileText className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-blue-800">{totalDocuments}</div>
+                <div className="text-2xl font-bold text-blue-800">{stats.totalDocuments}</div>
                 <div className="text-sm text-blue-600">{t('documentsLabel')}</div>
               </div>
             </div>
