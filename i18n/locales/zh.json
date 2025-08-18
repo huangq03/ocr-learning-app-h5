@@ -90,5 +90,8 @@
   "originalText": "原文:",
   "yourInput": "您的输入:",
   "paperModeTitle": "纸笔模式",
-  "paperModeMarkedComplete": "已标记为完成！"
+  "paperModeMarkedComplete": "已标记为完成！",
+  "autoMode": "自动模式",
+  "autoModeTimeout": "超时时间:",
+  "seconds": "秒"
 }

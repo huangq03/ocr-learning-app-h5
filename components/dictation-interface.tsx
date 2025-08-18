@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { AutoModeSettings } from "@/components/auto-mode-settings"
 import type { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase/client"
 import { BarChart, CheckCircle, XCircle, Volume2, HelpCircle, Timer } from "lucide-react"
@@ -73,10 +74,20 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   const [startTime, setStartTime] = useState(Date.now())
   const [mode, setMode] = useState<DictationMode>('typing') // New state for dictation mode
   const [paperInputChecked, setPaperInputChecked] = useState(false) // For paper mode verification
+  
+  // Auto mode states
+  const [autoMode, setAutoMode] = useState(false)
+  const [timeoutValue, setTimeoutValue] = useState(5) // Default 5 seconds
+  const [timeLeft, setTimeLeft] = useState(0)
+  const autoTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     setStartTime(Date.now())
-  }, [currentSelectionIndex])
+    // Reset timer when changing items
+    if (autoMode) {
+      setTimeLeft(timeoutValue)
+    }
+  }, [currentSelectionIndex, autoMode, timeoutValue])
 
   const handleCheck = useCallback(() => {
     const currentSelection = selections[currentSelectionIndex]
@@ -97,6 +108,12 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   }, [userInput, selections, currentSelectionIndex, mode])
 
   const handleNext = async () => {
+    // Clear any existing timer
+    if (autoTimerRef.current) {
+      clearTimeout(autoTimerRef.current)
+      autoTimerRef.current = null
+    }
+    
     const endTime = Date.now()
     const completionTime = Math.round((endTime - startTime) / 1000)
     const currentSelection = selections[currentSelectionIndex]
@@ -148,12 +165,22 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       setIsCorrect(null)
       setAttempts(0)
       setPaperInputChecked(false) // Reset paper mode verification
+      // Reset timer for next item
+      if (autoMode) {
+        setTimeLeft(timeoutValue)
+      }
     } else {
       setShowSummary(true)
     }
   }
 
   const handleRestart = () => {
+    // Clear any existing timer
+    if (autoTimerRef.current) {
+      clearTimeout(autoTimerRef.current)
+      autoTimerRef.current = null
+    }
+    
     setCurrentSelectionIndex(0)
     setUserInput("")
     setIsCorrect(null)
@@ -162,6 +189,8 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     setShowSummary(false)
     setMode('typing') // Reset to default typing mode
     setPaperInputChecked(false) // Reset paper mode verification
+    setAutoMode(false) // Reset auto mode
+    setTimeLeft(0) // Reset timer
   }
 
   const handleListen = () => {
@@ -177,6 +206,33 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       window.speechSynthesis.getVoices()
     }
   }, [])
+
+  // Initialize timeLeft when autoMode is enabled
+  useEffect(() => {
+    if (autoMode && timeLeft === 0) {
+      setTimeLeft(timeoutValue)
+    }
+  }, [autoMode, timeoutValue, timeLeft])
+
+  // Auto mode timer effect
+  useEffect(() => {
+    if (!autoMode || showSummary) return
+
+    if (timeLeft > 0) {
+      autoTimerRef.current = setTimeout(() => {
+        setTimeLeft(prev => prev - 1)
+      }, 1000)
+    } else if (timeLeft === 0 && currentSelectionIndex < selections.length - 1) {
+      // Auto advance to next item when timer reaches 0
+      handleNext()
+    }
+
+    return () => {
+      if (autoTimerRef.current) {
+        clearTimeout(autoTimerRef.current)
+      }
+    }
+  }, [autoMode, timeLeft, currentSelectionIndex, selections.length, showSummary])
 
   if (selections.length === 0) {
     return <p className="text-center p-8">No text items available for dictation.</p>
@@ -246,18 +302,17 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       <Card className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">{t('dictationTitle')}</h2>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">{t('dictationModeLabel')}</span>
-            <select
-              value={mode}
-              onChange={(e) => setMode(e.target.value as DictationMode)}
-              className="border rounded p-1 text-sm"
-            >
-              <option value="typing">{t('dictationModeType')}</option>
-              <option value="paper">{t('dictationModePaper')}</option>
-            </select>
-          </div>
+          <AutoModeSettings 
+            autoMode={autoMode}
+            setAutoMode={setAutoMode}
+            timeoutValue={timeoutValue}
+            setTimeoutValue={setTimeoutValue}
+            timeLeft={timeLeft}
+            mode={mode}
+            setMode={setMode}
+          />
         </div>
+        
         <p className="text-sm text-gray-500 mb-6">{t('itemCounter', { current: currentSelectionIndex + 1, total: selections.length })}</p>
         <div className="text-center my-8 p-4 bg-purple-50 rounded-lg">
           <Button onClick={handleListen} size="lg" variant="outline">
@@ -275,7 +330,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
               placeholder={t('typeHerePlaceholder')}
               className="mb-4 text-lg"
               rows={4}
-              disabled={isCorrect === true}
+              disabled={isCorrect === true || autoMode} // Disable in auto mode
             />
             {isCorrect !== null && (
               <div className="mb-4 p-4 border rounded-lg bg-gray-50">
@@ -303,10 +358,10 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         )}
 
         <div className="flex justify-around items-center">
-          <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
+          <Button onClick={handleCheck} size="lg" disabled={isCorrect === true || autoMode}>
             {mode === 'paper' ? t('markAsCompletedButton') : t('checkButton')}
           </Button>
-          <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
+          <Button onClick={handleNext} disabled={isCorrect !== true && !autoMode} size="lg">
             {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
           </Button>
         </div>

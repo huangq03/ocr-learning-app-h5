@@ -90,5 +90,8 @@
   "originalText": "Original:",
   "yourInput": "Your input:",
   "paperModeTitle": "Paper Mode",
-  "paperModeMarkedComplete": "Marked as completed!"
+  "paperModeMarkedComplete": "Marked as completed!",
+  "autoMode": "Auto Mode",
+  "autoModeTimeout": "Timeout:",
+  "seconds": "seconds"
 }
