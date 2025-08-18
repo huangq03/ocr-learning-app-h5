@@ -94,6 +94,7 @@
   "autoMode": "Auto Mode",
   "autoModeTimeout": "Timeout:",
   "autoModeCountdown": "Get ready...",
+  "autoModeInProgress": "Auto mode in progress",
   "startAutoSession": "Start Auto Session",
   "seconds": "seconds"
 }

@@ -198,12 +198,10 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     setAttempts(0)
     setSessionResults([])
     setShowSummary(false)
-    setMode('typing') // Reset to default typing mode
     setPaperInputChecked(false) // Reset paper mode verification
-    setAutoMode(false) // Reset auto mode
-    setTimeLeft(0) // Reset timer
-    setCountdown(null) // Reset countdown
     setAutoSessionStarted(false) // Reset auto session
+    setCountdown(null) // Reset countdown
+    setTimeLeft(0) // Reset timer
   }
 
   const handleListen = () => {
@@ -483,18 +481,11 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
                     </Button>
                   </div>
                 ) : (
-                  // Show Mark as Completed and Finish buttons in auto mode with timer
-                  <>
-                    <div className="flex flex-col items-center">
-                      <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
-                        {t('markAsCompletedButton')}
-                      </Button>
-                      <p className="text-sm text-gray-500 mt-1">{timeLeft}s</p>
-                    </div>
-                    <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
-                      {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
-                    </Button>
-                  </>
+                  // In auto mode after starting, show timer only
+                  <div className="text-center">
+                    <p className="text-lg font-semibold">{timeLeft}s</p>
+                    <p className="text-sm text-gray-500">{t('autoModeInProgress')}</p>
+                  </div>
                 )
               ) : (
                 // Show regular buttons in manual mode
