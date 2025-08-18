@@ -75,5 +75,7 @@
   "addingToStudyPlan": "正在添加到学习计划...",
   "errorAddToStudyPlan": "添加到学习计划失败",
   "successAddToStudyPlan": "已添加到学习计划",
-  "successAddToStudyPlanDesc": "{{count}} 个项目已添加到您的学习计划。"
+  "successAddToStudyPlanDesc": "{{count}} 个项目已添加到您的学习计划。",
+  "noNewItemsAdded": "没有新的项目被添加",
+  "noNewItemsAddedDesc": "您选择的项目已经在您的学习计划中。"
 }

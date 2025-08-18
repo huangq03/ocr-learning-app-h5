@@ -59,7 +59,7 @@ export default function StudySessionCreator({ document }: { document: Document }
       return;
     }
     setIsLoading(true);
-    const { error } = await supabase.rpc('add_to_study_plan', {
+    const { data: insertedCount, error } = await supabase.rpc('add_to_study_plan', {
       p_user_id: document.user_id,
       p_document_id: document.id,
       p_items: selectedItems,
@@ -70,7 +70,11 @@ export default function StudySessionCreator({ document }: { document: Document }
       console.error('Error adding items to study plan:', error);
       toast({ title: t('errorAddToStudyPlan'), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: t('successAddToStudyPlan'), description: t('successAddToStudyPlanDesc', { count: selectedItems.length }) });
+      if (insertedCount > 0) {
+        toast({ title: t('successAddToStudyPlan'), description: t('successAddToStudyPlanDesc', { count: insertedCount }) });
+      } else {
+        toast({ title: t('noNewItemsAdded'), description: t('noNewItemsAddedDesc') });
+      }
       setSelectedItems([]);
     }
   };

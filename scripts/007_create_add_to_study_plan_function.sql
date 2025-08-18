@@ -1,10 +1,11 @@
 -- scripts/007_create_add_to_study_plan_function.sql
 
 CREATE OR REPLACE FUNCTION add_to_study_plan(p_user_id UUID, p_document_id UUID, p_items TEXT[])
-RETURNS void AS $$
+RETURNS integer AS $
 DECLARE
     item_text TEXT;
     new_text_item_id UUID;
+    inserted_count INTEGER := 0;
 BEGIN
     FOREACH item_text IN ARRAY p_items
     LOOP
@@ -16,9 +17,11 @@ BEGIN
 
         -- Create a corresponding schedule if a new item was inserted
         IF new_text_item_id IS NOT NULL THEN
+            inserted_count := inserted_count + 1;
             INSERT INTO spaced_repetition_schedule (user_id, text_item_id)
             VALUES (p_user_id, new_text_item_id);
         END IF;
     END LOOP;
+    RETURN inserted_count;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;

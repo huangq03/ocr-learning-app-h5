@@ -75,5 +75,7 @@
   "addingToStudyPlan": "Adding to Study Plan...",
   "errorAddToStudyPlan": "Error adding items to study plan",
   "successAddToStudyPlan": "Items added to study plan",
-  "successAddToStudyPlanDesc": "{{count}} items have been added to your study plan."
+  "successAddToStudyPlanDesc": "{{count}} items have been added to your study plan.",
+  "noNewItemsAdded": "No new items added",
+  "noNewItemsAddedDesc": "The selected items are already in your study plan."
 }
