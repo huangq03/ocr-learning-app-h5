@@ -1,27 +1,44 @@
 -- scripts/007_create_add_to_study_plan_function.sql
-
 CREATE OR REPLACE FUNCTION add_to_study_plan(p_user_id UUID, p_document_id UUID, p_items TEXT[])
-RETURNS integer AS $
+RETURNS integer AS $$
 DECLARE
     item_text TEXT;
-    new_text_item_id UUID;
+    v_text_item_id UUID;
+    schedule_exists BOOLEAN;
     inserted_count INTEGER := 0;
 BEGIN
     FOREACH item_text IN ARRAY p_items
     LOOP
-        -- Create a new text_item
+        -- Get or create a text_item
         INSERT INTO text_items (user_id, document_id, content, item_type)
         VALUES (p_user_id, p_document_id, item_text, CASE WHEN array_length(string_to_array(item_text, ' '), 1) > 1 THEN 'phrase' ELSE 'word' END)
-        ON CONFLICT (user_id, document_id, content) DO NOTHING
-        RETURNING id INTO new_text_item_id;
+        ON CONFLICT (user_id, document_id, content)
+        DO UPDATE SET updated_at = NOW()  -- Update timestamp even if item exists
+        RETURNING id INTO v_text_item_id;
 
-        -- Create a corresponding schedule if a new item was inserted
-        IF new_text_item_id IS NOT NULL THEN
+        -- If the insert didn't return an ID (meaning it was an existing item), get the ID
+        IF v_text_item_id IS NULL THEN
+            SELECT id INTO v_text_item_id
+            FROM text_items
+            WHERE user_id = p_user_id
+            AND document_id = p_document_id
+            AND content = item_text;
+        END IF;
+
+        -- Check if a spaced_repetition_schedule exists for this text_item
+        SELECT EXISTS (
+            SELECT 1 FROM spaced_repetition_schedule
+            WHERE text_item_id = v_text_item_id
+            AND user_id = p_user_id
+        ) INTO schedule_exists;
+
+        -- Create a corresponding schedule if it doesn't exist
+        IF NOT schedule_exists THEN
             inserted_count := inserted_count + 1;
             INSERT INTO spaced_repetition_schedule (user_id, text_item_id)
-            VALUES (p_user_id, new_text_item_id);
+            VALUES (p_user_id, v_text_item_id);
         END IF;
     END LOOP;
     RETURN inserted_count;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
