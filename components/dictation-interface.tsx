@@ -90,7 +90,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     setStartTime(Date.now())
     // Reset timer when changing items (skip first item as it's handled by the start button)
     if (autoMode && autoSessionStarted && currentSelectionIndex > 0) {
-      setTimeLeft(timeoutValue)
       // Auto play with countdown when changing items in auto mode
       autoPlayWithCountdown()
     }
@@ -209,6 +208,15 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     if (!currentSelection || typeof window === 'undefined') return
     const utterance = new SpeechSynthesisUtterance(currentSelection.content)
     utterance.lang = 'en-US'
+    
+    // Set up event listener for when speech ends
+    utterance.onend = () => {
+      // Start the timeout countdown after audio is finished
+      if (autoMode && autoSessionStarted) {
+        setTimeLeft(timeoutValue)
+      }
+    }
+    
     window.speechSynthesis.speak(utterance)
   }
 
@@ -220,6 +228,12 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     if (countdownRef.current) {
       clearTimeout(countdownRef.current)
       countdownRef.current = null
+    }
+    
+    // Clear any existing timeout
+    if (autoTimerRef.current) {
+      clearTimeout(autoTimerRef.current)
+      autoTimerRef.current = null
     }
     
     // Start 3-second countdown
@@ -240,7 +254,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   const startAutoSession = () => {
     setAutoSessionStarted(true)
     setStartTime(Date.now())
-    setTimeLeft(timeoutValue)
     autoPlayWithCountdown()
   }
 
@@ -264,12 +277,13 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     }
   }, [])
 
-  // Initialize timeLeft when autoMode is enabled
+  // Initialize timeLeft when autoMode is enabled and not in countdown
   useEffect(() => {
-    if (autoMode && autoSessionStarted && timeLeft === 0) {
-      setTimeLeft(timeoutValue)
+    if (autoMode && autoSessionStarted && timeLeft === 0 && countdown === null) {
+      // Only set timeLeft if we're not in the initial state (when no audio has been played yet)
+      // This ensures timeLeft is only set after audio is played
     }
-  }, [autoMode, timeoutValue, timeLeft, autoSessionStarted])
+  }, [autoMode, timeoutValue, timeLeft, autoSessionStarted, countdown])
 
   // Reset auto session when auto mode is disabled
   useEffect(() => {
@@ -280,7 +294,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
   // Auto mode timer effect
   useEffect(() => {
-    if (!autoMode || showSummary || !autoSessionStarted) return
+    if (!autoMode || showSummary || !autoSessionStarted || countdown !== null) return
 
     if (timeLeft > 0) {
       autoTimerRef.current = setTimeout(() => {
@@ -299,7 +313,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         clearTimeout(autoTimerRef.current)
       }
     }
-  }, [autoMode, timeLeft, currentSelectionIndex, selections.length, showSummary, autoSessionStarted])
+  }, [autoMode, timeLeft, currentSelectionIndex, selections.length, showSummary, autoSessionStarted, countdown])
 
   // Cleanup effect for countdown timer
   useEffect(() => {
