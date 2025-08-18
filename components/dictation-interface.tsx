@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { DictationModeSettings } from "@/components/dictation-mode-settings"
 import type { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase/client"
@@ -461,10 +463,25 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
               {/* Show appropriate buttons based on mode */}
               {autoMode ? (
                 !autoSessionStarted ? (
-                  // Show Start Auto Session button
-                  <Button onClick={startAutoSession} size="lg">
-                    {t('startAutoSession')}
-                  </Button>
+                  // Show Start Auto Session button with timeout input
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="timeout-value" className="whitespace-nowrap">{t('autoModeTimeout')}</Label>
+                      <Input
+                        id="timeout-value"
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={timeoutValue}
+                        onChange={(e) => setTimeoutValue(Math.max(1, Math.min(60, Number(e.target.value))))}
+                        className="w-16"
+                      />
+                      <span>{t('seconds')}</span>
+                    </div>
+                    <Button onClick={startAutoSession} size="lg">
+                      {t('startAutoSession')}
+                    </Button>
+                  </div>
                 ) : (
                   // Show Mark as Completed and Finish buttons in auto mode with timer
                   <>
