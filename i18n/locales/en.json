@@ -77,5 +77,18 @@
   "successAddToStudyPlan": "Items added to study plan",
   "successAddToStudyPlanDesc": "{{count}} items have been added to your study plan.",
   "noNewItemsAdded": "No new items added",
-  "noNewItemsAddedDesc": "The selected items are already in your study plan."
+  "noNewItemsAddedDesc": "The selected items are already in your study plan.",
+  "dictationModeType": "Type",
+  "dictationModePaper": "Paper",
+  "paperModeInstructions": "Listen to the audio and write your answer on paper. After writing, click \"Check\" to mark this item as completed.",
+  "paperModeCompleted": "Marked as completed. You wrote your answer on paper.",
+  "markAsCompletedButton": "Mark as Completed",
+  "dictationModeLabel": "Mode:",
+  "itemCounter": "Item {{current}} of {{total}}",
+  "clickToHearAudio": "Click to hear the audio",
+  "comparison": "Comparison",
+  "originalText": "Original:",
+  "yourInput": "Your input:",
+  "paperModeTitle": "Paper Mode",
+  "paperModeMarkedComplete": "Marked as completed!"
 }

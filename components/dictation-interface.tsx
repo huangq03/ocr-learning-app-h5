@@ -13,6 +13,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useTranslation } from 'react-i18next'
+import '@/i18n'
 
 // Helper function to calculate Levenshtein distance
 const levenshteinDistance = (a: string, b: string): number => {
@@ -60,6 +62,7 @@ interface SessionResult {
 }
 
 export default function DictationInterface({ user, textItems }: DictationInterfaceProps) {
+  const { t } = useTranslation();
   const [selections, setSelections] = useState(textItems)
   const [currentSelectionIndex, setCurrentSelectionIndex] = useState(0)
   const [userInput, setUserInput] = useState("")
@@ -242,26 +245,26 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     <div className="p-4 max-w-2xl mx-auto">
       <Card className="p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Dictation Practice</h2>
+          <h2 className="text-2xl font-bold">{t('dictationTitle')}</h2>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Mode:</span>
+            <span className="text-sm text-gray-600">{t('dictationModeLabel')}</span>
             <select
               value={mode}
               onChange={(e) => setMode(e.target.value as DictationMode)}
               className="border rounded p-1 text-sm"
             >
-              <option value="typing">Type</option>
-              <option value="paper">Paper</option>
+              <option value="typing">{t('dictationModeType')}</option>
+              <option value="paper">{t('dictationModePaper')}</option>
             </select>
           </div>
         </div>
-        <p className="text-sm text-gray-500 mb-6">Item {currentSelectionIndex + 1} of {selections.length}</p>
+        <p className="text-sm text-gray-500 mb-6">{t('itemCounter', { current: currentSelectionIndex + 1, total: selections.length })}</p>
         <div className="text-center my-8 p-4 bg-purple-50 rounded-lg">
           <Button onClick={handleListen} size="lg" variant="outline">
             <Volume2 className="w-6 h-6 mr-2" />
-            Listen
+            {t('playSoundButton')}
           </Button>
-          <p className="text-sm text-gray-500 mt-2">Click to hear the audio</p>
+          <p className="text-sm text-gray-500 mt-2">{t('clickToHearAudio')}</p>
         </div>
 
         {mode === 'typing' ? (
@@ -269,49 +272,48 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
             <Textarea
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type what you hear..."
+              placeholder={t('typeHerePlaceholder')}
               className="mb-4 text-lg"
               rows={4}
               disabled={isCorrect === true}
             />
             {isCorrect !== null && (
               <div className="mb-4 p-4 border rounded-lg bg-gray-50">
-                <h3 className="font-bold text-lg">Comparison</h3>
-                <p className="font-semibold text-gray-700">Original: <span className="font-normal">{currentSelection.content}</span></p>
-                <p className="font-semibold text-gray-700">Your input: <span className="font-normal">{userInput}</span></p>
+                <h3 className="font-bold text-lg">{t('comparison')}</h3>
+                <p className="font-semibold text-gray-700">{t('originalText')} <span className="font-normal">{currentSelection.content}</span></p>
+                <p className="font-semibold text-gray-700">{t('yourInput')} <span className="font-normal">{userInput}</span></p>
               </div>
             )}
           </>
         ) : (
           <>
             <div className="mb-4 p-4 border rounded-lg bg-gray-50">
-              <h3 className="font-bold text-lg mb-2">Paper Mode</h3>
+              <h3 className="font-bold text-lg mb-2">{t('paperModeTitle')}</h3>
               <p className="text-gray-700">
-                Listen to the audio and write your answer on paper.
-                After writing, click "Check" to mark this item as completed.
+                {t('paperModeInstructions')}
               </p>
             </div>
             {paperInputChecked && (
               <div className="mb-4 p-4 border rounded-lg bg-green-50">
                 <CheckCircle className="w-5 h-5 text-green-500 inline mr-2" />
-                <span className="text-green-700">Marked as completed. You wrote your answer on paper.</span>
+                <span className="text-green-700">{t('paperModeCompleted')}</span>
               </div>
             )}
           </>
         )}
- 
+
         <div className="flex justify-around items-center">
           <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
-            {mode === 'paper' ? 'Mark as Completed' : 'Check'}
+            {mode === 'paper' ? t('markAsCompletedButton') : t('checkButton')}
           </Button>
           <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
-            {currentSelectionIndex < selections.length - 1 ? "Next" : "Finish"}
+            {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
           </Button>
         </div>
         <div className="mt-4 h-6 text-center">
-          {isCorrect === true && mode === 'typing' && <p className="text-green-500 font-bold">Correct!</p>}
-          {isCorrect === true && mode === 'paper' && <p className="text-green-500 font-bold">Marked as completed!</p>}
-          {isCorrect === false && <p className="text-red-500 font-bold">Incorrect. Please try again.</p>}
+          {isCorrect === true && mode === 'typing' && <p className="text-green-500 font-bold">{t('correctFeedback')}</p>}
+          {isCorrect === true && mode === 'paper' && <p className="text-green-500 font-bold">{t('paperModeMarkedComplete')}</p>}
+          {isCorrect === false && <p className="text-red-500 font-bold">{t('incorrectFeedback')}</p>}
         </div>
       </Card>
     </div>

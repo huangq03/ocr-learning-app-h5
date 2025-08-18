@@ -62,7 +62,7 @@
   "finishButton": "完成",
   "dictationTitle": "听写",
   "dictationSubtitle": "请听并写下内容。",
-  "playSoundButton": "播放声音",
+  "playSoundButton": "播放音频",
   "typeHerePlaceholder": "在此输入...",
   "correctFeedback": "正确！",
   "incorrectFeedback": "正确答案: {{answer}}",
@@ -77,5 +77,18 @@
   "successAddToStudyPlan": "已添加到学习计划",
   "successAddToStudyPlanDesc": "{{count}} 个项目已添加到您的学习计划。",
   "noNewItemsAdded": "没有新的项目被添加",
-  "noNewItemsAddedDesc": "您选择的项目已经在您的学习计划中。"
+  "noNewItemsAddedDesc": "您选择的项目已经在您的学习计划中。",
+  "dictationModeType": "打字",
+  "dictationModePaper": "纸笔",
+  "paperModeInstructions": "请听音频并在纸上写下答案。写完后，点击\"标记完成\"来标记此项目已完成。",
+  "paperModeCompleted": "已标记为完成。您已在纸上写下了答案。",
+  "markAsCompletedButton": "标记完成",
+  "dictationModeLabel": "模式:",
+  "itemCounter": "第 {{current}} 项，共 {{total}} 项",
+  "clickToHearAudio": "点击听取音频",
+  "comparison": "对比",
+  "originalText": "原文:",
+  "yourInput": "您的输入:",
+  "paperModeTitle": "纸笔模式",
+  "paperModeMarkedComplete": "已标记为完成！"
 }
