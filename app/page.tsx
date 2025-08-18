@@ -20,15 +20,9 @@ export default async function Home() {
     redirect("/auth/login")
   }
 
-  // Fetch the live document count directly.
-  const { count: totalDocuments, error: countError } = await supabase
-    .from('documents')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-lavender-50">
-      <DashboardInterface user={user} totalDocuments={totalDocuments || 0} />
+      <DashboardInterface user={user} />
     </div>
   )
 }
