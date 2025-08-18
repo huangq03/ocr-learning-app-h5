@@ -4,6 +4,7 @@ import { I18nextProvider } from 'react-i18next';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import i18n from '@/i18n';
 import SiteHeader from '@/components/site-header';
+import { Toaster } from '@/components/ui/toaster';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <div className="relative flex min-h-screen flex-col">
           <SiteHeader />
           <main className="flex-1">{children}</main>
+          <Toaster />
         </div>
       </NextThemesProvider>
     </I18nextProvider>
