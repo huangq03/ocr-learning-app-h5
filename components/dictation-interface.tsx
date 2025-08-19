@@ -90,7 +90,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     setStartTime(Date.now())
     // When changing items in auto mode (after the first one), start the item countdown
     if (autoMode && autoSessionStarted && currentSelectionIndex > -1) {
-      console.log('XXXXXXXX: To call autoPlayWithCountdown due to currentSelectionIndex change:', currentSelectionIndex)
       autoPlayWithCountdown()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,7 +114,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   }, [userInput, selections, currentSelectionIndex, mode])
 
   const handleNext = () => {
-    console.log('XXXXXXXX: handleNext called with currentSelectionIndex:', currentSelectionIndex, 'selections length:', selections.length)
     if (currentSelectionIndex < selections.length - 1) {
       setCurrentSelectionIndex(currentSelectionIndex + 1)
       setUserInput("")
@@ -221,17 +219,14 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     }
     
     // Start 3-second countdown
-    console.log('XXXXXXXX: Starting countdown for auto mode')
     setCountdown(3)
     countdownRef.current = setTimeout(() => {
       setCountdown(2)
-      console.log('XXXXXXXX: Countdown at 2 seconds')
       countdownRef.current = setTimeout(() => {
         setCountdown(1)
         console.log
         countdownRef.current = setTimeout(() => {
           setCountdown(null)
-          console.log('XXXXXXXX: Countdown finished, calling handleListen')
           handleListen()
         }, 1000)
       }, 1000)
@@ -248,7 +243,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     utterance.onend = () => {
       // Start the timeout countdown after audio is finished
       if (autoMode && autoSessionStarted) {
-        console.log('XXXXXXXX: Audio ended, starting timeout countdown with timeoutValue:', timeoutValue)
         setTimeLeft(timeoutValue)
       }
     }
@@ -258,7 +252,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
   // Start auto session
   const startAutoSession = () => {
-    console.log('XXXXXXXX: startAutoSession called with timeoutValue:', timeoutValue)
     setAutoSessionStarted(true)
     // setTimeLeft is called in handleListen's onend callback
     handleNext() // Move to the first item
@@ -298,13 +291,11 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
     // Only run the timeout countdown if we've set a value (after audio plays)
     if (timeLeft > 0) {
-      console.log('XXXXXXXX: Auto mode timer running with timeLeft:', timeLeft)
       autoTimerRef.current = setTimeout(() => {
         setTimeLeft(prev => prev - 1)
       }, 1000)
     } else if (autoTimerRef.current && timeLeft === 0) {
       // When timer reaches 0, save answer and move to next item or finish the session
-      console.log('XXXXXXXX: to call handleAnswer and handleNext due to timer reaching 0')
       handleAnswer()
       handleNext()
     }
