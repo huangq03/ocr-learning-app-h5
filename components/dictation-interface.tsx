@@ -264,9 +264,30 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     handleNext();
   }
 
+  const playBeep = () => {
+    if (typeof window === 'undefined') return;
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (!audioContext) return;
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+  }
+
   const autoPlayWithCountdown = () => {
     if (!autoMode) return;
     
+    playBeep();
+
     if (countdownRef.current) {
       clearTimeout(countdownRef.current)
     }
