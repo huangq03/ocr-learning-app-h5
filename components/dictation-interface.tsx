@@ -202,6 +202,79 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     setTimeLeft(0) // Reset timer
   }
 
+  const handleCheckAnswerAndNext = async () => {
+    const currentSelection = selections[currentSelectionIndex];
+    if (!currentSelection) return;
+
+    // from handleCheck
+    const newAttempts = attempts + 1;
+    setAttempts(newAttempts);
+
+    let isCorrectResult: boolean;
+    if (mode === 'typing') {
+      isCorrectResult = userInput.trim().toLowerCase() === currentSelection.content.toLowerCase();
+    } else { // paper mode
+      isCorrectResult = true;
+    }
+    // Don't set isCorrect as we are moving to the next screen. The summary will show the result.
+
+    // from handleAnswer
+    const endTime = Date.now();
+    const completionTime = Math.round((endTime - startTime) / 1000);
+
+    let result: SessionResult;
+
+    if (mode === 'typing') {
+      const isCorrectOnFirstTry = newAttempts === 1 && isCorrectResult;
+      const characterAccuracy = calculateAccuracy(currentSelection.content, userInput.trim());
+
+      result = {
+        text_item_id: currentSelection.id,
+        original_text: currentSelection.content,
+        user_input: userInput.trim(),
+        attempts: newAttempts,
+        is_correct_on_first_try: isCorrectOnFirstTry,
+        character_accuracy: characterAccuracy,
+        completion_time_seconds: completionTime,
+      };
+    } else { // paper mode
+      result = {
+        text_item_id: currentSelection.id,
+        original_text: currentSelection.content,
+        user_input: "[Written on paper]",
+        attempts: 1,
+        is_correct_on_first_try: true,
+        character_accuracy: 100,
+        completion_time_seconds: completionTime,
+      };
+    }
+
+    setSessionResults([...sessionResults, result]);
+
+    await supabase.from("dictation_exercises").insert({
+      user_id: user.id,
+      text_item_id: result.text_item_id,
+      target_text: result.original_text,
+      user_input: result.user_input,
+      accuracy_score: result.character_accuracy,
+      mistakes_count: mode === 'typing' ? newAttempts - 1 : 0,
+      completion_time_seconds: completionTime,
+      completed_at: new Date().toISOString(),
+    });
+
+    // from handleNext
+    if (currentSelectionIndex < selections.length - 1) {
+      setCurrentSelectionIndex(currentSelectionIndex + 1);
+      setUserInput("");
+      setIsCorrect(null);
+      setAttempts(0);
+      setPaperInputChecked(false);
+      setStartTime(Date.now());
+    } else {
+      setShowSummary(true);
+    }
+  }
+
   // Auto play audio in auto mode with countdown
   const autoPlayWithCountdown = () => {
     if (!autoMode) return;
@@ -505,14 +578,9 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
                     Start
                   </Button>
                 ) : (
-                  <>
-                    <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
-                      {mode === 'paper' ? t('markAsCompletedButton') : t('checkButton')}
-                    </Button>
-                    <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
-                      {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
-                    </Button>
-                  </>
+                  <Button onClick={handleCheckAnswerAndNext} size="lg">
+                    {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
+                  </Button>
                 )
               )}
             </div>
