@@ -136,7 +136,7 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
               </div>
             </div>
           </Card>
-          <Card className="p-4 bg-white shadow-lg border-0 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/study')}>
+          <Card className="p-4 bg-white shadow-lg border-0 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/items')}>
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <BookOpen className="w-5 h-5 text-purple-600" />
