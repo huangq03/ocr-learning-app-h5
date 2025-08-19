@@ -500,14 +500,20 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
                 )
               ) : (
                 // Show regular buttons in manual mode
-                <>
-                  <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
-                    {mode === 'paper' ? t('markAsCompletedButton') : t('checkButton')}
+                currentSelectionIndex === -1 ? (
+                  <Button onClick={handleNext} size="lg">
+                    Start
                   </Button>
-                  <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
-                    {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
-                  </Button>
-                </>
+                ) : (
+                  <>
+                    <Button onClick={handleCheck} size="lg" disabled={isCorrect === true}>
+                      {mode === 'paper' ? t('markAsCompletedButton') : t('checkButton')}
+                    </Button>
+                    <Button onClick={handleNext} disabled={isCorrect !== true} size="lg">
+                      {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
+                    </Button>
+                  </>
+                )
               )}
             </div>
           </>
