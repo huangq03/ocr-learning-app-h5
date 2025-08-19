@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
+import '@/i18n';
 
 interface Document {
   id: string;
@@ -16,6 +18,7 @@ interface Document {
 }
 
 export default function ItemGroup({ document }: { document: Document }) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<string | null>(null);
   const [highlightedWordIndex, setHighlightedWordIndex] = useState(-1);
@@ -69,9 +72,9 @@ export default function ItemGroup({ document }: { document: Document }) {
       <CardHeader className="flex flex-row items-center justify-between cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div>
           <CardTitle className="text-lg font-medium">
-            <span>Document from {new Date(document.created_at).toLocaleDateString()}</span>
+            <span>{t('documentFrom')} {new Date(document.created_at).toLocaleDateString()}</span>
           </CardTitle>
-          <Badge variant="outline" className="mt-1">{items.length} items</Badge>
+          <Badge variant="outline" className="mt-1">{items.length} {t('itemsCountLabel')}</Badge>
         </div>
         {items.length > 0 && (
           <Button
