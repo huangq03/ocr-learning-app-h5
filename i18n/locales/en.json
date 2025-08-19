@@ -100,5 +100,12 @@
   "autoModeCountdown": "Get ready...",
   "autoModeInProgress": "Auto mode in progress",
   "startAutoSession": "Start Auto Session",
-  "seconds": "seconds"
+  "seconds": "seconds",
+  "summaryTitle": "Dictation Complete!",
+  "summaryFirstTryAccuracy": "First-Try Accuracy",
+  "summaryCharAccuracy": "Character Accuracy",
+  "summaryAvgTime": "Avg. Time",
+  "summaryYourInput": "Your input: ",
+  "summaryAccuracyTime": "Accuracy / Time",
+  "summaryPracticeAgain": "Practice Again"
 }

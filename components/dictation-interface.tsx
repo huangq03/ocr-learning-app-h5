@@ -459,21 +459,21 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     return (
       <div className="p-4 max-w-2xl mx-auto">
         <Card className="p-6">
-          <h2 className="text-3xl font-bold mb-4 text-center text-purple-700">Dictation Complete!</h2>
+          <h2 className="text-3xl font-bold mb-4 text-center text-purple-700">{t('summaryTitle', 'Dictation Complete!')}</h2>
           <div className="text-center my-6 space-y-4">
             <BarChart className="w-16 h-16 mx-auto text-purple-500" />
             <div className="flex justify-center items-stretch gap-2">
               <div className="p-3 bg-purple-50 rounded-lg w-1/3 flex flex-col justify-center">
                 <p className="text-2xl font-bold">{firstTryAccuracy.toFixed(1)}%</p>
-                <p className="text-xs text-gray-600">First-Try Accuracy</p>
+                <p className="text-xs text-gray-600">{t('summaryFirstTryAccuracy', 'First-Try Accuracy')}</p>
               </div>
               <div className="p-3 bg-green-50 rounded-lg w-1/3 flex flex-col justify-center">
                 <p className="text-2xl font-bold">{avgCharAccuracy.toFixed(1)}%</p>
-                <p className="text-xs text-gray-600">Character Accuracy</p>
+                <p className="text-xs text-gray-600">{t('summaryCharAccuracy', 'Character Accuracy')}</p>
               </div>
               <div className="p-3 bg-blue-50 rounded-lg w-1/3 flex flex-col justify-center">
                 <p className="text-2xl font-bold">{avgTime.toFixed(1)}s</p>
-                <p className="text-xs text-gray-600">Avg. Time</p>
+                <p className="text-xs text-gray-600">{t('summaryAvgTime', 'Avg. Time')}</p>
               </div>
             </div>
           </div>
@@ -488,18 +488,18 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
                   )}
                   <div className="flex-grow">
                     <p className="font-semibold text-sm text-gray-700 truncate">{result.original_text}</p>
-                    <p className="text-xs text-gray-500">Your input: {result.user_input}</p>
+                    <p className="text-xs text-gray-500">{t('summaryYourInput', 'Your input: ')}{result.user_input}</p>
                   </div>
                   <div className="text-right flex-shrink-0 w-28">
                      <p className="font-bold text-sm">{result.character_accuracy.toFixed(1)}% / {result.completion_time_seconds}s</p>
-                     <p className="text-xs text-gray-500">Accuracy / Time</p>
+                     <p className="text-xs text-gray-500">{t('summaryAccuracyTime', 'Accuracy / Time')}</p>
                   </div>
                 </div>
               </Card>
             ))}
           </div>
           <div className="text-center mt-6">
-            <Button onClick={handleRestart}>Practice Again</Button>
+            <Button onClick={handleRestart}>{t('summaryPracticeAgain', 'Practice Again')}</Button>
           </div>
         </Card>
       </div>

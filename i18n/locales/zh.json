@@ -100,5 +100,12 @@
   "autoModeCountdown": "准备开始...",
   "autoModeInProgress": "自动模式进行中",
   "startAutoSession": "开始自动听写",
-  "seconds": "秒"
+  "seconds": "秒",
+  "summaryTitle": "听写完成！",
+  "summaryFirstTryAccuracy": "首次正确率",
+  "summaryCharAccuracy": "字符准确率",
+  "summaryAvgTime": "平均用时",
+  "summaryYourInput": "您的输入：",
+  "summaryAccuracyTime": "准确率 / 时间",
+  "summaryPracticeAgain": "再次练习"
 }
