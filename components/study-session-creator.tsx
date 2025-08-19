@@ -43,11 +43,36 @@ export default function StudySessionCreator({ document }: { document: Document }
     }
   };
 
-  const handleStartSession = (type: 'recitation' | 'dictation') => {
+  const addToStudyPlan = async (items: string[]) => {
+    setIsLoading(true);
+    const { data: insertedCount, error } = await supabase.rpc('add_to_study_plan', {
+      p_user_id: document.user_id,
+      p_document_id: document.id,
+      p_items: items,
+    });
+    setIsLoading(false);
+    return { insertedCount, error };
+  };
+
+  const handleStartSession = async (type: 'recitation' | 'dictation') => {
     if (selectedItems.length === 0) {
-      toast({ title: t('selectItemsAlert'), variant: 'destructive' });
+      toast({ title: <span className="text-white">{t('selectItemsAlert')}</span>, variant: 'destructive' });
       return;
     }
+
+    const { error } = await addToStudyPlan(selectedItems);
+
+    if (error) {
+      toast({
+        title: <span className="text-white">{t('errorAddToStudyPlan')}</span>,
+        description: <span className="text-white">{error.message}</span>,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({ title: t('successAddToStudyPlan'), description: t('startingSessionNow') });
+
     const studySession = { type, items: selectedItems, documentId: document.id };
     localStorage.setItem('studySession', JSON.stringify(studySession));
     router.push('/study');
@@ -55,20 +80,17 @@ export default function StudySessionCreator({ document }: { document: Document }
 
   const handleAddToStudyPlan = async () => {
     if (selectedItems.length === 0) {
-      toast({ title: t('selectItemsAlert'), variant: 'destructive' });
+      toast({ title: <span className="text-white">{t('selectItemsAlert')}</span>, variant: 'destructive' });
       return;
     }
-    setIsLoading(true);
-    const { data: insertedCount, error } = await supabase.rpc('add_to_study_plan', {
-      p_user_id: document.user_id,
-      p_document_id: document.id,
-      p_items: selectedItems,
-    });
-
-    setIsLoading(false);
+    const { insertedCount, error } = await addToStudyPlan(selectedItems);
     if (error) {
       console.error('Error adding items to study plan:', error);
-      toast({ title: t('errorAddToStudyPlan'), description: error.message, variant: 'destructive' });
+      toast({
+        title: <span className="text-white">{t('errorAddToStudyPlan')}</span>,
+        description: <span className="text-white">{error.message}</span>,
+        variant: 'destructive',
+      });
     } else {
       if (insertedCount > 0) {
         toast({ title: t('successAddToStudyPlan'), description: t('successAddToStudyPlanDesc', { count: insertedCount }) });
