@@ -385,7 +385,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
   return (
     <div className="p-4 max-w-2xl mx-auto relative">
-      <Card className="p-6">
+      <Card className="p-6 relative">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">{t('dictationTitle')}</h2>
           <DictationModeSettings 
@@ -403,13 +403,15 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         
         {/* Countdown overlay */}
         {countdown !== null && (
-          <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
-            <div className="bg-blue-500 rounded-full w-32 h-32 flex items-center justify-center shadow-lg">
-              <div className="text-4xl font-bold text-white">
-                {countdown}
+          <div className="absolute inset-0 flex items-center justify-center z-50">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-12 shadow-2xl flex flex-col items-center justify-center">
+              <div className="bg-blue-500 rounded-full w-32 h-32 flex items-center justify-center shadow-lg">
+                <div className="text-6xl font-bold text-white">
+                  {countdown}
+                </div>
               </div>
+              <p className="mt-6 text-gray-800 text-xl font-medium">{t('autoModeCountdown')}</p>
             </div>
-            <p className="absolute top-1/2 mt-24 text-gray-700 text-lg font-medium">{t('autoModeCountdown')}</p>
           </div>
         )}
         
@@ -489,10 +491,12 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
                   </div>
                 ) : (
                   // In auto mode after starting, show timer only
-                  <div className="text-center">
-                    <p className="text-lg font-semibold">{timeLeft}s</p>
-                    <p className="text-sm text-gray-500">{t('autoModeInProgress')}</p>
-                  </div>
+                  timeLeft > 0 && (
+                    <div className="text-center">
+                      <p className="text-lg font-semibold">{timeLeft}s</p>
+                      <p className="text-sm text-gray-500">{t('autoModeInProgress')}</p>
+                    </div>
+                  )
                 )
               ) : (
                 // Show regular buttons in manual mode
