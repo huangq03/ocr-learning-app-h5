@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import ItemGroup from '@/components/item-group';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,35 +36,9 @@ export default async function ItemsManagementPage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">All Items</h1>
         <div className="space-y-6">
-          {documents?.map(doc => {
-            const items = doc.recognized_text?.items || [];
-            const cleaned_text = doc.recognized_text?.cleaned_text || '';
-            const sortedItems = [...items].sort((a, b) => {
-                const indexA = cleaned_text.indexOf(a);
-                const indexB = cleaned_text.indexOf(b);
-                if (indexA === -1) return 1;
-                if (indexB === -1) return -1;
-                return indexA - indexB;
-            });
-
-            return (
-              <Card key={doc.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-lg font-medium">
-                    <span>Document from {new Date(doc.created_at).toLocaleDateString()}</span>
-                    <Badge variant="outline">{items.length} items</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 list-disc list-inside">
-                    {sortedItems.map((item, index) => (
-                      <li key={index} className="p-2 bg-gray-100 rounded-md text-gray-800">{item}</li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {documents?.map(doc => (
+            <ItemGroup key={doc.id} document={doc as any} />
+          ))}
         </div>
       </div>
     </div>
