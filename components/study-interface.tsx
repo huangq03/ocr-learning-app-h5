@@ -64,6 +64,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
     const [showSummary, setShowSummary] = useState(false);
     const [sessionStats, setSessionStats] = useState<SessionStats>({ again: 0, hard: 0, good: 0, easy: 0 });
     const [nowPlaying, setNowPlaying] = useState<string | null>(null);
+    const [highlightedWordIndex, setHighlightedWordIndex] = useState(-1);
 
     const handlePlay = (text: string) => {
         if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -72,14 +73,30 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
             window.speechSynthesis.cancel();
             if (nowPlaying === text) {
                 setNowPlaying(null);
+                setHighlightedWordIndex(-1);
                 return;
             }
         }
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
-        utterance.onstart = () => setNowPlaying(text);
-        utterance.onend = () => setNowPlaying(null);
+
+        let wordIndex = 0;
+        utterance.onboundary = (event) => {
+            if (event.name === 'word') {
+                setHighlightedWordIndex(wordIndex++);
+            }
+        };
+
+        utterance.onstart = () => {
+            setNowPlaying(text);
+            setHighlightedWordIndex(-1);
+            wordIndex = 0;
+        };
+        utterance.onend = () => {
+            setNowPlaying(null);
+            setHighlightedWordIndex(-1);
+        };
         window.speechSynthesis.speak(utterance);
     };
 
@@ -150,7 +167,13 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                 <CardContent className="min-h-[200px] flex items-center justify-center text-center">
                     <div>
                         <div className="flex items-center justify-center gap-4">
-                            <p className="text-2xl font-bold mb-2">{currentItem.text_items.content}</p>
+                            <p className="text-2xl font-bold mb-2">
+                                {currentItem.text_items.content.split(/(\s+)/).map((word, wordIndex) => (
+                                    <span key={wordIndex} className={nowPlaying === currentItem.text_items.content && highlightedWordIndex === Math.floor(wordIndex / 2) ? 'bg-yellow-200' : ''}>
+                                        {word}
+                                    </span>
+                                ))}
+                            </p>
                             <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.text_items.content)}>
                                 <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.text_items.content ? 'text-purple-600' : ''}`} />
                             </Button>
