@@ -390,7 +390,19 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
             
             {autoMode && (
                 <div className="flex items-center space-x-2 mb-8">
-                    <Label htmlFor="timeout-value" className="whitespace-nowrap">{t('autoModeTimeout')}</Label>
+                    <Label htmlFor="timeout-value" className="whitespace-nowrap flex items-center">
+                      {t('autoModeTimeout', 'Auto-mode timeout')}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="w-4 h-4 ml-1.5 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t('autoModeTimeoutTooltip', 'The time you have to type the answer after the audio plays.')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </Label>
                     <Input
                     id="timeout-value"
                     type="number"
@@ -400,7 +412,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
                     onChange={(e) => setTimeoutValue(Math.max(1, Math.min(60, Number(e.target.value))))}
                     className="w-16"
                     />
-                    <span>{t('seconds')}</span>
+                    <span>{t('seconds', 's')}</span>
                 </div>
             )}
 

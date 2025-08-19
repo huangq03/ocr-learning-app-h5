@@ -96,6 +96,7 @@
   "paperModeMarkedComplete": "已标记为完成！",
   "autoMode": "自动模式",
   "autoModeTimeout": "超时时间:",
+  "autoModeTimeoutTooltip": "在音频播放后，您用来输入或写下答案的时间。",
   "autoModeCountdown": "准备开始...",
   "autoModeInProgress": "自动模式进行中",
   "startAutoSession": "开始自动听写",

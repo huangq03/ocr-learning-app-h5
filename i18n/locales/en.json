@@ -96,6 +96,7 @@
   "paperModeMarkedComplete": "Marked as completed!",
   "autoMode": "Auto Mode",
   "autoModeTimeout": "Timeout:",
+  "autoModeTimeoutTooltip": "The time you have to type or write down the answer after the audio plays.",
   "autoModeCountdown": "Get ready...",
   "autoModeInProgress": "Auto mode in progress",
   "startAutoSession": "Start Auto Session",
