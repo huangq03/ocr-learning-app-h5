@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
+import ItemGroup from "@/components/item-group";
 
 interface DashboardStats {
   totalDocuments: number
@@ -20,13 +21,13 @@ interface DashboardStats {
   studyTimeHours: number
 }
 
-interface RecentDocument {
-  id: string
-  created_at: string
-  image_path: string | null
+interface Document {
+  id: string;
+  created_at: string;
   recognized_text: {
-    cleaned_text?: string
-  } | null
+    items: string[];
+    cleaned_text: string;
+  };
 }
 
 interface DashboardInterfaceProps {
@@ -44,7 +45,7 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
     currentStreak: 0,
     studyTimeHours: 0,
   })
-  const [recentDocuments, setRecentDocuments] = useState<RecentDocument[]>([])
+  const [recentItemGroups, setRecentItemGroups] = useState<Document[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -66,12 +67,26 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
           .gte("ease_factor", 2.5)
           .gte("repetition_number", 3)
 
-        const { data: documents } = await supabase
-          .from("documents")
-          .select("id, created_at, image_path, recognized_text")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(3)
+        const { data: recentTextItems } = await supabase
+          .from('text_items')
+          .select('document_id, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (recentTextItems) {
+            const recentDocumentIds = [...new Set(recentTextItems.map(item => item.document_id))].slice(0, 3);
+            
+            if (recentDocumentIds.length > 0) {
+                const { data: documents } = await supabase
+                    .from('documents')
+                    .select('id, created_at, recognized_text')
+                    .in('id', recentDocumentIds)
+                    .order('created_at', { ascending: false });
+                
+                setRecentItemGroups(documents as any || []);
+            }
+        }
 
         setStats({
           totalDocuments: userProgress?.total_documents || 0,
@@ -82,7 +97,6 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
           studyTimeHours: Math.round((userProgress?.total_study_time_minutes || 0) / 60),
         })
 
-        setRecentDocuments(documents || [])
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
       } finally {
@@ -188,22 +202,13 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
           <Card className="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg border-0"><div className="flex items-center justify-between mb-4"><div className="p-3 bg-white bg-opacity-20 rounded-lg"><Camera className="w-8 h-8" /></div></div><h3 className="text-xl font-bold mb-2">{t('addNewContentTitle')}</h3><p className="text-green-100 mb-4">{t('addNewContentSubtitle')}</p><Button onClick={() => router.push("/capture")} variant="secondary" className="w-full bg-white text-green-600 hover:bg-green-50">{t('captureNewDocument')}<ArrowRight className="w-4 h-4 ml-2" /></Button></Card>
         </div>
 
-        {recentDocuments.length > 0 && (
+        {recentItemGroups.length > 0 && (
           <Card className="p-6 bg-white shadow-lg border-0">
-            <h3 className="text-xl font-bold text-purple-800 mb-4">{t('recentDocuments')}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {recentDocuments.map((doc) => {
-                const title = doc.recognized_text?.cleaned_text?.substring(0, 50) || t('untitledDocument');
-                return (
-                  <div key={doc.id} onClick={() => router.push(`/documents/${doc.id}`)} className="cursor-pointer group">
-                    <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden mb-3 group-hover:shadow-md transition-shadow">
-                      <img src={doc.image_path || "/placeholder.svg"} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
-                    </div>
-                    <h4 className="font-medium text-gray-800 group-hover:text-purple-600 transition-colors truncate">{title}</h4>
-                    <p className="text-sm text-gray-500">{new Date(doc.created_at).toLocaleDateString()}</p>
-                  </div>
-                )
-              })}
+            <h3 className="text-xl font-bold text-purple-800 mb-4">{t('recentItemGroups')}</h3>
+            <div className="space-y-4">
+              {recentItemGroups.map((doc) => (
+                <ItemGroup key={doc.id} document={doc} />
+              ))}
             </div>
           </Card>
         )}
