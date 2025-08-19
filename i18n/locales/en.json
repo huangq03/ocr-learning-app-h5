@@ -83,7 +83,7 @@
   "noNewItemsAddedDesc": "The selected items are already in your study plan.",
   "dictationModeType": "Type",
   "dictationModePaper": "Paper",
-  "paperModeInstructions": "Listen to the audio and write your answer on paper. After writing, click \"Check\" to mark this item as completed.",
+  "paperModeInstructions": "Listen to the audio and write your answer on paper.",
   "paperModeCompleted": "Marked as completed. You wrote your answer on paper.",
   "markAsCompletedButton": "Mark as Completed",
   "dictationModeLabel": "Mode:",
