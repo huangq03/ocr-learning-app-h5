@@ -78,6 +78,22 @@ export async function POST(request: Request) {
                 case 'doubao': cleanedJson = await runDoubao(rawText); break;
                 default: return NextResponse.json({ error: 'Invalid LLM service specified.' }, { status: 400 });
             }
+
+            // Reorder items based on their position in cleaned_text
+            if (cleanedJson && cleanedJson.cleaned_text && Array.isArray(cleanedJson.items)) {
+                const { cleaned_text, items } = cleanedJson;
+                const sortedItems = [...items].sort((a, b) => {
+                    const indexA = cleaned_text.indexOf(a);
+                    const indexB = cleaned_text.indexOf(b);
+                    
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+
+                    return indexA - indexB;
+                });
+                cleanedJson.items = sortedItems;
+            }
+
             console.log('cleaned json: ', cleanedJson);
             return NextResponse.json(cleanedJson);
         } else {

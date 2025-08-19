@@ -44,7 +44,7 @@ const enrichOcrResult = (result: Omit<OCRResult, 'newlyFoundItems'>): OCRResult 
   const uniqueNewItems = [...new Set(newlyFoundPhrases)];
   return {
     ...result,
-    items: result.items.sort((a, b) => a.localeCompare(b)),
+    items: result.items,
     newlyFoundItems: uniqueNewItems,
   };
 };
@@ -92,11 +92,20 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
   const handleAddItem = useCallback((itemToAdd: string) => {
     setOcrResult(prevResult => {
       if (!prevResult) return null;
-      const newItems = prevResult.items.includes(itemToAdd)
-        ? prevResult.items
-        : [...prevResult.items, itemToAdd].sort((a, b) => a.localeCompare(b));
+      if (prevResult.items.includes(itemToAdd)) {
+        return prevResult;
+      }
+      const newItems = [...prevResult.items, itemToAdd];
+      const cleaned_text = prevResult.cleaned_text || '';
+      const sortedNewItems = newItems.sort((a, b) => {
+        const indexA = cleaned_text.indexOf(a);
+        const indexB = cleaned_text.indexOf(b);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
       const newNewlyFoundItems = prevResult.newlyFoundItems?.filter(item => item !== itemToAdd);
-      return { ...prevResult, items: newItems, newlyFoundItems: newNewlyFoundItems };
+      return { ...prevResult, items: sortedNewItems, newlyFoundItems: newNewlyFoundItems };
     });
   }, []);
 

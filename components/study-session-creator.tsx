@@ -29,7 +29,14 @@ export default function StudySessionCreator({ document }: { document: Document }
   const { toast } = useToast();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const allItems = document.recognized_text?.items || [];
+  const allItems = (document.recognized_text?.items || []).sort((a, b) => {
+    const cleaned_text = document.recognized_text?.cleaned_text || '';
+    const indexA = cleaned_text.indexOf(a);
+    const indexB = cleaned_text.indexOf(b);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
 
   const handleToggleAll = (checked: boolean) => {
     setSelectedItems(checked ? allItems : []);
@@ -60,7 +67,16 @@ export default function StudySessionCreator({ document }: { document: Document }
       return;
     }
 
-    const { error } = await addToStudyPlan(selectedItems);
+    const cleaned_text = document.recognized_text?.cleaned_text || '';
+    const sortedSelectedItems = [...selectedItems].sort((a, b) => {
+        const indexA = cleaned_text.indexOf(a);
+        const indexB = cleaned_text.indexOf(b);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+    });
+
+    const { error } = await addToStudyPlan(sortedSelectedItems);
 
     if (error) {
       toast({
@@ -71,7 +87,7 @@ export default function StudySessionCreator({ document }: { document: Document }
       return;
     }
 
-    const studySession = { type, items: selectedItems, documentId: document.id };
+    const studySession = { type, items: sortedSelectedItems, documentId: document.id };
     localStorage.setItem('studySession', JSON.stringify(studySession));
     if (type === 'dictation') {
       router.push('/dictation');
@@ -85,7 +101,17 @@ export default function StudySessionCreator({ document }: { document: Document }
       toast({ title: <span className="text-white">{t('selectItemsAlert')}</span>, variant: 'destructive' });
       return;
     }
-    const { insertedCount, error } = await addToStudyPlan(selectedItems);
+
+    const cleaned_text = document.recognized_text?.cleaned_text || '';
+    const sortedSelectedItems = [...selectedItems].sort((a, b) => {
+        const indexA = cleaned_text.indexOf(a);
+        const indexB = cleaned_text.indexOf(b);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+    });
+
+    const { insertedCount, error } = await addToStudyPlan(sortedSelectedItems);
     if (error) {
       console.error('Error adding items to study plan:', error);
       toast({
