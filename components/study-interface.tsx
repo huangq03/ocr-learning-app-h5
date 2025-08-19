@@ -61,12 +61,9 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
     const router = useRouter();
     const [items, setItems] = useState(initialItems);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [isFlipped, setIsFlipped] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [sessionStats, setSessionStats] = useState<SessionStats>({ again: 0, hard: 0, good: 0, easy: 0 });
     const [nowPlaying, setNowPlaying] = useState<string | null>(null);
-
-    const handleFlip = () => setIsFlipped(true);
 
     const handlePlay = (text: string) => {
         if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -106,7 +103,6 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
         } else {
             if (currentIndex < items.length - 1) {
                 setCurrentIndex(currentIndex + 1);
-                setIsFlipped(false);
             } else {
                 setShowSummary(true);
             }
@@ -152,37 +148,24 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                     <Progress value={progress} className="mt-2" />
                 </CardHeader>
                 <CardContent className="min-h-[200px] flex items-center justify-center text-center">
-                    {!isFlipped ? (
-                        <div className="flex items-center gap-4">
-                            <p className="text-3xl font-bold">{currentItem.text_items.content}</p>
+                    <div>
+                        <div className="flex items-center justify-center gap-4">
+                            <p className="text-2xl font-bold mb-2">{currentItem.text_items.content}</p>
                             <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.text_items.content)}>
                                 <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.text_items.content ? 'text-purple-600' : ''}`} />
                             </Button>
                         </div>
-                    ) : (
-                        <div>
-                            <div className="flex items-center justify-center gap-4">
-                                <p className="text-2xl font-bold mb-2">{currentItem.text_items.content}</p>
-                                <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.text_items.content)}>
-                                    <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.text_items.content ? 'text-purple-600' : ''}`} />
-                                </Button>
-                            </div>
-                            <p className="text-lg text-gray-600">{currentItem.text_items.context}</p>
-                            <p className="text-md text-gray-500 italic">{currentItem.text_items.user_definition}</p>
-                        </div>
-                    )}
+                        <p className="text-lg text-gray-600">{currentItem.text_items.context}</p>
+                        <p className="text-md text-gray-500 italic">{currentItem.text_items.user_definition}</p>
+                    </div>
                 </CardContent>
                 <CardFooter className="flex flex-col items-center">
-                    {!isFlipped ? (
-                        <Button onClick={handleFlip}>Show Answer</Button>
-                    ) : (
-                        <div className="flex justify-around w-full">
-                            <Button variant="destructive" onClick={() => handleRating(0)}>Again</Button>
-                            <Button variant="outline" onClick={() => handleRating(3)}>Hard</Button>
-                            <Button variant="outline" onClick={() => handleRating(4)}>Good</Button>
-                            <Button onClick={() => handleRating(5)}>Easy</Button>
-                        </div>
-                    )}
+                    <div className="flex justify-around w-full">
+                        <Button variant="destructive" onClick={() => handleRating(0)}>Again</Button>
+                        <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => handleRating(3)}>Hard</Button>
+                        <Button className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => handleRating(4)}>Good</Button>
+                        <Button className="bg-green-500 hover:bg-green-600 text-white" onClick={() => handleRating(5)}>Easy</Button>
+                    </div>
                 </CardFooter>
             </Card>
         </div>
