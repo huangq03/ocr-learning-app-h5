@@ -67,7 +67,7 @@ interface SessionResult {
 export default function DictationInterface({ user, textItems }: DictationInterfaceProps) {
   const { t } = useTranslation();
   const [selections, setSelections] = useState(textItems)
-  const [currentSelectionIndex, setCurrentSelectionIndex] = useState(0)
+  const [currentSelectionIndex, setCurrentSelectionIndex] = useState(-1)
   const [userInput, setUserInput] = useState("")
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [attempts, setAttempts] = useState(0)
@@ -88,12 +88,13 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
   useEffect(() => {
     setStartTime(Date.now())
-    // Reset timer when changing items (skip first item as it's handled by the start button)
-    if (autoMode && autoSessionStarted && currentSelectionIndex > 0) {
-      // Auto play with countdown when changing items in auto mode
+    // When changing items in auto mode (after the first one), start the item countdown
+    if (autoMode && autoSessionStarted && currentSelectionIndex > -1) {
+      console.log('XXXXXXXX: To call autoPlayWithCountdown due to currentSelectionIndex change:', currentSelectionIndex)
       autoPlayWithCountdown()
     }
-  }, [currentSelectionIndex, autoMode, autoSessionStarted, timeoutValue])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSelectionIndex, autoMode, autoSessionStarted])
 
   const handleCheck = useCallback(() => {
     const currentSelection = selections[currentSelectionIndex]
@@ -113,7 +114,21 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     }
   }, [userInput, selections, currentSelectionIndex, mode])
 
-  const handleNext = async () => {
+  const handleNext = () => {
+    console.log('XXXXXXXX: handleNext called with currentSelectionIndex:', currentSelectionIndex, 'selections length:', selections.length)
+    if (currentSelectionIndex < selections.length - 1) {
+      setCurrentSelectionIndex(currentSelectionIndex + 1)
+      setUserInput("")
+      setIsCorrect(null)
+      setAttempts(0)
+      setPaperInputChecked(false) // Reset paper mode verification
+      // Reset timer for next item
+    } else {
+      setShowSummary(true)
+    }
+  }
+
+  const handleAnswer = async () => {
     // Clear any existing timer
     if (autoTimerRef.current) {
       clearTimeout(autoTimerRef.current)
@@ -164,20 +179,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       completion_time_seconds: completionTime,
       completed_at: new Date().toISOString(),
     })
-
-    if (currentSelectionIndex < selections.length - 1) {
-      setCurrentSelectionIndex(currentSelectionIndex + 1)
-      setUserInput("")
-      setIsCorrect(null)
-      setAttempts(0)
-      setPaperInputChecked(false) // Reset paper mode verification
-      // Reset timer for next item
-      if (autoMode) {
-        setTimeLeft(timeoutValue)
-      }
-    } else {
-      setShowSummary(true)
-    }
   }
 
   const handleRestart = () => {
@@ -191,7 +192,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       countdownRef.current = null
     }
     
-    setCurrentSelectionIndex(0)
+    setCurrentSelectionIndex(-1)
     setUserInput("")
     setIsCorrect(null)
     setAttempts(0)
@@ -201,23 +202,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     setAutoSessionStarted(false) // Reset auto session
     setCountdown(null) // Reset countdown
     setTimeLeft(0) // Reset timer
-  }
-
-  const handleListen = () => {
-    const currentSelection = selections[currentSelectionIndex]
-    if (!currentSelection || typeof window === 'undefined') return
-    const utterance = new SpeechSynthesisUtterance(currentSelection.content)
-    utterance.lang = 'en-US'
-    
-    // Set up event listener for when speech ends
-    utterance.onend = () => {
-      // Start the timeout countdown after audio is finished
-      if (autoMode && autoSessionStarted) {
-        setTimeLeft(timeoutValue)
-      }
-    }
-    
-    window.speechSynthesis.speak(utterance)
   }
 
   // Auto play audio in auto mode with countdown
@@ -237,24 +221,47 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     }
     
     // Start 3-second countdown
+    console.log('XXXXXXXX: Starting countdown for auto mode')
     setCountdown(3)
     countdownRef.current = setTimeout(() => {
       setCountdown(2)
+      console.log('XXXXXXXX: Countdown at 2 seconds')
       countdownRef.current = setTimeout(() => {
         setCountdown(1)
+        console.log
         countdownRef.current = setTimeout(() => {
           setCountdown(null)
+          console.log('XXXXXXXX: Countdown finished, calling handleListen')
           handleListen()
         }, 1000)
       }, 1000)
     }, 1000)
   }
 
+  const handleListen = () => {
+    const currentSelection = selections[currentSelectionIndex]
+    if (!currentSelection || typeof window === 'undefined') return
+    const utterance = new SpeechSynthesisUtterance(currentSelection.content)
+    utterance.lang = 'en-US'
+    
+    // Set up event listener for when speech ends
+    utterance.onend = () => {
+      // Start the timeout countdown after audio is finished
+      if (autoMode && autoSessionStarted) {
+        console.log('XXXXXXXX: Audio ended, starting timeout countdown with timeoutValue:', timeoutValue)
+        setTimeLeft(timeoutValue)
+      }
+    }
+    
+    window.speechSynthesis.speak(utterance)
+  }
+
   // Start auto session
   const startAutoSession = () => {
+    console.log('XXXXXXXX: startAutoSession called with timeoutValue:', timeoutValue)
     setAutoSessionStarted(true)
-    setStartTime(Date.now())
-    autoPlayWithCountdown()
+    // setTimeLeft is called in handleListen's onend callback
+    handleNext() // Move to the first item
   }
 
   // Reset auto session
@@ -277,14 +284,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     }
   }, [])
 
-  // Initialize timeLeft when autoMode is enabled and not in countdown
-  useEffect(() => {
-    if (autoMode && autoSessionStarted && timeLeft === 0 && countdown === null) {
-      // Only set timeLeft if we're not in the initial state (when no audio has been played yet)
-      // This ensures timeLeft is only set after audio is played
-    }
-  }, [autoMode, timeoutValue, timeLeft, autoSessionStarted, countdown])
-
   // Reset auto session when auto mode is disabled
   useEffect(() => {
     if (!autoMode) {
@@ -294,17 +293,19 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
   // Auto mode timer effect
   useEffect(() => {
+    // Don't run if not in auto mode, showing summary, not started, or in item countdown
     if (!autoMode || showSummary || !autoSessionStarted || countdown !== null) return
 
+    // Only run the timeout countdown if we've set a value (after audio plays)
     if (timeLeft > 0) {
+      console.log('XXXXXXXX: Auto mode timer running with timeLeft:', timeLeft)
       autoTimerRef.current = setTimeout(() => {
         setTimeLeft(prev => prev - 1)
       }, 1000)
-    } else if (timeLeft === 0 && currentSelectionIndex < selections.length - 1) {
-      // Auto advance to next item when timer reaches 0
-      handleNext()
-    } else if (timeLeft === 0 && currentSelectionIndex === selections.length - 1) {
-      // For the last item, we still call handleNext to finish the session
+    } else if (autoTimerRef.current && timeLeft === 0) {
+      // When timer reaches 0, save answer and move to next item or finish the session
+      console.log('XXXXXXXX: to call handleAnswer and handleNext due to timer reaching 0')
+      handleAnswer()
       handleNext()
     }
 
@@ -313,7 +314,8 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         clearTimeout(autoTimerRef.current)
       }
     }
-  }, [autoMode, timeLeft, currentSelectionIndex, selections.length, showSummary, autoSessionStarted, countdown])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoMode, timeLeft, showSummary, autoSessionStarted, countdown])
 
   // Cleanup effect for countdown timer
   useEffect(() => {
@@ -425,7 +427,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
           <>
             <div className="text-center my-8 p-4 bg-purple-50 rounded-lg">
               <Button 
-                onClick={autoMode ? autoPlayWithCountdown : handleListen} 
+                onClick={handleListen} 
                 size="lg" 
                 variant="outline"
                 disabled={countdown !== null || (autoMode && !autoSessionStarted)} // Disable during countdown or before starting auto session
