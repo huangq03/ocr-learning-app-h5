@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { BarChart, Smile, Meh, Frown, Angry } from 'lucide-react';
+import { BarChart, Smile, Meh, Frown, Angry, Volume2 } from 'lucide-react';
 
 // SM-2 Algorithm Implementation
 const calculateSm2 = (item: any, quality: number) => {
@@ -64,8 +64,27 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
     const [isFlipped, setIsFlipped] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [sessionStats, setSessionStats] = useState<SessionStats>({ again: 0, hard: 0, good: 0, easy: 0 });
+    const [nowPlaying, setNowPlaying] = useState<string | null>(null);
 
     const handleFlip = () => setIsFlipped(true);
+
+    const handlePlay = (text: string) => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            if (nowPlaying === text) {
+                setNowPlaying(null);
+                return;
+            }
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.onstart = () => setNowPlaying(text);
+        utterance.onend = () => setNowPlaying(null);
+        window.speechSynthesis.speak(utterance);
+    };
 
     const handleRating = async (quality: number) => {
         const currentItem = items[currentIndex];
@@ -134,10 +153,20 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                 </CardHeader>
                 <CardContent className="min-h-[200px] flex items-center justify-center text-center">
                     {!isFlipped ? (
-                        <p className="text-3xl font-bold">{currentItem.text_items.content}</p>
+                        <div className="flex items-center gap-4">
+                            <p className="text-3xl font-bold">{currentItem.text_items.content}</p>
+                            <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.text_items.content)}>
+                                <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.text_items.content ? 'text-purple-600' : ''}`} />
+                            </Button>
+                        </div>
                     ) : (
                         <div>
-                            <p className="text-2xl font-bold mb-2">{currentItem.text_items.content}</p>
+                            <div className="flex items-center justify-center gap-4">
+                                <p className="text-2xl font-bold mb-2">{currentItem.text_items.content}</p>
+                                <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.text_items.content)}>
+                                    <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.text_items.content ? 'text-purple-600' : ''}`} />
+                                </Button>
+                            </div>
                             <p className="text-lg text-gray-600">{currentItem.text_items.context}</p>
                             <p className="text-md text-gray-500 italic">{currentItem.text_items.user_definition}</p>
                         </div>

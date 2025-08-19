@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
 
 interface Document {
   id: string;
@@ -17,6 +17,7 @@ interface Document {
 
 export default function ItemGroup({ document }: { document: Document }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [nowPlaying, setNowPlaying] = useState<string | null>(null);
   const items = document.recognized_text?.items || [];
   const cleaned_text = document.recognized_text?.cleaned_text || '';
 
@@ -27,6 +28,24 @@ export default function ItemGroup({ document }: { document: Document }) {
     if (indexB === -1) return -1;
     return indexA - indexB;
   });
+
+  const handlePlay = (text: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      if (nowPlaying === text) {
+        setNowPlaying(null);
+        return;
+      }
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.onstart = () => setNowPlaying(text);
+    utterance.onend = () => setNowPlaying(null);
+    window.speechSynthesis.speak(utterance);
+  };
 
   return (
     <Card>
@@ -50,7 +69,12 @@ export default function ItemGroup({ document }: { document: Document }) {
         <CardContent>
           <ul className="space-y-2 list-disc list-inside">
             {sortedItems.map((item, index) => (
-              <li key={index} className="p-2 bg-gray-100 rounded-md text-gray-800">{item}</li>
+              <li key={index} className="p-2 bg-gray-100 rounded-md text-gray-800 flex items-center justify-between">
+                <span>{item}</span>
+                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handlePlay(item); }}>
+                  <Volume2 className={`w-4 h-4 ${nowPlaying === item ? 'text-purple-600' : ''}`} />
+                </Button>
+              </li>
             ))}
           </ul>
         </CardContent>
