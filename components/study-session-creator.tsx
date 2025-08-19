@@ -75,7 +75,11 @@ export default function StudySessionCreator({ document }: { document: Document }
 
     const studySession = { type, items: selectedItems, documentId: document.id };
     localStorage.setItem('studySession', JSON.stringify(studySession));
-    router.push('/study');
+    if (type === 'dictation') {
+      router.push('/dictation');
+    } else {
+      router.push('/study');
+    }
   };
 
   const handleAddToStudyPlan = async () => {
