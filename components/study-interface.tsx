@@ -126,7 +126,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                     setShowSummary(true);
                 }
             }
-        }, 500);
+        }, 150); // Reduced timeout for overlap
     };
 
     if (items.length === 0) {
@@ -172,10 +172,10 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                     to { transform: translateX(-100%); opacity: 0; }
                 }
                 .animate-slide-in {
-                    animation: slide-in 0.5s forwards;
+                    animation: slide-in 0.3s forwards;
                 }
                 .animate-slide-out {
-                    animation: slide-out 0.5s forwards;
+                    animation: slide-out 0.3s forwards;
                 }
             `}</style>
             <Card className={`w-full ${animationClass}`}>
