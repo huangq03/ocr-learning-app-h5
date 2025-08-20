@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
 import { useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { supabase } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
+import { saveSelectionsAndCreateReviewsAction } from "@/lib/actions"
 
 interface TextSelectionInterfaceProps {
   user: User
@@ -30,27 +30,10 @@ export default function TextSelectionInterface({ user, document, extractedText, 
   const handleSaveSelections = useCallback(async () => {
     if (selections.length === 0) return
 
-    const { data: savedSelections, error } = await supabase
-      .from("selections")
-      .insert(selections.map(s => ({ document_id: document.id, text: s.text, type: s.type })))
-      .select()
+    const result = await saveSelectionsAndCreateReviewsAction(document.id, selections, user.id);
 
-    if (error) {
-      console.error("Failed to save selections:", error)
-      return
-    }
-
-    // Create review schedule for each new selection
-    const reviewSchedules = savedSelections.map(selection => ({
-      selection_id: selection.id,
-      user_id: user.id,
-      due_date: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
-    }))
-
-    const { error: reviewError } = await supabase.from("reviews").insert(reviewSchedules)
-
-    if (reviewError) {
-      console.error("Failed to create review schedules:", reviewError)
+    if (result.error) {
+      console.error("Failed to save selections:", result.error)
     } else {
       console.log("Selections and review schedules saved successfully")
       router.push("/study")

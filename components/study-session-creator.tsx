@@ -9,8 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { BookOpen, Headphones, ArrowLeft, BrainCircuit } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
-import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { addToStudyPlanAction } from '@/lib/actions';
 
 interface Document {
   id: string;
@@ -52,13 +52,9 @@ export default function StudySessionCreator({ document }: { document: Document }
 
   const addToStudyPlan = async (items: string[]) => {
     setIsLoading(true);
-    const { data: insertedCount, error } = await supabase.rpc('add_to_study_plan', {
-      p_user_id: document.user_id,
-      p_document_id: document.id,
-      p_items: items,
-    });
+    const result = await addToStudyPlanAction(document.user_id, document.id, items);
     setIsLoading(false);
-    return { insertedCount, error };
+    return result;
   };
 
   const handleStartSession = async (type: 'recitation' | 'dictation') => {
@@ -81,7 +77,7 @@ export default function StudySessionCreator({ document }: { document: Document }
     if (error) {
       toast({
         title: <span className="text-white">{t('errorAddToStudyPlan')}</span>,
-        description: <span className="text-white">{error.message}</span>,
+        description: <span className="text-white">{error}</span>,
         variant: 'destructive',
       });
       return;
@@ -116,11 +112,11 @@ export default function StudySessionCreator({ document }: { document: Document }
       console.error('Error adding items to study plan:', error);
       toast({
         title: <span className="text-white">{t('errorAddToStudyPlan')}</span>,
-        description: <span className="text-white">{error.message}</span>,
+        description: <span className="text-white">{error}</span>,
         variant: 'destructive',
       });
     } else {
-      if (insertedCount > 0) {
+      if (insertedCount && insertedCount > 0) {
         toast({ title: t('successAddToStudyPlan'), description: t('successAddToStudyPlanDesc', { count: insertedCount }) });
       } else {
         toast({ title: t('noNewItemsAdded'), description: t('noNewItemsAddedDesc') });

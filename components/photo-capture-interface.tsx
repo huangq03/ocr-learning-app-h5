@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import type React from "react"
 import { useState, useRef, useCallback, useEffect } from "react"
@@ -7,11 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Camera, Upload, RotateCcw, Check, X, Sparkles, Gift, PlusCircle } from "lucide-react"
-import { supabase } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { useTranslation } from 'react-i18next';
 import '@/i18n'; // Initialize i18n
+import { saveDocument } from "@/lib/actions";
 
 // --- TYPES & INTERFACES ---
 interface OCRResult {
@@ -193,16 +193,16 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
     try {
       const response = await fetch(capturedImage)
       const blob = await response.blob()
-      const fileName = `${user.id}/${Date.now()}.jpg`
-      const { error: uploadError } = await supabase.storage.from("documents").upload(fileName, blob, { contentType: "image/jpeg" })
-      if (uploadError) throw uploadError
-      const { data: publicUrlData } = supabase.storage.from("documents").getPublicUrl(fileName)
-      const { data: documentData, error: dbError } = await supabase
-        .from("documents")
-        .insert({ user_id: user.id, image_url: publicUrlData.publicUrl, image_path: fileName, recognized_text: { ...ocrResult, newlyFoundItems: undefined } })
-        .select("id").single()
-      if (dbError) throw dbError
-      router.push(`/documents/${documentData.id}`)
+      const formData = new FormData();
+      formData.append('file', blob);
+
+      const result = await saveDocument(user.id, ocrResult, formData);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      router.push(`/documents/${result.documentId}`)
     } catch (err) {
       setError(t('errorSaveFailed'));
       console.error("Upload error:", err)

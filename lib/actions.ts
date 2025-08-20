@@ -157,3 +157,116 @@ export async function saveDictationResult(result: any) {
     return { error: "Failed to save dictation result." };
   }
 }
+
+export async function saveDocument(userId: string, ocrResult: any, formData: FormData) {
+  const cookieStore = cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+  const file = formData.get('file') as File;
+
+  if (!file) {
+    return { error: "File is missing" };
+  }
+
+  try {
+    const fileName = `${userId}/${Date.now()}.jpg`
+    const { error: uploadError } = await supabase.storage.from("documents").upload(fileName, file, { contentType: "image/jpeg" })
+    if (uploadError) throw uploadError
+
+    const { data: publicUrlData } = supabase.storage.from("documents").getPublicUrl(fileName)
+
+    const { data: documentData, error: dbError } = await supabase
+      .from("documents")
+      .insert({ user_id: userId, image_url: publicUrlData.publicUrl, image_path: fileName, recognized_text: { ...ocrResult, newlyFoundItems: undefined } })
+      .select("id").single()
+
+    if (dbError) throw dbError
+
+    return { documentId: documentData.id };
+  } catch (error) {
+    console.error("Error saving document:", error);
+    return { error: "Failed to save document." };
+  }
+}
+
+export async function addToStudyPlanAction(userId: string, documentId: string, items: string[]) {
+  const cookieStore = cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { data: insertedCount, error } = await supabase.rpc('add_to_study_plan', {
+      p_user_id: userId,
+      p_document_id: documentId,
+      p_items: items,
+    });
+
+    if (error) {
+      console.error("Error adding to study plan:", error);
+      return { error: "Failed to add to study plan." };
+    }
+    return { insertedCount };
+  } catch (error) {
+    console.error("Error adding to study plan:", error);
+    return { error: "Failed to add to study plan." };
+  }
+}
+
+export async function updateStudyScheduleAction(itemId: string, updatedSchedule: any) {
+  const cookieStore = cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { error } = await supabase
+      .from('spaced_repetition_schedule')
+      .update(updatedSchedule)
+      .eq('id', itemId);
+
+    if (error) {
+      console.error("Error updating study schedule:", error);
+      return { error: "Failed to update study schedule." };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating study schedule:", error);
+    return { error: "Failed to update study schedule." };
+  }
+}
+
+export async function saveSelectionsAndCreateReviewsAction(documentId: string, selections: any[], userId: string) {
+  const cookieStore = cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { data: savedSelections, error } = await supabase
+      .from("selections")
+      .insert(selections.map(s => ({ document_id: documentId, text: s.text, type: s.type })))
+      .select()
+
+    if (error) {
+      console.error("Failed to save selections:", error);
+      return { error: "Failed to save selections." };
+    }
+
+    if (!savedSelections) {
+      return { error: "Failed to save selections." };
+    }
+
+    // Create review schedule for each new selection
+    const reviewSchedules = savedSelections.map(selection => ({
+      selection_id: selection.id,
+      user_id: userId,
+      due_date: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
+    }))
+
+    const { error: reviewError } = await supabase.from("reviews").insert(reviewSchedules)
+
+    if (reviewError) {
+      console.error("Failed to create review schedules:", reviewError)
+      return { error: "Failed to create review schedules." };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving selections and reviews:", error);
+    return { error: "Failed to save selections and reviews." };
+  }
+}

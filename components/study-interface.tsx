@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { BarChart, Smile, Meh, Frown, Angry, Volume2 } from 'lucide-react';
+import { Smile, Meh, Frown, Angry, Volume2 } from 'lucide-react';
+import { updateStudyScheduleAction } from '@/lib/actions';
 
 // SM-2 Algorithm Implementation
 const calculateSm2 = (item: any, quality: number) => {
@@ -57,7 +57,7 @@ interface SessionStats {
     easy: number;
 }
 
-export default function StudyInterface({ initialItems, user }: StudyInterfaceProps) {
+export default function StudyInterface({ initialItems }: StudyInterfaceProps) {
     const router = useRouter();
     const [items, setItems] = useState(initialItems);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -110,10 +110,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
         else if (quality === 4) setSessionStats(prev => ({ ...prev, good: prev.good + 1 }));
         else if (quality === 5) setSessionStats(prev => ({ ...prev, easy: prev.easy + 1 }));
 
-        const { error } = await supabase
-            .from('spaced_repetition_schedule')
-            .update(updatedSchedule)
-            .eq('id', currentItem.id);
+        const { error } = await updateStudyScheduleAction(currentItem.id, updatedSchedule);
 
         if (error) {
             console.error('Error updating schedule:', error);
