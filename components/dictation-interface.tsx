@@ -525,15 +525,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       <Card className="p-6 relative">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">{t('dictationTitle')}</h2>
-          <DictationModeSettings 
-            autoMode={autoMode}
-            setAutoMode={setAutoMode}
-            timeoutValue={timeoutValue}
-            setTimeoutValue={setTimeoutValue}
-            timeLeft={timeLeft}
-            mode={mode}
-            setMode={setMode}
-          />
         </div>
         
         <p className="text-sm text-gray-500 mb-6">{t('itemCounter', { current: currentSelectionIndex + 1, total: selections.length })}</p>
