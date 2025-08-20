@@ -1,8 +1,10 @@
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import DashboardInterface from "@/components/dashboard-interface"
+import { getPageSession } from "@/lib/actions"
 
 export default async function Home() {
+  const { session, isSupabaseConfigured } = await getPageSession();
+
   if (!isSupabaseConfigured) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -11,18 +13,13 @@ export default async function Home() {
     )
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
+  if (!session) {
     redirect("/auth/login")
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-lavender-50">
-      <DashboardInterface user={user} />
+      <DashboardInterface user={session.user} />
     </div>
   )
 }
