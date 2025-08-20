@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation';
 import StudyInterface from '@/components/study-interface';
 import type { User } from '@supabase/supabase-js';
 import { getStudyPageData } from '@/lib/actions';
-import { supabase } from '@/lib/supabase/client';
 
 export default function StudyPage() {
     const [user, setUser] = useState<User | null>(null);
@@ -16,38 +15,36 @@ export default function StudyPage() {
     useEffect(() => {
         setIsMounted(true);
         const fetchUserAndItems = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-
-            if (!user) {
-                redirect('/auth/login');
-                return;
-            }
-            setUser(user);
-
             const studySessionString = localStorage.getItem('studySession');
             if (studySessionString) {
                 const studySession = JSON.parse(studySessionString);
                 if (studySession.type === 'recitation') {
-                    const result = await getStudyPageData(user.id, studySession.items);
+                    const result = await getStudyPageData(studySession.items);
                     if (result.error) {
                         console.error('Error fetching study session items:', result.error);
+                        redirect('/auth/login');
                     } else {
+                        setUser(result.user);
                         setItems(result.items || []);
                     }
                     localStorage.removeItem('studySession'); // Clear after use
                 } else {
-                    const result = await getStudyPageData(user.id);
+                    const result = await getStudyPageData();
                     if (result.error) {
                         console.error('Error fetching due items:', result.error);
+                        redirect('/auth/login');
                     } else {
+                        setUser(result.user);
                         setItems(result.items || []);
                     }
                 }
             } else {
-                const result = await getStudyPageData(user.id);
+                const result = await getStudyPageData();
                 if (result.error) {
                     console.error('Error fetching due items:', result.error);
+                    redirect('/auth/login');
                 } else {
+                    setUser(result.user);
                     setItems(result.items || []);
                 }
             }

@@ -271,15 +271,20 @@ export async function saveSelectionsAndCreateReviewsAction(documentId: string, s
   }
 }
 
-export async function getDocuments(userId: string) {
+export async function getDocumentsPageData() {
   const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: "User not found" };
+    }
+
     const { data, error } = await supabase
       .from('documents')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .eq('is_deleted', false)
       .order('created_at', { ascending: false });
 
@@ -287,7 +292,7 @@ export async function getDocuments(userId: string) {
       console.error("Error fetching documents:", error);
       return { error: "Failed to fetch documents." };
     }
-    return { documents: data };
+    return { documents: data, user };
   } catch (error) {
     console.error("Error fetching documents:", error);
     return { error: "Failed to fetch documents." };
@@ -316,11 +321,16 @@ export async function deleteDocument(documentId: string, userId: string) {
   }
 }
 
-export async function getStudyPageData(userId: string, studySessionItems?: string[]) {
+export async function getStudyPageData(studySessionItems?: string[]) {
   const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: "User not found" };
+    }
+
     if (studySessionItems) {
       const { data, error } = await supabase
         .from('spaced_repetition_schedule')
@@ -328,14 +338,14 @@ export async function getStudyPageData(userId: string, studySessionItems?: strin
             *,
             text_items!inner(*)
         `)
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .in('text_items.content', studySessionItems);
 
       if (error) {
         console.error("Error fetching study session items:", error);
         return { error: "Failed to fetch study session items." };
       }
-      return { items: data };
+      return { items: data, user };
     } else {
       const today = new Date().toISOString().split("T")[0];
       const { data, error } = await supabase
@@ -344,7 +354,7 @@ export async function getStudyPageData(userId: string, studySessionItems?: strin
             *,
             text_items:text_item_id (*)
         `)
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .eq("is_active", true)
         .lte("next_review_date", today);
 
@@ -352,7 +362,7 @@ export async function getStudyPageData(userId: string, studySessionItems?: strin
         console.error("Error fetching due items:", error);
         return { error: "Failed to fetch due items." };
       }
-      return { items: data };
+      return { items: data, user };
     }
   } catch (error) {
     console.error("Error fetching study page data:", error);
@@ -360,22 +370,27 @@ export async function getStudyPageData(userId: string, studySessionItems?: strin
   }
 }
 
-export async function getDictationPageData(userId: string) {
+export async function getDictationPageData() {
   const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: "User not found" };
+    }
+
     const { data, error } = await supabase
       .from('text_items')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching text items:", error);
       return { error: "Failed to fetch text items." };
     }
-    return { items: data };
+    return { items: data, user };
   } catch (error) {
     console.error("Error fetching text items:", error);
     return { error: "Failed to fetch text items." };
@@ -395,45 +410,55 @@ export async function getPageSession() {
   return { session, isSupabaseConfigured };
 }
 
-export async function getDocumentById(documentId: string, userId: string) {
+export async function getDocumentById(documentId: string) {
   const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: "User not found" };
+    }
+
     const { data, error } = await supabase
       .from('documents')
       .select('*')
       .eq('id', documentId)
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .single();
 
     if (error) {
       console.error("Error fetching document:", error);
       return { error: "Failed to fetch document." };
     }
-    return { document: data };
+    return { document: data, user };
   } catch (error) {
     console.error("Error fetching document:", error);
     return { error: "Failed to fetch document." };
   }
 }
 
-export async function getItemsPageData(userId: string) {
+export async function getItemsPageData() {
   const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: "User not found" };
+    }
+
     const { data, error } = await supabase
       .from('documents')
       .select('id, created_at, recognized_text')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching documents for items page:", error);
       return { error: "Failed to fetch documents for items page." };
     }
-    return { documents: data };
+    return { documents: data, user };
   } catch (error) {
     console.error("Error fetching documents for items page:", error);
     return { error: "Failed to fetch documents for items page." };

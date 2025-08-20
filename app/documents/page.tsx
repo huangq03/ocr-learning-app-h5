@@ -6,8 +6,7 @@ import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Trash2, Edit, PlusCircle, ArrowLeft, FileText } from 'lucide-react';
-import { getDocuments, deleteDocument } from '@/lib/actions';
-import { supabase } from '@/lib/supabase/client';
+import { getDocumentsPageData, deleteDocument } from '@/lib/actions';
 
 // Define the type for our document data
 interface Document {
@@ -28,18 +27,13 @@ export default function DocumentManagementPage() {
 
   useEffect(() => {
     const getUserAndDocuments = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/auth/login');
-        return;
-      }
-      setUser(user);
-
-      const result = await getDocuments(user.id);
+      const result = await getDocumentsPageData();
 
       if (result.error) {
         console.error('Error fetching documents:', result.error);
+        router.push('/auth/login');
       } else {
+        setUser(result.user);
         setDocuments(result.documents as Document[]);
       }
       setIsLoading(false);
