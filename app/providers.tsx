@@ -3,7 +3,7 @@
 import { I18nextProvider } from 'react-i18next';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import i18n from '@/i18n';
-import SiteHeader from '@/components/site-header';
+import { SiteHeader } from '@/components/site-header';
 import { Toaster } from '@/components/ui/toaster';
 
 export function Providers({ children }: { children: React.ReactNode }) {

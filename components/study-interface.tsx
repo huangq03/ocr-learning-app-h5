@@ -65,7 +65,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
     const [sessionStats, setSessionStats] = useState<SessionStats>({ again: 0, hard: 0, good: 0, easy: 0 });
     const [nowPlaying, setNowPlaying] = useState<string | null>(null);
     const [highlightedWordIndex, setHighlightedWordIndex] = useState(-1);
-    const [isFading, setIsFading] = useState(false);
+    const [animationClass, setAnimationClass] = useState('animate-slide-in');
 
     const handlePlay = (text: string) => {
         if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -102,7 +102,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
     };
 
     const handleRating = async (quality: number) => {
-        setIsFading(true);
+        setAnimationClass('animate-slide-out');
         const currentItem = items[currentIndex];
         const updatedSchedule = calculateSm2(currentItem, quality);
 
@@ -117,16 +117,16 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
         setTimeout(() => {
             if (error) {
                 console.error('Error updating schedule:', error);
-                setIsFading(false);
+                setAnimationClass('animate-slide-in');
             } else {
                 if (currentIndex < items.length - 1) {
                     setCurrentIndex(currentIndex + 1);
-                    setIsFading(false);
+                    setAnimationClass('animate-slide-in');
                 } else {
                     setShowSummary(true);
                 }
             }
-        }, 200);
+        }, 500);
     };
 
     if (items.length === 0) {
@@ -162,7 +162,23 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
 
     return (
         <div className="p-4 max-w-2xl mx-auto">
-            <Card className={`w-full transition-opacity duration-200 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+            <style>{`
+                @keyframes slide-in {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slide-out {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(-100%); opacity: 0; }
+                }
+                .animate-slide-in {
+                    animation: slide-in 0.5s forwards;
+                }
+                .animate-slide-out {
+                    animation: slide-out 0.5s forwards;
+                }
+            `}</style>
+            <Card className={`w-full ${animationClass}`}>
                 <CardHeader>
                     <CardTitle>Study Session</CardTitle>
                     <Progress value={progress} className="mt-2" />
