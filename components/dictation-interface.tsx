@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DictationModeSettings } from "@/components/dictation-mode-settings"
 import type { User } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase/client"
-import { BarChart, CheckCircle, XCircle, Volume2, HelpCircle, Timer } from "lucide-react"
+import { BarChart, CheckCircle, XCircle, Volume2, HelpCircle } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/tooltip"
 import { useTranslation } from 'react-i18next'
 import '@/i18n'
+import { saveDictationResult } from "@/lib/actions"
 
 // Helper function to calculate Levenshtein distance
 const levenshteinDistance = (a: string, b: string): number => {
@@ -168,7 +168,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
     setSessionResults([...sessionResults, result])
 
-    await supabase.from("dictation_exercises").insert({
+    await saveDictationResult({
       user_id: user.id,
       text_item_id: result.text_item_id,
       target_text: result.original_text,
@@ -250,7 +250,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
     setSessionResults(prev => [...prev, result]);
 
-    await supabase.from("dictation_exercises").insert({
+    await saveDictationResult({
       user_id: user.id,
       text_item_id: result.text_item_id,
       target_text: result.original_text,

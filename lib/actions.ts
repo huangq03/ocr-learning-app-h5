@@ -140,3 +140,20 @@ export async function getDashboardData(userId: string) {
     return { error: "Failed to fetch dashboard data." };
   }
 }
+
+export async function saveDictationResult(result: any) {
+  const cookieStore = cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { error } = await supabase.from("dictation_exercises").insert(result);
+    if (error) {
+      console.error("Error saving dictation result:", error);
+      return { error: "Failed to save dictation result." };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving dictation result:", error);
+    return { error: "Failed to save dictation result." };
+  }
+}
