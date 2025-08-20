@@ -1,38 +1,69 @@
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
-import DictationInterface from "@/components/dictation-interface"
+'use client';
 
-export default async function DictationPage() {
-  // If Supabase is not configured, show setup message
-  if (!isSupabaseConfigured) {
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase/client';
+import { redirect } from 'next/navigation';
+import DictationInterface from '@/components/dictation-interface';
+import type { User } from '@supabase/supabase-js';
+
+export default function DictationPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [textItems, setTextItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserAndItems = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        redirect('/auth/login');
+        return;
+      }
+      setUser(user);
+
+      const studySessionString = localStorage.getItem('studySession');
+      if (studySessionString) {
+        const studySession = JSON.parse(studySessionString);
+        if (studySession.type === 'dictation') {
+          // The items are strings, we need to convert them to the format expected by DictationInterface
+          const formattedItems = studySession.items.map((item: string, index: number) => ({ id: `local-${index}`, content: item }));
+          setTextItems(formattedItems);
+          localStorage.removeItem('studySession'); // Clear after use
+        } else {
+          // Fetch all items if the session is not for dictation
+          const { data } = await supabase
+            .from('text_items')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+          setTextItems(data || []);
+        }
+      } else {
+        // Fetch all items if no session is found
+        const { data } = await supabase
+          .from('text_items')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        setTextItems(data || []);
+      }
+      setIsLoading(false);
+    };
+
+    fetchUserAndItems();
+  }, []);
+
+  if (isLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <h1 className="text-2xl font-bold mb-4 text-foreground">Connect Supabase to get started</h1>
+        <h1 className="text-2xl font-bold mb-4 text-foreground">Loading...</h1>
       </div>
-    )
+    );
   }
-
-  // Get the user from the server
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // If no user, redirect to login
-  if (!user) {
-    redirect("/auth/login")
-  }
-
-  // Fetch user's text items for dictation practice
-  const { data: textItems } = await supabase
-    .from("text_items")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100">
-      <DictationInterface user={user} textItems={textItems || []} />
+      <DictationInterface user={user} textItems={textItems} />
     </div>
-  )
+  );
 }
