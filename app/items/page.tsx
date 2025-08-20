@@ -1,14 +1,12 @@
-import { cookies } from 'next/headers';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import ItemGroup from '@/components/item-group';
+import { getItemsPageData, getPageSession } from '@/lib/actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ItemsManagementPage() {
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
+  const { session } = await getPageSession();
 
-  if (!user) {
+  if (!session) {
     return (
       <div className="p-4 sm:p-6 md:p-8">
         <p>Please log in to see your items.</p>
@@ -16,11 +14,7 @@ export default async function ItemsManagementPage() {
     );
   }
 
-  const { data: documents, error } = await supabase
-    .from('documents')
-    .select('id, created_at, recognized_text')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+  const { documents, error } = await getItemsPageData(session.user.id);
 
   if (error) {
     console.error('Error fetching documents:', error);

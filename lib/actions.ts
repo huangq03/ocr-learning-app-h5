@@ -417,3 +417,25 @@ export async function getDocumentById(documentId: string, userId: string) {
     return { error: "Failed to fetch document." };
   }
 }
+
+export async function getItemsPageData(userId: string) {
+  const cookieStore = await cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('id, created_at, recognized_text')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching documents for items page:", error);
+      return { error: "Failed to fetch documents for items page." };
+    }
+    return { documents: data };
+  } catch (error) {
+    console.error("Error fetching documents for items page:", error);
+    return { error: "Failed to fetch documents for items page." };
+  }
+}
