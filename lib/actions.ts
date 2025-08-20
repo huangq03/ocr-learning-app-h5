@@ -19,7 +19,7 @@ export async function signIn(prevState: any, formData: FormData) {
     return { error: "Email and password are required" }
   }
 
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
@@ -55,7 +55,7 @@ export async function signUp(prevState: any, formData: FormData) {
     return { error: "Email and password are required" }
   }
 
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
@@ -76,7 +76,7 @@ export async function signUp(prevState: any, formData: FormData) {
 }
 
 export async function signOut() {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   await supabase.auth.signOut()
@@ -84,7 +84,7 @@ export async function signOut() {
 }
 
 export async function getDashboardData(userId: string) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
@@ -110,7 +110,7 @@ export async function getDashboardData(userId: string) {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    let recentDocuments: any[] = [];
+    let recentDocuments: any[] = []
     if (recentTextItems) {
         const recentDocumentIds = [...new Set(recentTextItems.map(item => item.document_id))].slice(0, 3);
         
@@ -142,7 +142,7 @@ export async function getDashboardData(userId: string) {
 }
 
 export async function saveDictationResult(result: any) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
@@ -159,7 +159,7 @@ export async function saveDictationResult(result: any) {
 }
 
 export async function saveDocument(userId: string, ocrResult: any, formData: FormData) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
   const file = formData.get('file') as File;
 
@@ -189,7 +189,7 @@ export async function saveDocument(userId: string, ocrResult: any, formData: For
 }
 
 export async function addToStudyPlanAction(userId: string, documentId: string, items: string[]) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
@@ -211,7 +211,7 @@ export async function addToStudyPlanAction(userId: string, documentId: string, i
 }
 
 export async function updateStudyScheduleAction(itemId: string, updatedSchedule: any) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
@@ -232,7 +232,7 @@ export async function updateStudyScheduleAction(itemId: string, updatedSchedule:
 }
 
 export async function saveSelectionsAndCreateReviewsAction(documentId: string, selections: any[], userId: string) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerActionClient({ cookies: () => cookieStore })
 
   try {
