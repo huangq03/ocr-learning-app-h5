@@ -60,12 +60,11 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
           .eq("is_active", true)
           .lte("next_review_date", today)
 
-        const { count: masteredItemsCount } = await supabase
-          .from("spaced_repetition_schedule")
-          .select("id", { count: 'exact', head: true })
-          .eq("user_id", user.id)
-          .gte("ease_factor", 2.5)
-          .gte("repetition_number", 3)
+        const { data: masteredItemsCount, error: masteredError } = await supabase.rpc('get_mastered_items_count', { p_user_id: user.id });
+        if (masteredError) throw masteredError;
+
+        const { data: currentStreak, error: streakError } = await supabase.rpc('get_day_streak', { p_user_id: user.id });
+        if (streakError) throw streakError;
 
         const { data: recentTextItems } = await supabase
           .from('text_items')
@@ -93,7 +92,7 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
           totalItems: userProgress?.total_text_items || 0,
           itemsDue: dueItemsCount || 0,
           masteredItems: masteredItemsCount || 0,
-          currentStreak: userProgress?.current_streak_days || 0,
+          currentStreak: currentStreak || 0,
           studyTimeHours: Math.round((userProgress?.total_study_time_minutes || 0) / 60),
         })
 

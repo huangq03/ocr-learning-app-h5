@@ -110,6 +110,6 @@
   "summaryPracticeAgain": "再次练习",
   "autoModeStartNotification": "听写即将开始。听到提示音后，3秒钟后将播放发音。您将有 {{timeoutValue}} 秒的时间写下您的答案。",
   "dictationReadyTitle": "准备好听写了吗？",
-  "dictationReadySubtitle": "点击下面的按钮开始您的环节。",
+  "dictationReadySubtitle": "点击下面的按钮开始听写。",
   "startSessionButton": "开始听写"
 }
