@@ -163,7 +163,15 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
           <Card className="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg border-0"><div className="flex items-center justify-between mb-4"><div className="p-3 bg-white bg-opacity-20 rounded-lg"><Camera className="w-8 h-8" /></div></div><h3 className="text-xl font-bold mb-2">{t('addNewContentTitle')}</h3><p className="text-green-100 mb-4">{t('addNewContentSubtitle')}</p><Button onClick={() => router.push("/capture")} variant="secondary" className="w-full bg-white text-green-600 hover:bg-green-50">{t('captureNewDocument')}<ArrowRight className="w-4 h-4 ml-2" /></Button></Card>
         </div>
 
-        {recentItemGroups.length > 0 && (
+        {stats.totalDocuments === 0 && !isLoading ? (
+          <Card className="p-6 bg-white shadow-lg border-0 text-center">
+            <h3 className="text-xl font-bold text-purple-800 mb-2">{t('welcomeMessage')}</h3>
+            <Button onClick={() => router.push("/capture")} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white">
+              <Camera className="w-4 h-4 mr-2" />
+              {t('addFirstDocument')}
+            </Button>
+          </Card>
+        ) : recentItemGroups.length > 0 && (
           <Card className="p-6 bg-white shadow-lg border-0">
             <h3 className="text-xl font-bold text-purple-800 mb-4">{t('recentItemGroups')}</h3>
             <div className="space-y-4">

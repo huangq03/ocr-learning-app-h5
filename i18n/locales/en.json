@@ -111,5 +111,7 @@
   "autoModeStartNotification": "The dictation is about to begin. After the beep, you'll hear the pronunciation in 3 seconds. You will have {{timeoutValue}} seconds to write your answer.",
   "dictationReadyTitle": "Ready for Dictation?",
   "dictationReadySubtitle": "Click the button below to start your session.",
-  "startSessionButton": "Start Session"
+  "startSessionButton": "Start Session",
+  "welcomeMessage": "Welcome! Add your first document to start learning.",
+  "addFirstDocument": "Add Your First Document"
 }
