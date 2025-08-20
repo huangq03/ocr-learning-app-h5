@@ -394,3 +394,26 @@ export async function getPageSession() {
 
   return { session, isSupabaseConfigured };
 }
+
+export async function getDocumentById(documentId: string, userId: string) {
+  const cookieStore = await cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching document:", error);
+      return { error: "Failed to fetch document." };
+    }
+    return { document: data };
+  } catch (error) {
+    console.error("Error fetching document:", error);
+    return { error: "Failed to fetch document." };
+  }
+}

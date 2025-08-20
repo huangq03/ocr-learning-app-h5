@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import StudySessionCreator from '@/components/study-session-creator';
+import { getPageSession, getDocumentById } from '@/lib/actions';
 
 // Define the type for our document data
 interface Document {
@@ -17,19 +17,13 @@ interface Document {
 // Server Component that fetches data and passes it to the client component
 export default async function DocumentPage({ params }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { session } = await getPageSession();
 
-  if (!user) {
+  if (!session) {
     redirect('/auth/login');
   }
 
-  const { data: document, error } = await supabase
-    .from('documents')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single();
+  const { document, error } = await getDocumentById(id, session.user.id);
 
   if (error || !document) {
     notFound();
