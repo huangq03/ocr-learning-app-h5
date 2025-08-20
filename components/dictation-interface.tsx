@@ -65,7 +65,7 @@ interface SessionResult {
 }
 
 export default function DictationInterface({ user, textItems }: DictationInterfaceProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selections, setSelections] = useState(textItems)
   const [currentSelectionIndex, setCurrentSelectionIndex] = useState(-1)
   const [userInput, setUserInput] = useState("")
@@ -383,11 +383,23 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   }, [])
 
   const handleStartSession = () => {
-    setIsSessionStarted(true);
     if (autoMode) {
+      const notificationMessage = t('autoModeStartNotification', { timeoutValue });
+      const utterance = new SpeechSynthesisUtterance(notificationMessage);
+      let lang = i18n.language;
+      if (lang === 'zh') {
+        utterance.lang = 'zh-CN';
+      } else {
+        utterance.lang = 'en-US';
+      }
+      utterance.onend = () => {
+        setIsSessionStarted(true);
         startAutoSession();
+      };
+      window.speechSynthesis.speak(utterance);
     } else {
-        handleNext();
+      setIsSessionStarted(true);
+      handleNext();
     }
   }
 
