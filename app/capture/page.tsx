@@ -1,8 +1,10 @@
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import PhotoCaptureInterface from "@/components/photo-capture-interface"
+import { getPageSession } from "@/lib/actions"
 
 export default async function CapturePage() {
+  const { session, isSupabaseConfigured } = await getPageSession();
+
   // If Supabase is not configured, show setup message
   if (!isSupabaseConfigured) {
     return (
@@ -12,20 +14,14 @@ export default async function CapturePage() {
     )
   }
 
-  // Get the user from the server
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
   // If no user, redirect to login
-  if (!user) {
+  if (!session) {
     redirect("/auth/login")
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100">
-      <PhotoCaptureInterface user={user} />
+      <PhotoCaptureInterface user={session.user} />
     </div>
   )
 }

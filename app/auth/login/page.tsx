@@ -1,8 +1,10 @@
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import LoginForm from "@/components/login-form"
+import { getPageSession } from "@/lib/actions"
 
 export default async function LoginPage() {
+  const { session, isSupabaseConfigured } = await getPageSession();
+
   // If Supabase is not configured, show setup message directly
   if (!isSupabaseConfigured) {
     return (
@@ -11,12 +13,6 @@ export default async function LoginPage() {
       </div>
     )
   }
-
-  // Check if user is already logged in
-  const supabase = await createClient()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
 
   // If user is logged in, redirect to home page
   if (session) {

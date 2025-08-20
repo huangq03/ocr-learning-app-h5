@@ -315,3 +315,82 @@ export async function deleteDocument(documentId: string, userId: string) {
     return { error: "Failed to delete document." };
   }
 }
+
+export async function getStudyPageData(userId: string, studySessionItems?: string[]) {
+  const cookieStore = await cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    if (studySessionItems) {
+      const { data, error } = await supabase
+        .from('spaced_repetition_schedule')
+        .select(`
+            *,
+            text_items!inner(*)
+        `)
+        .eq('user_id', userId)
+        .in('text_items.content', studySessionItems);
+
+      if (error) {
+        console.error("Error fetching study session items:", error);
+        return { error: "Failed to fetch study session items." };
+      }
+      return { items: data };
+    } else {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("spaced_repetition_schedule")
+        .select(`
+            *,
+            text_items:text_item_id (*)
+        `)
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .lte("next_review_date", today);
+
+      if (error) {
+        console.error("Error fetching due items:", error);
+        return { error: "Failed to fetch due items." };
+      }
+      return { items: data };
+    }
+  } catch (error) {
+    console.error("Error fetching study page data:", error);
+    return { error: "Failed to fetch study page data." };
+  }
+}
+
+export async function getDictationPageData(userId: string) {
+  const cookieStore = await cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { data, error } = await supabase
+      .from('text_items')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching text items:", error);
+      return { error: "Failed to fetch text items." };
+    }
+    return { items: data };
+  } catch (error) {
+    console.error("Error fetching text items:", error);
+    return { error: "Failed to fetch text items." };
+  }
+}
+
+export async function getPageSession() {
+  const cookieStore = await cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+  const { data: { session } } = await supabase.auth.getSession();
+  const isSupabaseConfigured =
+    typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0 &&
+    typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0;
+
+  return { session, isSupabaseConfigured };
+}

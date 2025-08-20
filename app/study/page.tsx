@@ -1,31 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { redirect } from 'next/navigation';
 import StudyInterface from '@/components/study-interface';
 import type { User } from '@supabase/supabase-js';
-
-async function getDueItems(user: User) {
-    const today = new Date().toISOString().split("T")[0];
-
-    const { data: dueItems, error } = await supabase
-        .from("spaced_repetition_schedule")
-        .select(`
-            *,
-            text_items:text_item_id (*)
-        `)
-        .eq("user_id", user.id)
-        .eq("is_active", true)
-        .lte("next_review_date", today);
-
-    if (error) {
-        console.error("Error fetching due items:", error);
-        return [];
-    }
-
-    return dueItems;
-}
+import { getStudyPageData } from '@/lib/actions';
+import { supabase } from '@/lib/supabase/client';
 
 export default function StudyPage() {
     const [user, setUser] = useState<User | null>(null);
@@ -48,24 +28,28 @@ export default function StudyPage() {
             if (studySessionString) {
                 const studySession = JSON.parse(studySessionString);
                 if (studySession.type === 'recitation') {
-                    const { data } = await supabase
-                        .from('spaced_repetition_schedule')
-                        .select(`
-                            *,
-                            text_items!inner(*)
-                        `)
-                        .eq('user_id', user.id)
-                        .in('text_items.content', studySession.items);
-
-                    setItems(data || []);
+                    const result = await getStudyPageData(user.id, studySession.items);
+                    if (result.error) {
+                        console.error('Error fetching study session items:', result.error);
+                    } else {
+                        setItems(result.items || []);
+                    }
                     localStorage.removeItem('studySession'); // Clear after use
                 } else {
-                    const dueItems = await getDueItems(user);
-                    setItems(dueItems || []);
+                    const result = await getStudyPageData(user.id);
+                    if (result.error) {
+                        console.error('Error fetching due items:', result.error);
+                    } else {
+                        setItems(result.items || []);
+                    }
                 }
             } else {
-                const dueItems = await getDueItems(user);
-                setItems(dueItems || []);
+                const result = await getStudyPageData(user.id);
+                if (result.error) {
+                    console.error('Error fetching due items:', result.error);
+                } else {
+                    setItems(result.items || []);
+                }
             }
             setIsLoading(false);
         };

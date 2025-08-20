@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { redirect } from 'next/navigation';
 import DictationInterface from '@/components/dictation-interface';
 import type { User } from '@supabase/supabase-js';
+import { getDictationPageData } from '@/lib/actions';
+import { supabase } from '@/lib/supabase/client';
 
 export default function DictationPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -32,22 +33,20 @@ export default function DictationPage() {
           setTextItems(formattedItems);
           localStorage.removeItem('studySession'); // Clear after use
         } else {
-          // Fetch all items if the session is not for dictation
-          const { data } = await supabase
-            .from('text_items')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-          setTextItems(data || []);
+          const result = await getDictationPageData(user.id);
+          if (result.error) {
+            console.error('Error fetching text items:', result.error);
+          } else {
+            setTextItems(result.items || []);
+          }
         }
       } else {
-        // Fetch all items if no session is found
-        const { data } = await supabase
-          .from('text_items')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        setTextItems(data || []);
+        const result = await getDictationPageData(user.id);
+        if (result.error) {
+          console.error('Error fetching text items:', result.error);
+        } else {
+          setTextItems(result.items || []);
+        }
       }
       setIsLoading(false);
     };
