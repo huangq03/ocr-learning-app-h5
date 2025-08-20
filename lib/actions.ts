@@ -464,3 +464,45 @@ export async function getItemsPageData() {
     return { error: "Failed to fetch documents for items page." };
   }
 }
+
+export async function getProfilePageData() {
+  const cookieStore = await cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: "User not found" };
+    }
+
+    const { data: userProgress } = await supabase.from("user_progress").select("*").eq("user_id", user.id).maybeSingle()
+    const today = new Date().toISOString().split("T")[0]
+    const { count: dueItemsCount } = await supabase
+      .from("spaced_repetition_schedule")
+      .select("id", { count: 'exact', head: true })
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .lte("next_review_date", today)
+
+    const { data: masteredItemsCount, error: masteredError } = await supabase.rpc('get_mastered_items_count', { p_user_id: user.id });
+    if (masteredError) throw masteredError;
+
+    const { data: currentStreak, error: streakError } = await supabase.rpc('get_day_streak', { p_user_id: user.id });
+    if (streakError) throw streakError;
+
+    const stats = {
+      totalDocuments: userProgress?.total_documents || 0,
+      totalItems: userProgress?.total_text_items || 0,
+      itemsDue: dueItemsCount || 0,
+      masteredItems: masteredItemsCount || 0,
+      currentStreak: currentStreak || 0,
+      studyTimeHours: Math.round((userProgress?.total_study_time_minutes || 0) / 60),
+    };
+
+    return { stats, user };
+
+  } catch (error) {
+    console.error("Error fetching profile page data:", error)
+    return { error: "Failed to fetch profile page data." };
+  }
+}

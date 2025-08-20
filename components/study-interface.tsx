@@ -57,7 +57,7 @@ interface SessionStats {
     easy: number;
 }
 
-export default function StudyInterface({ initialItems }: StudyInterfaceProps) {
+export default function StudyInterface({ initialItems, user }: StudyInterfaceProps) {
     const router = useRouter();
     const [items, setItems] = useState(initialItems);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,6 +65,7 @@ export default function StudyInterface({ initialItems }: StudyInterfaceProps) {
     const [sessionStats, setSessionStats] = useState<SessionStats>({ again: 0, hard: 0, good: 0, easy: 0 });
     const [nowPlaying, setNowPlaying] = useState<string | null>(null);
     const [highlightedWordIndex, setHighlightedWordIndex] = useState(-1);
+    const [isFading, setIsFading] = useState(false);
 
     const handlePlay = (text: string) => {
         if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -101,6 +102,7 @@ export default function StudyInterface({ initialItems }: StudyInterfaceProps) {
     };
 
     const handleRating = async (quality: number) => {
+        setIsFading(true);
         const currentItem = items[currentIndex];
         const updatedSchedule = calculateSm2(currentItem, quality);
 
@@ -112,15 +114,19 @@ export default function StudyInterface({ initialItems }: StudyInterfaceProps) {
 
         const { error } = await updateStudyScheduleAction(currentItem.id, updatedSchedule);
 
-        if (error) {
-            console.error('Error updating schedule:', error);
-        } else {
-            if (currentIndex < items.length - 1) {
-                setCurrentIndex(currentIndex + 1);
+        setTimeout(() => {
+            if (error) {
+                console.error('Error updating schedule:', error);
+                setIsFading(false);
             } else {
-                setShowSummary(true);
+                if (currentIndex < items.length - 1) {
+                    setCurrentIndex(currentIndex + 1);
+                    setIsFading(false);
+                } else {
+                    setShowSummary(true);
+                }
             }
-        }
+        }, 200);
     };
 
     if (items.length === 0) {
@@ -156,7 +162,7 @@ export default function StudyInterface({ initialItems }: StudyInterfaceProps) {
 
     return (
         <div className="p-4 max-w-2xl mx-auto">
-            <Card className="w-full">
+            <Card className={`w-full transition-opacity duration-200 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                 <CardHeader>
                     <CardTitle>Study Session</CardTitle>
                     <Progress value={progress} className="mt-2" />

@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Camera, Upload, RotateCcw, Check, X, Sparkles, Gift, PlusCircle } from "lucide-react"
+import { Camera, Upload, RotateCcw, Check, X, Sparkles, Gift, PlusCircle, Trash2, Edit } from "lucide-react"
 import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { useTranslation } from 'react-i18next';
 import '@/i18n'; // Initialize i18n
 import { saveDocument } from "@/lib/actions";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 // --- TYPES & INTERFACES ---
 interface OCRResult {
@@ -49,32 +51,6 @@ const enrichOcrResult = (result: Omit<OCRResult, 'newlyFoundItems'>): OCRResult 
   };
 };
 
-const HighlightedText = ({ text, wordsToHighlight, onAdd }: { text: string; wordsToHighlight: string[]; onAdd: (item: string) => void; }) => {
-  if (!wordsToHighlight || wordsToHighlight.length === 0) {
-    return <p className="text-sm text-gray-700 whitespace-pre-wrap">{text}</p>;
-  }
-  const regex = new RegExp(`(${wordsToHighlight.join('|')})`, 'gi');
-  const parts = text.split(regex);
-
-  return (
-    <p className="text-sm text-gray-700 whitespace-pre-wrap">
-      {parts.map((part, index) =>
-        wordsToHighlight.some(word => word.toLowerCase() === part.toLowerCase()) ? (
-          <button
-            key={index}
-            onClick={() => onAdd(part)}
-            className="bg-yellow-200 rounded-sm px-1 mx-px text-black hover:bg-yellow-300 transition-colors duration-200"
-          >
-            {part}
-          </button>
-        ) : (
-          <span key={index}>{part}</span>
-        )
-      )}
-    </p>
-  );
-};
-
 // --- MAIN COMPONENT ---
 export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfaceProps) {
   const { t } = useTranslation();
@@ -84,6 +60,8 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
   const [error, setError] = useState<string | null>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null)
+  const [editingItem, setEditingItem] = useState<{ index: number; text: string } | null>(null);
+  const [newItemText, setNewItemText] = useState("");
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -108,6 +86,30 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       return { ...prevResult, items: sortedNewItems, newlyFoundItems: newNewlyFoundItems };
     });
   }, []);
+
+  const handleAddNewItem = () => {
+    if (newItemText.trim() === "") return;
+    handleAddItem(newItemText.trim());
+    setNewItemText("");
+  };
+
+  const handleRemoveItem = (indexToRemove: number) => {
+    setOcrResult(prevResult => {
+        if (!prevResult) return null;
+        const newItems = prevResult.items.filter((_, index) => index !== indexToRemove);
+        return { ...prevResult, items: newItems };
+    });
+  };
+
+  const handleEditItem = (index: number, newText: string) => {
+    setOcrResult(prevResult => {
+        if (!prevResult) return null;
+        const newItems = [...prevResult.items];
+        newItems[index] = newText;
+        return { ...prevResult, items: newItems };
+    });
+    setEditingItem(null);
+  };
 
   const startCamera = useCallback(async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -247,7 +249,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
               <div className="absolute inset-0 p-2 z-10 flex flex-col animate-burst-in" style={{ animationDelay: '400ms' }}>
                 <Tabs defaultValue="full-text" className="w-full h-full flex flex-col">
                   <TabsList className="grid w-full grid-cols-2 shrink-0"><TabsTrigger value="full-text">{t('fullTextView')}</TabsTrigger><TabsTrigger value="items">{t('recognizedItems')}</TabsTrigger></TabsList>
-                  <TabsContent value="full-text" className="flex-grow mt-2"><Card className="h-full w-full bg-white/80 backdrop-blur-sm"><CardContent className="p-3"><ScrollArea className="h-[240px]"><HighlightedText text={ocrResult.cleaned_text} wordsToHighlight={ocrResult.newlyFoundItems || []} onAdd={handleAddItem} /></ScrollArea></CardContent></Card></TabsContent>
+                  <TabsContent value="full-text" className="flex-grow mt-2"><Card className="h-full w-full bg-white/80 backdrop-blur-sm"><CardContent className="p-3"><ScrollArea className="h-[240px]"><Textarea className="w-full h-full" value={ocrResult.cleaned_text} onChange={(e) => setOcrResult(prev => prev ? ({ ...prev, cleaned_text: e.target.value }) : null)} /></ScrollArea></CardContent></Card></TabsContent>
                   <TabsContent value="items" className="flex-grow mt-2"><Card className="h-full w-full bg-white/80 backdrop-blur-sm"><CardContent className="p-3"><ScrollArea className="h-[240px]">
                     <h4 className="text-sm font-semibold mb-2 text-gray-600">{t('suggestedItems')}</h4>
                     <ul className="space-y-1 mb-3">
@@ -256,9 +258,39 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
                     </ul>
                     <h4 className="text-sm font-semibold mb-2 text-gray-600">{t('confirmedItems')}</h4>
                     <ul className="space-y-1">
-                      {ocrResult.items.map((item) => (<li key={item} className="bg-purple-50/90 p-2 rounded-md text-purple-900 text-xs shadow-sm">{item}</li>))}
+                      {ocrResult.items.map((item, index) => (
+                        <li key={index} className="bg-purple-50/90 p-2 rounded-md text-purple-900 text-xs shadow-sm flex justify-between items-center">
+                          {editingItem?.index === index ? (
+                            <Input 
+                              type="text" 
+                              value={editingItem.text} 
+                              onChange={(e) => setEditingItem({ ...editingItem, text: e.target.value })}
+                              onBlur={() => handleEditItem(index, editingItem.text)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleEditItem(index, editingItem.text)}
+                              autoFocus
+                              className="h-auto p-1 bg-white"
+                            />
+                          ) : (
+                            <span className="font-medium">{item}</span>
+                          )}
+                          <div className="flex items-center">
+                            <Button size="sm" variant="ghost" className="h-auto p-1" onClick={() => setEditingItem({ index, text: item })}><Edit className="w-4 h-4"/></Button>
+                            <Button size="sm" variant="ghost" className="h-auto p-1" onClick={() => handleRemoveItem(index)}><Trash2 className="w-4 h-4"/></Button>
+                          </div>
+                        </li>
+                      ))}
                       {ocrResult.items.length === 0 && <p className="text-gray-400 text-center text-xs p-2">{t('noItemsRecognized')}</p>}
                     </ul>
+                    <div className="mt-4 flex gap-2">
+                        <Input 
+                            type="text" 
+                            value={newItemText} 
+                            onChange={(e) => setNewItemText(e.target.value)} 
+                            placeholder="Add a new item"
+                            className="h-auto p-1 bg-white"
+                        />
+                        <Button onClick={handleAddNewItem}>Add</Button>
+                    </div>
                   </ScrollArea></CardContent></Card></TabsContent>
                 </Tabs>
               </div>)}
