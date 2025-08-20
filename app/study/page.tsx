@@ -31,8 +31,10 @@ export default function StudyPage() {
     const [user, setUser] = useState<User | null>(null);
     const [items, setItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        setIsMounted(true);
         const fetchUserAndItems = async () => {
             const { data: { user } } = await supabase.auth.getUser();
 
@@ -50,7 +52,7 @@ export default function StudyPage() {
                         .from('spaced_repetition_schedule')
                         .select(`
                             *,
-                            text_items:text_item_id (*)
+                            text_items!inner(*)
                         `)
                         .eq('user_id', user.id)
                         .in('text_items.content', studySession.items);
@@ -71,7 +73,7 @@ export default function StudyPage() {
         fetchUserAndItems();
     }, []);
 
-    if (isLoading || !user) {
+    if (!isMounted || isLoading || !user) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-background">
                 <h1 className="text-2xl font-bold mb-4 text-foreground">Loading...</h1>

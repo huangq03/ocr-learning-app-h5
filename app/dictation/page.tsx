@@ -10,8 +10,10 @@ export default function DictationPage() {
   const [user, setUser] = useState<User | null>(null);
   const [textItems, setTextItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const fetchUserAndItems = async () => {
       const { data: { user } } = await supabase.auth.getUser();
 
@@ -53,7 +55,7 @@ export default function DictationPage() {
     fetchUserAndItems();
   }, []);
 
-  if (isLoading || !user) {
+  if (!isMounted || isLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <h1 className="text-2xl font-bold mb-4 text-foreground">Loading...</h1>
