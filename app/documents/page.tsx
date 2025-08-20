@@ -1,18 +1,19 @@
 'use client'; // This page is interactive, so it's a client component at the top level.
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Trash2, Edit, PlusCircle, ArrowLeft } from 'lucide-react';
+import { Trash2, Edit, PlusCircle, ArrowLeft, FileText } from 'lucide-react';
+import { getDocuments, deleteDocument } from '@/lib/actions';
+import { supabase } from '@/lib/supabase/client';
 
 // Define the type for our document data
 interface Document {
   id: string;
   created_at: string;
-  image_path: string;
+  image_url: string;
   recognized_text: {
     items: string[];
     cleaned_text: string;
@@ -34,23 +35,18 @@ export default function DocumentManagementPage() {
       }
       setUser(user);
 
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_deleted', false)
-        .order('created_at', { ascending: false });
+      const result = await getDocuments(user.id);
 
-      if (error) {
-        console.error('Error fetching documents:', error);
+      if (result.error) {
+        console.error('Error fetching documents:', result.error);
       } else {
-        setDocuments(data as Document[]);
+        setDocuments(result.documents as Document[]);
       }
       setIsLoading(false);
     };
 
     getUserAndDocuments();
-  }, [router, supabase]);
+  }, [router]);
 
   const handleDelete = async (documentId: string) => {
     if (!user) return;
@@ -58,14 +54,10 @@ export default function DocumentManagementPage() {
       return;
     }
 
-    const { error } = await supabase
-      .from('documents')
-      .update({ is_deleted: true })
-      .eq('id', documentId)
-      .eq('user_id', user.id);
+    const result = await deleteDocument(documentId, user.id);
 
-    if (error) {
-      console.error('Error soft-deleting document:', error);
+    if (result.error) {
+      console.error('Error soft-deleting document:', result.error);
       alert('Failed to delete the document. Please try again.');
     } else {
       setDocuments(documents.filter(doc => doc.id !== documentId));
@@ -94,11 +86,9 @@ export default function DocumentManagementPage() {
         <div className="space-y-4">
           {documents.map(doc => (
             <Card key={doc.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <img 
-                src={doc.image_path}
-                alt="Document thumbnail"
-                className="w-full sm:w-32 h-auto sm:h-24 object-cover rounded-md border"
-              />
+              <div className="w-full sm:w-32 h-24 flex items-center justify-center bg-gray-100 rounded-md border">
+                <FileText className="w-12 h-12 text-gray-400" />
+              </div>
               <div className="flex-grow">
                 <p className="text-sm text-gray-600 line-clamp-2">
                   {doc.recognized_text?.cleaned_text || 'No text recognized.'}

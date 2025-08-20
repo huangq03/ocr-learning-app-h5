@@ -270,3 +270,48 @@ export async function saveSelectionsAndCreateReviewsAction(documentId: string, s
     return { error: "Failed to save selections and reviews." };
   }
 }
+
+export async function getDocuments(userId: string) {
+  const cookieStore = await cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching documents:", error);
+      return { error: "Failed to fetch documents." };
+    }
+    return { documents: data };
+  } catch (error) {
+    console.error("Error fetching documents:", error);
+    return { error: "Failed to fetch documents." };
+  }
+}
+
+export async function deleteDocument(documentId: string, userId: string) {
+  const cookieStore = await cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+
+  try {
+    const { error } = await supabase
+      .from('documents')
+      .update({ is_deleted: true })
+      .eq('id', documentId)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error("Error deleting document:", error);
+      return { error: "Failed to delete document." };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    return { error: "Failed to delete document." };
+  }
+}
