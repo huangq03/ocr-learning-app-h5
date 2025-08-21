@@ -132,14 +132,14 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       if (direction === 'next') {
         setAnimationDirection('left');
       } else {
-        setAnimationDirection('left');
+        setAnimationDirection('right');
       }
 
       setTimeout(() => {
         if (direction === 'next') {
           setAnimationDirection('left');
         } else {
-          setAnimationDirection('left');
+          setAnimationDirection('right');
         }
         setCurrentSelectionIndex(newIndex);
         setUserInput('');
