@@ -112,6 +112,8 @@
   "dictationReadyTitle": "准备好听写了吗？",
   "dictationReadySubtitle": "点击下面的按钮开始听写。",
   "startSessionButton": "开始听写",
+  "startingSession": "启动中...",
+  "startingSessionMessage": "您的听写即将开始...",
   "welcomeMessage": "欢迎！添加您的第一份文档开始学习。",
   "addFirstDocument": "添加您的第一份文档"
 }

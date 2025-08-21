@@ -357,8 +357,11 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     }
   }, [])
 
+  const [isStartingSession, setIsStartingSession] = useState(false);
+
   const handleStartSession = () => {
     if (autoMode) {
+      setIsStartingSession(true);
       const notificationMessage = t('autoModeStartNotification', { timeoutValue });
       const utterance = new SpeechSynthesisUtterance(notificationMessage);
       let lang = i18n.language;
@@ -368,6 +371,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         utterance.lang = 'en-US';
       }
       utterance.onend = () => {
+        setIsStartingSession(false);
         setIsSessionStarted(true);
         startAutoSession();
       };
@@ -389,6 +393,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         mode={mode}
         setMode={setMode}
         onStart={handleStartSession}
+        isStartingSession={isStartingSession}
       />
     )
   }

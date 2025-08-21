@@ -23,6 +23,7 @@ interface StartScreenProps {
   mode: 'typing' | 'paper'
   setMode: (mode: 'typing' | 'paper') => void
   onStart: () => void
+  isStartingSession?: boolean
 }
 
 export function StartScreen({
@@ -32,7 +33,8 @@ export function StartScreen({
   setTimeoutValue,
   mode,
   setMode,
-  onStart
+  onStart,
+  isStartingSession
 }: StartScreenProps) {
   const { t, i18n } = useTranslation()
 
@@ -81,9 +83,17 @@ export function StartScreen({
           </div>
         )}
 
-        <Button onClick={onStart} size="lg">
-          {t('startSessionButton', 'Start Session')}
+        <Button onClick={onStart} size="lg" disabled={isStartingSession}>
+          {isStartingSession ? t('startingSession', 'Starting...') : t('startSessionButton', 'Start Session')}
         </Button>
+
+        {isStartingSession && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center rounded-lg">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <p className="text-lg font-medium">{t('startingSessionMessage', 'Starting your dictation session...')}</p>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   )

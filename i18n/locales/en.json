@@ -112,6 +112,8 @@
   "dictationReadyTitle": "Ready for Dictation?",
   "dictationReadySubtitle": "Click the button below to start your session.",
   "startSessionButton": "Start Session",
+  "startingSession": "Starting...",
+  "startingSessionMessage": "Starting your dictation session...",
   "welcomeMessage": "Welcome! Add your first document to start learning.",
   "addFirstDocument": "Add Your First Document"
 }
