@@ -125,14 +125,22 @@ export function DictationItemView({
           </>
         )}
 
-        <div className="flex justify-around items-center">
+        <div className="flex justify-around items-center min-h-[56px]">
               {autoMode ? (
-                timeLeft > 0 && (
-                  <div className="text-center">
-                    <p className="text-lg font-semibold">{timeLeft}s</p>
-                    <p className="text-sm text-gray-500">{t('autoModeInProgress')}</p>
-                  </div>
-                )
+                <>
+                  {timeLeft > 0 ? (
+                    <div className="text-center">
+                      <p className="text-lg font-semibold">{timeLeft}s</p>
+                      <p className="text-sm text-gray-500">{t('autoModeInProgress')}</p>
+                    </div>
+                  ) : (
+                    // Invisible placeholder to prevent layout shift
+                    <div className="text-center opacity-0">
+                      <p className="text-lg font-semibold">0s</p>
+                      <p className="text-sm text-gray-500">{t('autoModeInProgress')}</p>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex justify-between w-full">
                   <Button onClick={onPrevious} size="lg" variant="outline" disabled={false}>Previous</Button>
@@ -141,7 +149,7 @@ export function DictationItemView({
                   </Button>
                 </div>
               )}
-        </div>
+            </div>
         
         <div className="mt-4 h-6 text-center">
           {isCorrect === true && mode === 'typing' && <p className="text-green-500 font-bold">{t('correctFeedback')}</p>}
