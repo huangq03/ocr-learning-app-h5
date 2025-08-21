@@ -86,6 +86,18 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   const autoTimerRef = useRef<NodeJS.Timeout | null>(null)
   const countdownRef = useRef<NodeJS.Timeout | null>(null)
   const [isSessionStarted, setIsSessionStarted] = useState(false)
+  const [animationDirection, setAnimationDirection] = useState<'left' | 'right' | 'none'>('none');
+  const initialAnimationPlayed = useRef(false);
+
+  useEffect(() => {
+    if (isSessionStarted && !initialAnimationPlayed.current) {
+      initialAnimationPlayed.current = true;
+      setAnimationDirection('right');
+      setTimeout(() => {
+        setAnimationDirection('none');
+      }, 300);
+    }
+  }, [isSessionStarted]);
 
   useEffect(() => {
     setStartTime(Date.now())
@@ -114,18 +126,39 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     }
   }, [userInput, selections, currentSelectionIndex, mode])
 
-  const handleNext = () => {
-    if (currentSelectionIndex < selections.length - 1) {
-      setCurrentSelectionIndex(currentSelectionIndex + 1)
-      setUserInput("")
-      setIsCorrect(null)
-      setAttempts(0)
-      setPaperInputChecked(false) // Reset paper mode verification
-      setStartTime(Date.now())
-    } else {
-      setShowSummary(true)
+  const navigate = (direction: 'next' | 'prev') => {
+    const newIndex = direction === 'next' ? currentSelectionIndex + 1 : currentSelectionIndex - 1;
+    if (newIndex >= 0 && newIndex < selections.length) {
+      if (direction === 'next') {
+        setAnimationDirection('left');
+      } else {
+        setAnimationDirection('left');
+      }
+
+      setTimeout(() => {
+        if (direction === 'next') {
+          setAnimationDirection('left');
+        } else {
+          setAnimationDirection('left');
+        }
+        setCurrentSelectionIndex(newIndex);
+        setUserInput('');
+        setIsCorrect(null);
+        setAttempts(0);
+        setPaperInputChecked(false);
+        setStartTime(Date.now());
+
+        setTimeout(() => {
+          setAnimationDirection('none');
+        }, 50);
+      }, 300);
+    } else if (direction === 'next') {
+      setShowSummary(true);
     }
-  }
+  };
+
+  const handleNext = () => navigate('next');
+  const handlePrevious = () => navigate('prev');
 
   const handleAnswer = async () => {
     // Clear any existing timer
@@ -160,7 +193,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         original_text: currentSelection.content,
         user_input: "[Written on paper]",
         attempts: 1,
-        is_correct_on_first_try: true, // Assume correct for paper mode
+        is_correct_on_first_ry: true, // Assume correct for paper mode
         character_accuracy: 100, // Assume 100% for paper mode
         completion_time_seconds: completionTime,
       }
@@ -261,7 +294,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       completed_at: new Date().toISOString(),
     });
 
-    handleNext();
+    handleNext()
   }
 
   const playBeep = () => {
@@ -360,8 +393,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
         setTimeLeft(prev => prev - 1)
       }, 1000)
     } else if (autoTimerRef.current && timeLeft === 0) {
-      handleAnswer()
-      handleNext()
+      handleAnswer().then(() => handleNext())
     }
 
     return () => {
@@ -399,7 +431,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       window.speechSynthesis.speak(utterance);
     } else {
       setIsSessionStarted(true);
-      handleNext();
+      setCurrentSelectionIndex(0);
     }
   }
 
@@ -520,9 +552,20 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
   const currentSelection = selections[currentSelectionIndex]
 
+  const getAnimationClass = () => {
+    switch (animationDirection) {
+      case 'left':
+        return 'transform -translate-x-full';
+      case 'right':
+        return 'transform translate-x-full';
+      default:
+        return 'transform-none';
+    }
+  };
+
   return (
-    <div className="p-4 max-w-2xl mx-auto relative">
-      <Card className="p-6 relative">
+    <div className="p-4 max-w-2xl mx-auto relative overflow-hidden">
+      <Card className={`p-6 relative transition-transform duration-300 ease-in-out ${getAnimationClass()}`}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">{t('dictationTitle')}</h2>
         </div>
@@ -601,9 +644,12 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
                   </div>
                 )
               ) : (
-                <Button onClick={handleCheckAnswerAndNext} size="lg">
-                  {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
-                </Button>
+                <div className="flex justify-between w-full">
+                  <Button onClick={handlePrevious} size="lg" variant="outline" disabled={currentSelectionIndex === 0}>Previous</Button>
+                  <Button onClick={handleCheckAnswerAndNext} size="lg">
+                    {currentSelectionIndex < selections.length - 1 ? t('nextButton') : t('finishButton')}
+                  </Button>
+                </div>
               )}
             </div>
           </>
