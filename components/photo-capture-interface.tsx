@@ -239,18 +239,18 @@ export default function PhotoCaptureInterface({
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 p-4">
       <div className="max-w-md mx-auto">
-        <div className="text-center mb-8 pt-8">
-          <h1 className="text-3xl font-bold text-purple-800 mb-4">
-            {t("captureYourDocument")}
-          </h1>
-          <p className="text-purple-600">
-            {isConfirming ? t("reviewOcrItems") : t("alignAndScan")}
-          </p>
-          {error && <p className="text-red-500 mt-4">{error}</p>}
-          <Button variant="outline" onClick={goToDashboard} className="mt-4">
-            {t("goToDashboard")}
-          </Button>
-        </div>
+<div className="text-center mb-4 pt-4">
+  <h1 className="text-2xl font-bold text-purple-800 mb-2">
+    {t("captureYourDocument")}
+  </h1>
+  <p className="text-purple-600">
+    {isConfirming ? t("reviewOcrItems") : t("alignAndScan")}
+  </p>
+  {error && <p className="text-red-500 mt-2">{error}</p>}
+  <Button variant="outline" onClick={goToDashboard} className="mt-2">
+    {t("goToDashboard")}
+  </Button>
+</div>
 
         <Card className="overflow-hidden bg-white shadow-xl border-0">
           <div className="aspect-[4/3] bg-gray-100 relative flex items-center justify-center">
@@ -322,7 +322,7 @@ export default function PhotoCaptureInterface({
               >
 <Tabs
   defaultValue="full-text"
-  className="w-full flex flex-col max-h-[350px] overflow-y-auto"
+  className="w-full flex flex-col max-h-[400px] overflow-y-auto"
 >
                   <TabsList className="grid w-full grid-cols-2 shrink-0">
                     <TabsTrigger value="full-text">
