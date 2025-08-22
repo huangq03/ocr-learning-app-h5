@@ -19,19 +19,16 @@ const nextConfig = {
     if (isServer) {
       const copyTesseractData = (dir) => {
         const sourceDir = path.join(config.context, `node_modules/tesseract.js/src/${dir}`);
-        if (dev) {
-          const destDir = path.join(config.context, `.next/${dir}`);
-          if (!fs.existsSync(destDir)) {
-            fs.mkdirSync(destDir, { recursive: true });
-          }
-          fs.cpSync(sourceDir, destDir, { recursive: true });
-        } else {
-          const destDir = path.join(config.context, `.next/server/app/${dir}`);
-          if (!fs.existsSync(destDir)) {
-            fs.mkdirSync(destDir, { recursive: true });
-          }
-          fs.cpSync(sourceDir, destDir, { recursive: true });
+        const destDir = path.join(config.context, `.next/${dir}`);
+        if (!fs.existsSync(destDir)) {
+          fs.mkdirSync(destDir, { recursive: true });
         }
+        fs.cpSync(sourceDir, destDir, { recursive: true });
+        const destDirProd = path.join(config.context, `.next/server/app/${dir}`);
+        if (!fs.existsSync(destDirProd)) {
+          fs.mkdirSync(destDirProd, { recursive: true });
+        }
+        fs.cpSync(sourceDir, destDirProd, { recursive: true });
       }
       copyTesseractData('worker-script');
       copyTesseractData('constants');
