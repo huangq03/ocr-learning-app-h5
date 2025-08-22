@@ -15,15 +15,23 @@ const nextConfig = {
   experimental: {
     allowedDevOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://0.0.0.0:3000'], // Add your allowed origins here
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     if (isServer) {
       const copyTesseractData = (dir) => {
         const sourceDir = path.join(config.context, `node_modules/tesseract.js/src/${dir}`);
-        const destDir = path.join(config.context, `.next/${dir}`);
-        if (!fs.existsSync(destDir)) {
-          fs.mkdirSync(destDir, { recursive: true });
+        if (dev) {
+          const destDir = path.join(config.context, `.next/${dir}`);
+          if (!fs.existsSync(destDir)) {
+            fs.mkdirSync(destDir, { recursive: true });
+          }
+          fs.cpSync(sourceDir, destDir, { recursive: true });
+        } else {
+          const destDir = path.join(config.context, `.next/server/app/${dir}`);
+          if (!fs.existsSync(destDir)) {
+            fs.mkdirSync(destDir, { recursive: true });
+          }
+          fs.cpSync(sourceDir, destDir, { recursive: true });
         }
-        fs.cpSync(sourceDir, destDir, { recursive: true });
       }
       copyTesseractData('worker-script');
       copyTesseractData('constants');
