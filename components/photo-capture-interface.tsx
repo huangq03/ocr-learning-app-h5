@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Camera, Upload, RotateCcw, Check, X, Sparkles, Gift, PlusCircle } from "lucide-react"
+import { Camera, Upload, Check, Sparkles, Gift, PlusCircle } from "lucide-react"
 import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { useTranslation } from 'react-i18next';
@@ -19,7 +19,7 @@ interface OCRResult {
   items: string[]
   newlyFoundItems?: string[]
 }
-type CaptureStatus = "idle" | "capturing" | "processing" | "animating" | "confirming" | "saving"
+type CaptureStatus = "idle" | "processing" | "animating" | "confirming" | "saving"
 interface PhotoCaptureInterfaceProps {
   user: User
 }
@@ -82,11 +82,8 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
   const [status, setStatus] = useState<CaptureStatus>("idle")
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [stream, setStream] = useState<MediaStream | null>(null)
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null)
 
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleAddItem = useCallback((itemToAdd: string) => {
@@ -108,30 +105,6 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       return { ...prevResult, items: sortedNewItems, newlyFoundItems: newNewlyFoundItems };
     });
   }, []);
-
-  const startCamera = useCallback(async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setError(t('errorCameraAccess'));
-      return
-    }
-    try {
-      setError(null)
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } })
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
-        setStream(mediaStream)
-        setStatus("capturing")
-      }
-    } catch (err) {
-      setError(t('errorUnableToAccessCamera'));
-      console.error("Camera error:", err)
-    }
-  }, [t])
-
-  const stopCamera = useCallback(() => {
-    if (stream) stream.getTracks().forEach((track) => track.stop())
-    setStatus("idle")
-  }, [stream])
 
   const processOCR = useCallback(async (imageUrl: string) => {
     setStatus("processing")
@@ -158,23 +131,6 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
       setCapturedImage(null)
     }
   }, [t])
-
-  const capturePhoto = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return
-    const video = videoRef.current, canvas = canvasRef.current, context = canvas.getContext("2d")
-    if (!context) return
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    context.drawImage(video, 0, 0, canvas.width, canvas.height)
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const imageUrl = URL.createObjectURL(blob)
-        setCapturedImage(imageUrl)
-        stopCamera()
-        processOCR(imageUrl)
-      }
-    }, "image/jpeg", 0.9)
-  }, [stopCamera, processOCR])
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -218,12 +174,11 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
 
   useEffect(() => {
     return () => {
-      if (stream) stream.getTracks().forEach((track) => track.stop())
       if (capturedImage) URL.revokeObjectURL(capturedImage)
     }
-  }, [stream, capturedImage])
+  }, [capturedImage])
 
-  const isIdle = status === "idle", isCapturing = status === "capturing", isProcessing = status === "processing", isAnimating = status === "animating", isConfirming = status === "confirming", isSaving = status === "saving"
+  const isIdle = status === "idle", isProcessing = status === "processing", isAnimating = status === "animating", isConfirming = status === "confirming", isSaving = status === "saving"
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 p-4">
@@ -238,9 +193,8 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
         <Card className="overflow-hidden bg-white shadow-xl border-0">
           <div className="aspect-[4/3] bg-gray-100 relative flex items-center justify-center">
             {isIdle && !capturedImage && (
-              <div className="text-center"><Camera className="w-16 h-16 text-purple-400 mx-auto mb-4" /><div className="space-y-3"><Button onClick={startCamera} className="w-full bg-purple-800 hover:bg-purple-700 text-white"><Camera className="w-5 h-5 mr-2" /> {t('openCamera')}</Button><Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full"><Upload className="w-5 h-5 mr-2" /> {t('uploadImage')}</Button><input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" /></div></div>)}
-            {isCapturing && (<div className="relative w-full h-full"><video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" /><canvas ref={canvasRef} className="hidden" /><div className="absolute inset-4 border-2 border-white border-dashed rounded-lg" /></div>)}
-            {capturedImage && !isIdle && !isCapturing && (<img src={capturedImage} alt="Captured document" className={`w-full h-full object-cover transition-opacity duration-500 ${isAnimating || isConfirming ? "opacity-20 blur-sm" : "opacity-100"}`} />)}
+              <div className="text-center"><Camera className="w-16 h-16 text-purple-400 mx-auto mb-4" /><div className="space-y-3"><Button onClick={() => fileInputRef.current?.click()} className="w-full bg-purple-800 hover:bg-purple-700 text-white"><Camera className="w-5 h-5 mr-2" /> {t('openCamera')}</Button><Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full"><Upload className="w-5 h-5 mr-2" /> {t('uploadImage')}</Button><input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" capture="environment" /></div></div>)}
+            {capturedImage && !isIdle && (<img src={capturedImage} alt="Captured document" className={`w-full h-full object-cover transition-opacity duration-500 ${isAnimating || isConfirming ? "opacity-20 blur-sm" : "opacity-100"}`} />)}
             {(isProcessing || isSaving) && (<div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"><div className="bg-black/60 backdrop-blur-sm text-white p-6 rounded-2xl flex flex-col items-center gap-2"><Sparkles className="w-12 h-12 animate-pulse" /><p className="font-semibold text-base">{isSaving ? t('savingDocumentStatus') : t('recognizingStatus')}</p></div></div>)}
             {isAnimating && (<div className="absolute inset-0 flex items-center justify-center z-10"><div className="animate-bounce"><Gift className="w-24 h-24 text-purple-600" /></div></div>)}
             {isConfirming && ocrResult && (
@@ -264,8 +218,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
               </div>)}
           </div>
           <div className="p-6 bg-gray-50">
-            {isCapturing && (<div className="flex gap-3"><Button variant="outline" onClick={stopCamera} className="flex-1"><X className="w-4 h-4 mr-2" /> {t('cancel')}</Button><Button onClick={capturePhoto} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"><Camera className="w-4 h-4 mr-2" /> {t('scanNow')}</Button></div>)}
-            {isConfirming && (<div className="flex gap-3"><Button variant="outline" onClick={resetCapture} className="flex-1" disabled={isSaving}><RotateCcw className="w-4 h-4 mr-2" /> {t('retake')}</Button><Button onClick={handleConfirmAndSave} className="flex-1 bg-green-600 hover:bg-green-700 text-white" disabled={isSaving}>{isSaving ? (<><div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('savingStatus')}</>) : (<><Check className="w-4 h-4 mr-2" /> {t('confirmAndSave')}</>)}</Button></div>)}
+            {isConfirming && (<div className="flex gap-3"><Button variant="outline" onClick={resetCapture} className="flex-1" disabled={isSaving}>{t('retake')}</Button><Button onClick={handleConfirmAndSave} className="flex-1 bg-green-600 hover:bg-green-700 text-white" disabled={isSaving}>{isSaving ? (<><div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('savingStatus')}</>) : (<><Check className="w-4 h-4 mr-2" /> {t('confirmAndSave')}</>)}</Button></div>)}
           </div>
         </Card>
       </div>
