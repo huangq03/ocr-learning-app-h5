@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Camera, Upload, Check, Sparkles, Gift, PlusCircle } from "lucide-react"
+import { Camera, Upload, Check, Sparkles, Gift, PlusCircle, RotateCcw } from "lucide-react"
 import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { useTranslation } from 'react-i18next';
@@ -84,7 +84,8 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
   const [error, setError] = useState<string | null>(null)
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null)
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const uploadInputRef = useRef<HTMLInputElement>(null)
 
   const handleAddItem = useCallback((itemToAdd: string) => {
     setOcrResult(prevResult => {
@@ -193,7 +194,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
         <Card className="overflow-hidden bg-white shadow-xl border-0">
           <div className="aspect-[4/3] bg-gray-100 relative flex items-center justify-center">
             {isIdle && !capturedImage && (
-              <div className="text-center"><Camera className="w-16 h-16 text-purple-400 mx-auto mb-4" /><div className="space-y-3"><Button onClick={() => fileInputRef.current?.click()} className="w-full bg-purple-800 hover:bg-purple-700 text-white"><Camera className="w-5 h-5 mr-2" /> {t('openCamera')}</Button><Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full"><Upload className="w-5 h-5 mr-2" /> {t('uploadImage')}</Button><input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" capture="environment" /></div></div>)}
+              <div className="text-center"><Camera className="w-16 h-16 text-purple-400 mx-auto mb-4" /><div className="space-y-3"><Button onClick={() => cameraInputRef.current?.click()} className="w-full bg-purple-800 hover:bg-purple-700 text-white"><Camera className="w-5 h-5 mr-2" /> {t('openCamera')}</Button><Button variant="outline" onClick={() => uploadInputRef.current?.click()} className="w-full"><Upload className="w-5 h-5 mr-2" /> {t('uploadImage')}</Button><input type="file" ref={cameraInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" capture="environment" /><input type="file" ref={uploadInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" /></div></div>)}
             {capturedImage && !isIdle && (<img src={capturedImage} alt="Captured document" className={`w-full h-full object-cover transition-opacity duration-500 ${isAnimating || isConfirming ? "opacity-20 blur-sm" : "opacity-100"}`} />)}
             {(isProcessing || isSaving) && (<div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"><div className="bg-black/60 backdrop-blur-sm text-white p-6 rounded-2xl flex flex-col items-center gap-2"><Sparkles className="w-12 h-12 animate-pulse" /><p className="font-semibold text-base">{isSaving ? t('savingDocumentStatus') : t('recognizingStatus')}</p></div></div>)}
             {isAnimating && (<div className="absolute inset-0 flex items-center justify-center z-10"><div className="animate-bounce"><Gift className="w-24 h-24 text-purple-600" /></div></div>)}
@@ -218,7 +219,7 @@ export default function PhotoCaptureInterface({ user }: PhotoCaptureInterfacePro
               </div>)}
           </div>
           <div className="p-6 bg-gray-50">
-            {isConfirming && (<div className="flex gap-3"><Button variant="outline" onClick={resetCapture} className="flex-1" disabled={isSaving}>{t('retake')}</Button><Button onClick={handleConfirmAndSave} className="flex-1 bg-green-600 hover:bg-green-700 text-white" disabled={isSaving}>{isSaving ? (<><div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('savingStatus')}</>) : (<><Check className="w-4 h-4 mr-2" /> {t('confirmAndSave')}</>)}</Button></div>)}
+            {isConfirming && (<div className="flex gap-3"><Button variant="outline" onClick={resetCapture} className="flex-1" disabled={isSaving}><RotateCcw className="w-4 h-4 mr-2" /> {t('retake')}</Button><Button onClick={handleConfirmAndSave} className="flex-1 bg-green-600 hover:bg-green-700 text-white" disabled={isSaving}>{isSaving ? (<><div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('savingStatus')}</>) : (<><Check className="w-4 h-4 mr-2" /> {t('confirmAndSave')}</>)}</Button></div>)}
           </div>
         </Card>
       </div>
