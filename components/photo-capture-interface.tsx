@@ -320,10 +320,10 @@ export default function PhotoCaptureInterface({
                 className="absolute inset-0 p-2 z-10 flex flex-col animate-burst-in"
                 style={{ animationDelay: "400ms" }}
               >
-                <Tabs
-                  defaultValue="full-text"
-                  className="w-full h-full flex flex-col"
-                >
+<Tabs
+  defaultValue="full-text"
+  className="w-full flex flex-col max-h-[350px] overflow-y-auto"
+>
                   <TabsList className="grid w-full grid-cols-2 shrink-0">
                     <TabsTrigger value="full-text">
                       {t("fullTextView")}
@@ -335,7 +335,7 @@ export default function PhotoCaptureInterface({
                   <TabsContent value="full-text" className="flex-grow mt-2">
                     <Card className="h-full w-full bg-white/80 backdrop-blur-sm">
                       <CardContent className="p-3">
-                        <ScrollArea className="h-[240px]">
+                        <ScrollArea className="h-[350px]">
                           <HighlightedText
                             text={ocrResult.cleaned_text}
                             wordsToHighlight={ocrResult.newlyFoundItems || []}
@@ -348,7 +348,7 @@ export default function PhotoCaptureInterface({
                   <TabsContent value="items" className="flex-grow mt-2">
                     <Card className="h-full w-full bg-white/80 backdrop-blur-sm">
                       <CardContent className="p-3">
-                        <ScrollArea className="h-[240px]">
+                        <ScrollArea className="h-full">
                           <h4 className="text-sm font-semibold mb-2 text-gray-600">
                             {t("suggestedItems")}
                           </h4>
