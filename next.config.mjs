@@ -12,6 +12,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    allowedDevOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://0.0.0.0:3000'], // Add your allowed origins here
+  },
   webpack: (config, { isServer }) => {
     if (isServer) {
       const copyTesseractData = (dir) => {
