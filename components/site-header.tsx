@@ -32,10 +32,15 @@ export function SiteHeader() {
               </div>
             </Link>
             <ThemeToggle />
-            <Avatar onClick={() => router.push('/profile')}>
-              <AvatarImage src="/placeholder-user.jpg" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
+            <div 
+              onClick={() => router.push('/profile')}
+              className={buttonVariants({ size: "icon", variant: "ghost" })}
+            >
+              <Avatar className="cursor-pointer">
+                <AvatarImage src="/placeholder-user.jpg" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            </div>
           </nav>
         </div>
       </div>
