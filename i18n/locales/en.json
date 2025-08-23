@@ -115,5 +115,30 @@
   "startingSession": "Starting...",
   "startingSessionMessage": "Starting your dictation session...",
   "welcomeMessage": "Welcome! Add your first document to start learning.",
-  "addFirstDocument": "Add Your First Document"
+  "addFirstDocument": "Add Your First Document",
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Welcome to your dashboard."
+  },
+  "landingPage": {
+    "title": "OCR Learning",
+    "login": "Login",
+    "signUp": "Sign Up",
+    "heroTitle": "Turn Images into Knowledge",
+    "heroSubtitle": "Snap a picture, extract the text, and create your own interactive study materials. Learning a new language or subject has never been easier.",
+    "getStarted": "Get Started for Free",
+    "featuresTitle": "Why You'll Love OCR Learning",
+    "featuresSubtitle": "All the tools you need to master new content, in one place.",
+    "feature1Title": "Effortless OCR",
+    "feature1Text": "High-accuracy text extraction from any image or document you upload.",
+    "feature2Title": "Custom Study Lists",
+    "feature2Text": "Create personalized vocabulary lists or study guides from your extracted text.",
+    "feature3Title": "Interactive Learning",
+    "feature3Text": "Engage with your material through flashcards and dictation exercises to reinforce learning.",
+    "footerText": "© {{year}} OCR Learning. All rights reserved."
+  },
+  "common": {
+    "english": "English",
+    "chinese": "Chinese"
+  }
 }

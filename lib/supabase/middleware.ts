@@ -36,12 +36,13 @@ export async function updateSession(request: NextRequest) {
   await supabase.auth.getSession()
 
   // Protected routes - redirect to login if not authenticated
-  const isAuthRoute =
+  const isPublicRoute =
+    request.nextUrl.pathname === "/" || // Allow landing page
     request.nextUrl.pathname.startsWith("/auth/login") ||
     request.nextUrl.pathname.startsWith("/auth/sign-up") ||
     request.nextUrl.pathname === "/auth/callback"
 
-  if (!isAuthRoute) {
+  if (!isPublicRoute) {
     const {
       data: { session },
     } = await supabase.auth.getSession()

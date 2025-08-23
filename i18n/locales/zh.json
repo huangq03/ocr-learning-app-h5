@@ -115,5 +115,30 @@
   "startingSession": "启动中...",
   "startingSessionMessage": "您的听写即将开始...",
   "welcomeMessage": "欢迎！添加您的第一份文档开始学习。",
-  "addFirstDocument": "添加您的第一份文档"
+  "addFirstDocument": "添加您的第一份文档",
+  "dashboard": {
+    "title": "仪表板",
+    "description": "欢迎来到您的仪表板。"
+  },
+  "landingPage": {
+    "title": "OCR学习",
+    "login": "登录",
+    "signUp": "注册",
+    "heroTitle": "将图片转化为知识",
+    "heroSubtitle": "拍张照片，提取文本，并创建您自己的互动学习材料。学习一门新语言或一个新学科从未如此简单。",
+    "getStarted": "免费开始",
+    "featuresTitle": "为什么您会爱上OCR学习",
+    "featuresSubtitle": "在一个地方掌握新内容所需的所有工具。",
+    "feature1Title": "轻松OCR",
+    "feature1Text": "从您上传的任何图像或文档中高精度提取文本。",
+    "feature2Title": "自定义学习列表",
+    "feature2Text": "从您提取的文本中创建个性化的词汇表或学习指南。",
+    "feature3Title": "互动学习",
+    "feature3Text": "通过抽认卡和听写练习来巩固学习。",
+    "footerText": "© {{year}} OCR学习。版权所有。"
+  },
+  "common": {
+    "english": "英语",
+    "chinese": "中文"
+  }
 }

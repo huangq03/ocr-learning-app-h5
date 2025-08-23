@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation"
 import DashboardInterface from "@/components/dashboard-interface"
+import LandingPage from "@/components/landing-page"
 import { getPageSession } from "@/lib/actions"
 
 export default async function Home() {
-  const { session, isSupabaseConfigured } = await getPageSession();
+  const { session, isSupabaseConfigured } = await getPageSession()
 
   if (!isSupabaseConfigured) {
     return (
@@ -14,7 +14,7 @@ export default async function Home() {
   }
 
   if (!session) {
-    redirect("/auth/login")
+    return <LandingPage />
   }
 
   return (
