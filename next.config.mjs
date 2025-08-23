@@ -17,24 +17,8 @@ const nextConfig = {
   },
   webpack: (config, { isServer, dev }) => {
     if (isServer) {
-      // Vercel-specific build logic
-      if (process.env.VERCEL) {
-        const copyTesseractDataForVercel = (dir) => {
-          const sourceDir = path.join(config.context, `node_modules/tesseract.js/src/${dir}`);
-          // Corrected destination path for Vercel based on the runtime error
-          const destDir = path.join(config.output.path, 'app', dir);
-          if (fs.existsSync(sourceDir)) {
-            if (!fs.existsSync(destDir)) {
-              fs.mkdirSync(destDir, { recursive: true });
-            }
-            fs.cpSync(sourceDir, destDir, { recursive: true });
-          }
-        };
-        copyTesseractDataForVercel('worker-script');
-        copyTesseractDataForVercel('constants');
-        copyTesseractDataForVercel('utils');
-      } else {
-        // Original logic for other environments
+      // Only run the file copying for non-Vercel environments
+      if (!process.env.VERCEL) {
         const copyTesseractData = (dir) => {
           const sourceDir = path.join(config.context, `node_modules/tesseract.js/src/${dir}`);
           const destDir = path.join(config.context, `.next/${dir}`);
