@@ -21,7 +21,8 @@ const nextConfig = {
       if (process.env.VERCEL) {
         const copyTesseractDataForVercel = (dir) => {
           const sourceDir = path.join(config.context, `node_modules/tesseract.js/src/${dir}`);
-          const destDir = path.join(config.output.path, dir);
+          // Corrected destination path for Vercel based on the runtime error
+          const destDir = path.join(config.output.path, 'app', dir);
           if (fs.existsSync(sourceDir)) {
             if (!fs.existsSync(destDir)) {
               fs.mkdirSync(destDir, { recursive: true });
