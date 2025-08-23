@@ -19,10 +19,10 @@ This is a full-stack web application built with Next.js that allows users to cap
 
 - **Framework**: [Next.js](https://nextjs.org/) (App Router)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Backend & DB**: [Supabase](https://supabase.com/) (Authentication, Postgres Database, Storage)
+- **Backend & DB**: [Supabase](https://supabase.com/) (Authentication, Postgres Database, Storage) or [PostgreSQL](https://www.postgresql.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
-- **Internationalization**: [react-i18next](https://react.i18next.com/)
+- **Internationalization**: [react-i18next](https://react-i18next.com/)
 
 ## Setup and Installation
 
@@ -44,7 +44,13 @@ cd ocr-learning-app
 pnpm install
 ```
 
-### 4. Set up Supabase
+### 4. Configure Database
+
+The application supports two database options:
+1. **Supabase** (default) - A hosted PostgreSQL database with additional features
+2. **PostgreSQL** - A self-hosted PostgreSQL database
+
+#### Option 1: Using Supabase (Default)
 
 1.  **Create a Supabase Project**: Go to [supabase.com](https://supabase.com), create a new project, and save your project's URL and `anon` key.
 2.  **Configure Environment Variables**: Create a new file named `.env.local` in the root of the project by copying the example file:
@@ -53,15 +59,29 @@ pnpm install
     ```
 3.  **Add Supabase Keys**: Open `.env.local` and add your Supabase project URL and anon key:
     ```
+    DATABASE_TYPE=supabase
     NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL
     NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+    ```
+
+#### Option 2: Using PostgreSQL
+
+1.  **Set up PostgreSQL**: Install and configure a PostgreSQL database.
+2.  **Configure Environment Variables**: Create a new file named `.env.local` in the root of the project by copying the example file:
+    ```bash
+    cp .env.example .env.local
+    ```
+3.  **Add Database Connection**: Open `.env.local` and configure the database connection:
+    ```
+    DATABASE_TYPE=postgres
+    DATABASE_URL=postgresql://username:password@host:port/database
     ```
 
 ### 5. Set up Database Schema
 
 This is a critical step. You must run the SQL scripts in the `/scripts` directory in the correct order to set up your database tables, storage, and functions.
 
-Navigate to the **SQL Editor** in your Supabase project dashboard and run the contents of the following files **one by one, in this specific order**:
+Navigate to the **SQL Editor** in your Supabase project dashboard (or use your PostgreSQL client) and run the contents of the following files **one by one, in this specific order**:
 
 1.  `scripts/001_create_initial_schema.sql`
 2.  `scripts/002_create_storage_bucket.sql`
@@ -127,6 +147,6 @@ Your application should now be accessible via `https://your-domain.com`. The cer
 
 - `/app`: Contains the pages of the application, following the Next.js App Router structure.
 - `/components`: Contains all React components, including UI components from shadcn/ui.
-- `/lib`: Contains helper functions, Supabase client configurations, and type definitions.
+- `/lib`: Contains helper functions, database implementations, and type definitions.
 - `/scripts`: Contains all the SQL scripts needed to initialize the database schema.
 - `/i18n`: Contains the configuration and locale files for internationalization.

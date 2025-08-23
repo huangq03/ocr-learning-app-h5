@@ -1,5 +1,6 @@
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { NextResponse, type NextRequest } from "next/server"
+import { createDatabase } from "../database"
 
 // Check if Supabase environment variables are available
 export const isSupabaseConfigured =
@@ -9,6 +10,18 @@ export const isSupabaseConfigured =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0
 
 export async function updateSession(request: NextRequest) {
+  // Check which database type we're using
+  const dbType = process.env.DATABASE_TYPE || "supabase"
+  
+  // If using PostgreSQL directly, we need a different approach to session management
+  if (dbType.toLowerCase() === "postgres") {
+    // For now, let's just continue without auth for PostgreSQL
+    // In a real implementation, you would implement your own session management
+    return NextResponse.next({
+      request,
+    })
+  }
+
   // If Supabase is not configured, just continue without auth
   if (!isSupabaseConfigured) {
     return NextResponse.next({

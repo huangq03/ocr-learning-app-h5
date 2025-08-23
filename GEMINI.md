@@ -11,7 +11,7 @@ This document provides essential context for AI models interacting with this pro
 
 * **Languages:** TypeScript
 * **Frameworks & Runtimes:** Next.js (App Router), Node.js
-* **Databases:** Supabase (PostgreSQL) for database, authentication, and storage.
+* **Databases:** Supabase (PostgreSQL) or PostgreSQL for database, authentication, and storage.
 * **Key Libraries/Dependencies:**
     *   **UI:** shadcn/ui, Tailwind CSS, Radix UI components
     *   **Forms:** react-hook-form, zod
@@ -25,7 +25,7 @@ This document provides essential context for AI models interacting with this pro
 * **Directory Structure Philosophy:**
     *   `/app`: Core application logic, including pages (`/app/(pages)`) and API endpoints (`/app/api`).
     *   `/components`: Shared and reusable React components, including a `ui` subdirectory for shadcn/ui components.
-    *   `/lib`: Utility functions, Supabase client configuration, and shared type definitions.
+    *   `/lib`: Utility functions, database implementations, and shared type definitions.
     *   `/scripts`: SQL scripts for database schema creation and migration.
     *   `/i18n`: Configuration and locale files for internationalization.
     *   `/public`: Static assets like images and logos.
@@ -54,10 +54,12 @@ This document provides essential context for AI models interacting with this pro
 ## 6. Development & Testing Workflow
 
 * **Local Development Environment:**
-    1.  Set up Supabase and create a `.env.local` file with the appropriate keys.
-    2.  Run the SQL scripts in the `/scripts` directory to initialize the database.
-    3.  Install dependencies using `pnpm install`.
-    4.  Run the development server with `pnpm dev`.
+    1.  Choose between Supabase or PostgreSQL as your database backend by setting the `DATABASE_TYPE` environment variable.
+    2.  If using Supabase, set up Supabase and create a `.env.local` file with the appropriate keys.
+    3.  If using PostgreSQL, set up PostgreSQL and create a `.env.local` file with the `DATABASE_URL`.
+    4.  Run the SQL scripts in the `/scripts` directory to initialize the database.
+    5.  Install dependencies using `pnpm install`.
+    6.  Run the development server with `pnpm dev`.
 * **Testing:** There is no testing framework or test files set up in this project.
 * **CI/CD Process:** Not applicable.
 
