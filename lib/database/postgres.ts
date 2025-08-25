@@ -3,6 +3,8 @@ import { Database } from "."
 import * as fs from "fs"
 import * as path from "path"
 import * as bcrypt from "bcrypt"
+import { sendConfirmationEmail } from "../email"
+import crypto from "crypto"
 
 // Helper function to get the database URL from environment variables
 function getDatabaseUrl(): string | undefined {
@@ -39,7 +41,7 @@ export class PostgresDatabase implements Database {
   async signIn(email: string, password: string) {
     try {
       const result = await this.pool.query(
-        "SELECT id, encrypted_password FROM users WHERE email = $1",
+        "SELECT id, encrypted_password, email_confirmed_at FROM users WHERE email = $1",
         [email]
       )
 
@@ -48,6 +50,11 @@ export class PostgresDatabase implements Database {
       }
 
       const user = result.rows[0]
+
+      if (!user.email_confirmed_at) {
+        return { error: "Please confirm your email address before signing in." }
+      }
+
       const passwordMatches = await bcrypt.compare(password, user.encrypted_password)
 
       if (!passwordMatches) {
@@ -76,13 +83,16 @@ export class PostgresDatabase implements Database {
 
       const saltRounds = 10
       const hashedPassword = await bcrypt.hash(password, saltRounds)
+      const confirmationToken = crypto.randomBytes(32).toString("hex")
 
       await this.pool.query(
-        "INSERT INTO users (email, encrypted_password) VALUES ($1, $2)",
-        [email, hashedPassword]
+        "INSERT INTO users (email, encrypted_password, confirmation_token, confirmation_sent_at) VALUES ($1, $2, $3, NOW())",
+        [email, hashedPassword, confirmationToken]
       )
 
-      return { success: "Account created successfully." }
+      await sendConfirmationEmail(email, confirmationToken)
+
+      return { success: "Account created successfully. Please check your email to confirm your account." }
     } catch (error) {
       console.error("Sign up error:", error)
       return { error: "An unexpected error occurred. Please try again." }
