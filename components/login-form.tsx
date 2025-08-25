@@ -10,9 +10,11 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { signIn } from "@/lib/actions"
+import { useTranslation } from "react-i18next"
 
 function SubmitButton() {
   const { pending } = useFormStatus()
+  const { t } = useTranslation()
 
   return (
     <Button
@@ -23,10 +25,10 @@ function SubmitButton() {
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Signing in...
+          {t("login.signingInButton")}
         </>
       ) : (
-        "Sign In"
+        t("login.signInButton")
       )}
     </Button>
   )
@@ -35,6 +37,7 @@ function SubmitButton() {
 export default function LoginForm() {
   const router = useRouter()
   const [state, formAction] = useActionState(signIn, null)
+  const { t } = useTranslation()
 
   // Handle successful login by redirecting
   useEffect(() => {
@@ -50,8 +53,8 @@ export default function LoginForm() {
           <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
             <Camera className="w-8 h-8 text-purple-600" />
           </div>
-          <h1 className="text-3xl font-bold text-purple-800">Welcome back</h1>
-          <p className="text-lg text-purple-600">Sign in to your OCR learning account</p>
+          <h1 className="text-3xl font-bold text-purple-800">{t("login.welcome")}</h1>
+          <p className="text-lg text-purple-600">{t("login.signInToAccount")}</p>
         </div>
 
         <form action={formAction} className="space-y-6">
@@ -62,20 +65,20 @@ export default function LoginForm() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium text-purple-700">
-                Email
+                {t("login.emailLabel")}
               </label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("login.emailPlaceholder")}
                 required
                 className="bg-purple-50 border-purple-200 text-purple-900 placeholder:text-purple-400 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
             <div className="space-y-2">
               <label htmlFor="password" className="block text-sm font-medium text-purple-700">
-                Password
+                {t("login.passwordLabel")}
               </label>
               <Input
                 id="password"
@@ -90,9 +93,9 @@ export default function LoginForm() {
           <SubmitButton />
 
           <div className="text-center text-purple-600">
-            Don't have an account?{" "}
+            {t("login.noAccount")}{" "}
             <Link href="/auth/sign-up" className="text-purple-800 hover:underline font-semibold">
-              Sign up
+              {t("login.signUpLink")}
             </Link>
           </div>
         </form>

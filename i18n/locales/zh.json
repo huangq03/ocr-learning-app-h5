@@ -137,6 +137,41 @@
     "feature3Text": "通过抽认卡和听写练习来巩固学习。",
     "footerText": "© {{year}} OCR学习。版权所有。"
   },
+  "login": {
+    "welcome": "欢迎回来",
+    "signInToAccount": "登录您的OCR学习账户",
+    "emailLabel": "电子邮箱",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "密码",
+    "signInButton": "登录",
+    "signingInButton": "登录中...",
+    "noAccount": "没有账户？",
+    "signUpLink": "注册"
+  },
+  "signUp": {
+    "createAccount": "创建账户",
+    "startJourney": "开始您的OCR学习之旅",
+    "emailLabel": "电子邮箱",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "密码",
+    "signUpButton": "注册",
+    "signingUpButton": "注册中...",
+    "hasAccount": "已经有账户了？",
+    "logInLink": "登录"
+  },
+  "profile": {
+    "title": "个人资料",
+    "signOut": "退出登录",
+    "userInfo": "用户信息",
+    "email": "电子邮箱",
+    "statistics": "统计数据",
+    "totalDocuments": "总文件数",
+    "totalItems": "总项目数",
+    "itemsDue": "今日到期项目",
+    "masteredItems": "已掌握项目",
+    "dayStreak": "连续学习天数",
+    "studyHours": "学习小时数"
+  },
   "common": {
     "english": "英语",
     "chinese": "中文"

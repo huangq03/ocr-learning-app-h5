@@ -137,6 +137,41 @@
     "feature3Text": "Engage with your material through flashcards and dictation exercises to reinforce learning.",
     "footerText": "© {{year}} OCR Learning. All rights reserved."
   },
+  "login": {
+    "welcome": "Welcome back",
+    "signInToAccount": "Sign in to your OCR learning account",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "signInButton": "Sign In",
+    "signingInButton": "Signing in...",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign up"
+  },
+  "signUp": {
+    "createAccount": "Create an account",
+    "startJourney": "Start your OCR learning journey",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "signUpButton": "Sign Up",
+    "signingUpButton": "Signing up...",
+    "hasAccount": "Already have an account?",
+    "logInLink": "Log in"
+  },
+  "profile": {
+    "title": "Profile",
+    "signOut": "Sign Out",
+    "userInfo": "User Information",
+    "email": "Email",
+    "statistics": "Statistics",
+    "totalDocuments": "Total Documents",
+    "totalItems": "Total Items",
+    "itemsDue": "Items Due Today",
+    "masteredItems": "Mastered Items",
+    "dayStreak": "Day Streak",
+    "studyHours": "Study Hours"
+  },
   "common": {
     "english": "English",
     "chinese": "Chinese"
