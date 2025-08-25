@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ocr-learning-app
+    env_file:
+      - ./.env.local
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: ocr-learning-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    restart: unless-stopped
