@@ -2,6 +2,7 @@ import { Pool, QueryResult } from "pg"
 import { Database } from "."
 import * as fs from "fs"
 import * as path from "path"
+import * as bcrypt from "bcrypt"
 
 // Helper function to get the database URL from environment variables
 function getDatabaseUrl(): string | undefined {
@@ -37,17 +38,22 @@ export class PostgresDatabase implements Database {
   // Authentication methods
   async signIn(email: string, password: string) {
     try {
-      // In a real implementation, you would hash and compare passwords
-      // This is a simplified version for demonstration
       const result = await this.pool.query(
-        "SELECT id FROM users WHERE email = $1 AND password = $2",
-        [email, password] // In real implementation, use hashed password
+        "SELECT id, encrypted_password FROM users WHERE email = $1",
+        [email]
       )
-      
+
       if (result.rows.length === 0) {
         return { error: "Invalid email or password" }
       }
-      
+
+      const user = result.rows[0]
+      const passwordMatches = await bcrypt.compare(password, user.encrypted_password)
+
+      if (!passwordMatches) {
+        return { error: "Invalid email or password" }
+      }
+
       // In a real implementation, you would create a session
       return { success: true }
     } catch (error) {
@@ -63,18 +69,19 @@ export class PostgresDatabase implements Database {
         "SELECT id FROM users WHERE email = $1",
         [email]
       )
-      
+
       if (existingUser.rows.length > 0) {
         return { error: "User already exists with this email" }
       }
-      
-      // In a real implementation, you would hash the password
-      // This is a simplified version for demonstration
+
+      const saltRounds = 10
+      const hashedPassword = await bcrypt.hash(password, saltRounds)
+
       await this.pool.query(
-        "INSERT INTO users (email, password) VALUES ($1, $2)",
-        [email, password] // In real implementation, use hashed password
+        "INSERT INTO users (email, encrypted_password) VALUES ($1, $2)",
+        [email, hashedPassword]
       )
-      
+
       return { success: "Account created successfully." }
     } catch (error) {
       console.error("Sign up error:", error)
@@ -307,7 +314,7 @@ export class PostgresDatabase implements Database {
         
         // Create spaced repetition schedule
         const scheduleResult = await this.pool.query(
-          "INSERT INTO spaced_repetition_schedule (text_item_id, user_id, next_review_date, interval_days, ease_factor, repetition_count) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
+          "INSERT INTO spaced_repetition_schedule (text_item_id, user_id, next_review_date, interval_days, ease_factor, repetition_number) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
           [textItemId, userId, new Date(Date.now() + 24 * 60 * 60 * 1000), 1, 2.5, 0]
         )
         
