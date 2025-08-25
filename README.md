@@ -81,6 +81,48 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
+## Running with Docker and Let's Encrypt
+
+This project includes a `docker-compose.yml` file to run the application and an Nginx proxy with SSL certificates from Let's Encrypt.
+
+### Prerequisites
+
+- A public server with Docker and Docker Compose installed.
+- A registered domain name pointing to the server's IP address.
+- Ports 80 and 443 open on the server's firewall.
+
+### Steps
+
+1.  **Update Configuration Files:**
+    *   In `docker-compose.yml`, replace `your-email@example.com` with your actual email address.
+    *   In both `docker-compose.yml` and `nginx/nginx.conf`, replace `your-domain.com` with your actual domain name.
+
+2.  **Run the Initialization Script:**
+    *   Before starting the containers, run the following command to download the necessary TLS parameters:
+        ```bash
+        ./init-letsencrypt.sh
+        ```
+
+3.  **Start the Nginx and App Containers:**
+    *   Bring up the `app` and `nginx` services:
+        ```bash
+        docker-compose up -d app nginx
+        ```
+
+4.  **Obtain the SSL Certificate:**
+    *   Run the following command to start the `certbot` container and request the certificate. Make sure you have replaced the placeholder domain and email in this command as well.
+        ```bash
+        docker-compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot --email your-email@example.com --agree-tos --no-eff-email -d your-domain.com
+        ```
+
+5.  **Restart Nginx:**
+    *   After the certificate is successfully generated, restart the Nginx container to load the new SSL configuration:
+        ```bash
+        docker-compose restart nginx
+        ```
+
+Your application should now be accessible via `https://your-domain.com`. The certificate will be automatically renewed.
+
 ## Project Structure
 
 - `/app`: Contains the pages of the application, following the Next.js App Router structure.
