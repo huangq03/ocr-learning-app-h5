@@ -6,7 +6,9 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "docker:build": "docker build -t ocr-learning-app .",
+    "docker:run": "docker run --env-file ./.env.local -p 3000:3000 ocr-learning-app"
   },
   "dependencies": {
     "@alicloud/ocr-api20210707": "^3.1.3",
