@@ -224,75 +224,6 @@ export class PostgresDatabase implements Database {
       )
       const dueItemsCount = parseInt(dueItemsResult.rows[0]?.count || "0")
 
-      // Get mastered items count
-      const masteredItemsResult = await this.pool.query(
-        `
-        WITH last_dictation AS (
-            SELECT
-                text_item_id,
-                MAX(created_at) AS last_completed_at
-            FROM
-                dictation_exercises
-            WHERE
-                user_id = $1
-            GROUP BY
-                text_item_id
-        ),
-        latest_attempts AS (
-            SELECT
-                d.text_item_id,
-                d.accuracy
-            FROM
-                dictation_exercises d
-            INNER JOIN
-                last_dictation ld ON d.text_item_id = ld.text_item_id AND d.created_at = ld.last_completed_at
-            WHERE
-                d.user_id = $1
-        )
-        SELECT
-            COUNT(*)
-        FROM
-            latest_attempts
-        WHERE
-            accuracy = 100
-        `,
-        [userId]
-      )
-      const masteredItemsCount = parseInt(masteredItemsResult.rows[0]?.count || "0")
-
-      // Get current streak
-      const streakResult = await this.pool.query(
-        `
-        SELECT DISTINCT created_at::date
-        FROM dictation_exercises
-        WHERE user_id = $1
-        ORDER BY created_at::date DESC
-        `,
-        [userId]
-      )
-
-      let streak = 0;
-      let lastDate: Date | null = null;
-      for (const row of streakResult.rows) {
-        const currentDate = new Date(row.created_at);
-        if (lastDate === null) {
-          if (currentDate.toDateString() === new Date().toDateString()) {
-            streak = 1;
-          } else if (currentDate.toDateString() === new Date(Date.now() - 86400000).toDateString()) {
-            streak = 1;
-          } else {
-            break;
-          }
-        } else {
-          if (currentDate.toDateString() === new Date(lastDate.getTime() - 86400000).toDateString()) {
-            streak++;
-          } else {
-            break;
-          }
-        }
-        lastDate = currentDate;
-      }
-
       // Get recent documents
       const recentTextItemsResult = await this.pool.query(
         "SELECT document_id, created_at FROM text_items WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10",
@@ -316,8 +247,8 @@ export class PostgresDatabase implements Database {
         totalDocuments: userProgress.total_documents || 0,
         totalItems: userProgress.total_text_items || 0,
         itemsDue: dueItemsCount,
-        masteredItems: masteredItemsCount,
-        currentStreak: streak,
+        masteredItems: userProgress.items_mastered || 0,
+        currentStreak: userProgress.current_streak_days || 0,
         studyTimeHours: Math.round((userProgress.total_study_time_minutes || 0) / 60),
       }
 
@@ -464,6 +395,7 @@ export class PostgresDatabase implements Database {
         "INSERT INTO dictation_exercises (user_id, text, accuracy, wpm, duration) VALUES ($1, $2, $3, $4, $5)",
         [result.userId, result.text, result.accuracy, result.wpm, result.duration]
       )
+      await this.updateUserProgress(result.userId, result.duration / 60000) // Convert ms to minutes
       return { success: true }
     } catch (error) {
       console.error("Error saving dictation result:", error)
@@ -503,26 +435,12 @@ export class PostgresDatabase implements Database {
       )
       const dueItemsCount = parseInt(dueItemsResult.rows[0]?.count || "0")
 
-      // Get mastered items count (simplified)
-      const masteredItemsResult = await this.pool.query(
-        "SELECT COUNT(*) as count FROM text_items WHERE user_id = $1 AND is_mastered = TRUE",
-        [userId]
-      )
-      const masteredItemsCount = parseInt(masteredItemsResult.rows[0]?.count || "0")
-
-      // Get current streak (simplified)
-      const streakResult = await this.pool.query(
-        "SELECT COALESCE(MAX(streak), 0) as streak FROM user_streaks WHERE user_id = $1",
-        [userId]
-      )
-      const currentStreak = parseInt(streakResult.rows[0]?.streak || "0")
-
       const stats = {
         totalDocuments: userProgress.total_documents || 0,
         totalItems: userProgress.total_text_items || 0,
         itemsDue: dueItemsCount,
-        masteredItems: masteredItemsCount,
-        currentStreak: currentStreak,
+        masteredItems: userProgress.items_mastered || 0,
+        currentStreak: userProgress.current_streak_days || 0,
         studyTimeHours: Math.round((userProgress.total_study_time_minutes || 0) / 60),
       }
 
@@ -530,6 +448,52 @@ export class PostgresDatabase implements Database {
     } catch (error) {
       console.error("Error fetching profile page data:", error)
       return { error: "Failed to fetch profile page data." }
+    }
+  }
+
+  async updateUserProgress(userId: string, studyTime: number) {
+    try {
+      const userProgressResult = await this.pool.query(
+        "SELECT * FROM user_progress WHERE user_id = $1",
+        [userId]
+      )
+
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (userProgressResult.rows.length > 0) {
+        const userProgress = userProgressResult.rows[0];
+        const lastStudyDate = new Date(userProgress.last_study_date);
+
+        let currentStreak = userProgress.current_streak_days;
+        let longestStreak = userProgress.longest_streak_days;
+
+        if (lastStudyDate.toDateString() === yesterday.toDateString()) {
+          currentStreak++;
+        } else if (lastStudyDate.toDateString() !== today.toDateString()) {
+          currentStreak = 1;
+        }
+
+        if (currentStreak > longestStreak) {
+          longestStreak = currentStreak;
+        }
+
+        await this.pool.query(
+          "UPDATE user_progress SET total_study_time_minutes = total_study_time_minutes + $1, last_study_date = $2, current_streak_days = $3, longest_streak_days = $4 WHERE user_id = $5",
+          [studyTime, today, currentStreak, longestStreak, userId]
+        )
+      } else {
+        await this.pool.query(
+          "INSERT INTO user_progress (user_id, total_study_time_minutes, last_study_date, current_streak_days, longest_streak_days) VALUES ($1, $2, $3, 1, 1)",
+          [userId, studyTime, today]
+        )
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error updating user progress:", error);
+      return { error: "Failed to update user progress." };
     }
   }
 }

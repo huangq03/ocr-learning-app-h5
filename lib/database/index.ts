@@ -33,6 +33,7 @@ export interface Database {
 
   // Profile methods
   getProfilePageData: (userId: string) => Promise<any>
+  updateUserProgress: (userId: string, studyTime: number) => Promise<{ success?: boolean; error?: string }>
 }
 
 // Factory function to create the appropriate database implementation
