@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation"
 import { createDatabase } from "./database"
+import { cookies } from "next/headers"
 
 // Update the signIn function to handle redirects properly
 export async function signIn(prevState: any, formData: FormData) {
@@ -19,7 +20,7 @@ export async function signIn(prevState: any, formData: FormData) {
   }
 
   const db = createDatabase()
-  const result = await db.signIn(email.toString(), password.toString())
+  const result = await db.signIn(email.toString(), password.toString(), cookies())
   
   if (result.success) {
     return { success: true }
@@ -55,7 +56,7 @@ export async function signUp(prevState: any, formData: FormData) {
 
 export async function signOut() {
   const db = createDatabase()
-  await db.signOut()
+  await db.signOut(cookies())
   redirect("/auth/login")
 }
 
@@ -99,7 +100,7 @@ export async function getDocumentsPageData() {
   const db = createDatabase()
   
   try {
-    const { user } = await db.getUser();
+    const { user } = await db.getUser(cookies());
     if (!user) {
       return { error: "User not found" };
     }
@@ -125,7 +126,7 @@ export async function getStudyPageData(studySessionItems?: string[]) {
   const db = createDatabase()
   
   try {
-    const { user } = await db.getUser();
+    const { user } = await db.getUser(cookies());
     if (!user) {
       return { error: "User not found" };
     }
@@ -146,7 +147,7 @@ export async function getDictationPageData() {
   const db = createDatabase()
   
   try {
-    const { user } = await db.getUser();
+    const { user } = await db.getUser(cookies());
     if (!user) {
       return { error: "User not found" };
     }
@@ -165,7 +166,7 @@ export async function getDictationPageData() {
 
 export async function getPageSession() {
   const db = createDatabase()
-  const { session } = await db.getSession()
+  const { session } = await db.getSession(cookies())
   const isSupabaseConfigured =
     typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
     process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0 &&
@@ -179,7 +180,7 @@ export async function getDocumentById(documentId: string) {
   const db = createDatabase()
   
   try {
-    const { user } = await db.getUser();
+    const { user } = await db.getUser(cookies());
     if (!user) {
       return { error: "User not found" };
     }
@@ -200,7 +201,7 @@ export async function getItemsPageData() {
   const db = createDatabase()
   
   try {
-    const { user } = await db.getUser();
+    const { user } = await db.getUser(cookies());
     if (!user) {
       return { error: "User not found" };
     }
@@ -221,7 +222,7 @@ export async function getProfilePageData() {
   const db = createDatabase()
   
   try {
-    const { user } = await db.getUser();
+    const { user } = await db.getUser(cookies());
     if (!user) {
       return { error: "User not found" };
     }

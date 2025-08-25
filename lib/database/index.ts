@@ -1,14 +1,15 @@
 import { SupabaseDatabase } from "./supabase"
 import { PostgresDatabase } from "./postgres"
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 // Database interface that both implementations must conform to
 export interface Database {
   // Authentication methods
-  signIn: (email: string, password: string) => Promise<{ error?: string; success?: boolean }>
+  signIn: (email: string, password: string, cookies: ReadonlyRequestCookies) => Promise<{ error?: string; success?: boolean }>
   signUp: (email: string, password: string) => Promise<{ error?: string; success?: string }>
-  signOut: () => Promise<void>
-  getUser: () => Promise<{ user: any | null; error?: string }>
-  getSession: () => Promise<{ session: any | null; error?: string }>
+  signOut: (cookies: ReadonlyRequestCookies) => Promise<void>
+  getUser: (cookies: ReadonlyRequestCookies) => Promise<{ user: any | null; error?: string }>
+  getSession: (cookies: ReadonlyRequestCookies) => Promise<{ session: { user: any | null } | null; error?: string }>
 
   // Document methods
   getDocuments: (userId: string) => Promise<{ documents: any[]; error?: string }>

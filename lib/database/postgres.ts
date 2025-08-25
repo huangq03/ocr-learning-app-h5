@@ -5,6 +5,8 @@ import * as path from "path"
 import * as bcrypt from "bcrypt"
 import { sendConfirmationEmail } from "../email"
 import crypto from "crypto"
+import { getSession as getIronSession } from "../session"
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 // Helper function to get the database URL from environment variables
 function getDatabaseUrl(): string | undefined {
@@ -38,7 +40,7 @@ export class PostgresDatabase implements Database {
   }
 
   // Authentication methods
-  async signIn(email: string, password: string) {
+  async signIn(email: string, password: string, cookies: ReadonlyRequestCookies) {
     try {
       const result = await this.pool.query(
         "SELECT id, encrypted_password, email_confirmed_at FROM users WHERE email = $1",
@@ -61,7 +63,10 @@ export class PostgresDatabase implements Database {
         return { error: "Invalid email or password" }
       }
 
-      // In a real implementation, you would create a session
+      const session = await getIronSession(cookies)
+      session.userId = user.id
+      await session.save()
+
       return { success: true }
     } catch (error) {
       console.error("Login error:", error)
@@ -99,21 +104,38 @@ export class PostgresDatabase implements Database {
     }
   }
 
-  async signOut() {
-    // In a real implementation, you would invalidate the session
-    // This is a no-op in this simplified version
+  async signOut(cookies: ReadonlyRequestCookies) {
+    const session = await getIronSession(cookies)
+    session.destroy()
   }
 
-  async getUser() {
-    // In a real implementation, you would get the user from the session
-    // This is a simplified version for demonstration
-    return { user: null }
+  async getUser(cookies: ReadonlyRequestCookies) {
+    const session = await getIronSession(cookies)
+    const userId = session.userId
+
+    if (!userId) {
+      return { user: null }
+    }
+
+    const result = await this.pool.query(
+      "SELECT id, email FROM users WHERE id = $1",
+      [userId]
+    )
+
+    if (result.rows.length === 0) {
+      return { user: null }
+    }
+
+    return { user: result.rows[0] }
   }
 
-  async getSession() {
-    // In a real implementation, you would get the session
-    // This is a simplified version for demonstration
-    return { session: null }
+  async getSession(cookies: ReadonlyRequestCookies) {
+    const session = await getIronSession(cookies)
+    if (!session.userId) {
+      return { session: null }
+    }
+    const { user } = await this.getUser(cookies)
+    return { session: { user } }
   }
 
   // Document methods
@@ -202,19 +224,74 @@ export class PostgresDatabase implements Database {
       )
       const dueItemsCount = parseInt(dueItemsResult.rows[0]?.count || "0")
 
-      // Get mastered items count (simplified)
+      // Get mastered items count
       const masteredItemsResult = await this.pool.query(
-        "SELECT COUNT(*) as count FROM text_items WHERE user_id = $1 AND is_mastered = TRUE",
+        `
+        WITH last_dictation AS (
+            SELECT
+                text_item_id,
+                MAX(created_at) AS last_completed_at
+            FROM
+                dictation_exercises
+            WHERE
+                user_id = $1
+            GROUP BY
+                text_item_id
+        ),
+        latest_attempts AS (
+            SELECT
+                d.text_item_id,
+                d.accuracy
+            FROM
+                dictation_exercises d
+            INNER JOIN
+                last_dictation ld ON d.text_item_id = ld.text_item_id AND d.created_at = ld.last_completed_at
+            WHERE
+                d.user_id = $1
+        )
+        SELECT
+            COUNT(*)
+        FROM
+            latest_attempts
+        WHERE
+            accuracy = 100
+        `,
         [userId]
       )
       const masteredItemsCount = parseInt(masteredItemsResult.rows[0]?.count || "0")
 
-      // Get current streak (simplified)
+      // Get current streak
       const streakResult = await this.pool.query(
-        "SELECT COALESCE(MAX(streak), 0) as streak FROM user_streaks WHERE user_id = $1",
+        `
+        SELECT DISTINCT created_at::date
+        FROM dictation_exercises
+        WHERE user_id = $1
+        ORDER BY created_at::date DESC
+        `,
         [userId]
       )
-      const currentStreak = parseInt(streakResult.rows[0]?.streak || "0")
+
+      let streak = 0;
+      let lastDate: Date | null = null;
+      for (const row of streakResult.rows) {
+        const currentDate = new Date(row.created_at);
+        if (lastDate === null) {
+          if (currentDate.toDateString() === new Date().toDateString()) {
+            streak = 1;
+          } else if (currentDate.toDateString() === new Date(Date.now() - 86400000).toDateString()) {
+            streak = 1;
+          } else {
+            break;
+          }
+        } else {
+          if (currentDate.toDateString() === new Date(lastDate.getTime() - 86400000).toDateString()) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+        lastDate = currentDate;
+      }
 
       // Get recent documents
       const recentTextItemsResult = await this.pool.query(
@@ -240,7 +317,7 @@ export class PostgresDatabase implements Database {
         totalItems: userProgress.total_text_items || 0,
         itemsDue: dueItemsCount,
         masteredItems: masteredItemsCount,
-        currentStreak: currentStreak,
+        currentStreak: streak,
         studyTimeHours: Math.round((userProgress.total_study_time_minutes || 0) / 60),
       }
 
