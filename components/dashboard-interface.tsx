@@ -47,14 +47,9 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
   })
   const [recentItemGroups, setRecentItemGroups] = useState<Document[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  console.log('session user: ', user)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!user?.id) {
-        setIsLoading(false);
-        return;
-      }
       try {
         const data = await getDashboardData(user.id);
         if (data && !data.error) {
@@ -71,7 +66,7 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
     }
 
     fetchDashboardData()
-  }, [user?.id])
+  }, [user.id])
 
   if (isLoading) {
     return (
