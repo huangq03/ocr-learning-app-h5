@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation"
 import { createDatabase } from "./database"
+import { getIronSession } from "iron-session"
+import { sessionOptions } from "./session"
 import { cookies } from "next/headers"
 
 // Update the signIn function to handle redirects properly
@@ -20,9 +22,13 @@ export async function signIn(prevState: any, formData: FormData) {
   }
 
   const db = createDatabase()
-  const result = await db.signIn(email.toString(), password.toString(), cookies())
+  const result = await db.signIn(email.toString(), password.toString())
   
-  if (result.success) {
+  const cookieStore = await cookies()
+  if (result.user) {
+    const session = await getIronSession(cookieStore, sessionOptions)
+    session.user = result.user
+    await session.save()
     return { success: true }
   }
   
@@ -55,14 +61,21 @@ export async function signUp(prevState: any, formData: FormData) {
 }
 
 export async function signOut() {
-  const db = createDatabase()
-  await db.signOut(cookies())
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  session.destroy()
   redirect("/auth/login")
 }
 
-export async function getDashboardData(userId: string) {
+export async function getDashboardData() {
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
+  }
   const db = createDatabase()
-  return await db.getDashboardData(userId)
+  return await db.getDashboardData(user.id)
 }
 
 export async function saveDictationResult(result: any) {
@@ -70,7 +83,14 @@ export async function saveDictationResult(result: any) {
   return await db.saveDictationResult(result)
 }
 
-export async function saveDocument(userId: string, ocrResult: any, formData: FormData) {
+export async function saveDocument(ocrResult: any, formData: FormData) {
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
+  }
+
   const file = formData.get('file') as File;
 
   if (!file) {
@@ -78,12 +98,18 @@ export async function saveDocument(userId: string, ocrResult: any, formData: For
   }
 
   const db = createDatabase()
-  return await db.saveDocument(userId, ocrResult, file)
+  return await db.saveDocument(user.id, ocrResult, file)
 }
 
-export async function addToStudyPlanAction(userId: string, documentId: string, items: string[]) {
+export async function addToStudyPlanAction(documentId: string, items: string[]) {
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
+  }
   const db = createDatabase()
-  return await db.addToStudyPlan(userId, documentId, items)
+  return await db.addToStudyPlan(user.id, documentId, items)
 }
 
 export async function updateStudyScheduleAction(itemId: string, updatedSchedule: any) {
@@ -91,150 +117,139 @@ export async function updateStudyScheduleAction(itemId: string, updatedSchedule:
   return await db.updateStudySchedule(itemId, updatedSchedule)
 }
 
-export async function saveSelectionsAndCreateReviewsAction(documentId: string, selections: any[], userId: string) {
+export async function saveSelectionsAndCreateReviewsAction(documentId: string, selections: any[]) {
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
+  }
   const db = createDatabase()
-  return await db.saveSelectionsAndCreateReviews(documentId, selections, userId)
+  return await db.saveSelectionsAndCreateReviews(documentId, selections, user.id)
 }
 
 export async function getDocumentsPageData() {
-  const db = createDatabase()
-  
-  try {
-    const { user } = await db.getUser(cookies());
-    if (!user) {
-      return { error: "User not found" };
-    }
-
-    const { documents, error } = await db.getDocuments(user.id);
-    if (error) {
-      return { error };
-    }
-    
-    return { documents, user };
-  } catch (error) {
-    console.error("Error fetching documents:", error);
-    return { error: "Failed to fetch documents." };
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
   }
+
+  const db = createDatabase()
+  const { documents, error } = await db.getDocuments(user.id);
+  if (error) {
+    return { error };
+  }
+  
+  return { documents, user };
 }
 
-export async function deleteDocument(documentId: string, userId: string) {
+export async function deleteDocument(documentId: string) {
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
+  }
   const db = createDatabase()
-  return await db.deleteDocument(documentId, userId)
+  return await db.deleteDocument(documentId, user.id)
 }
 
 export async function getStudyPageData(studySessionItems?: string[]) {
-  const db = createDatabase()
-  
-  try {
-    const { user } = await db.getUser(cookies());
-    if (!user) {
-      return { error: "User not found" };
-    }
-
-    const { items, error } = await db.getStudyPageData(user.id, studySessionItems);
-    if (error) {
-      return { error };
-    }
-    
-    return { items, user };
-  } catch (error) {
-    console.error("Error fetching study page data:", error);
-    return { error: "Failed to fetch study page data." };
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
   }
+
+  const db = createDatabase()
+  const { items, error } = await db.getStudyPageData(user.id, studySessionItems);
+  if (error) {
+    return { error };
+  }
+  
+  return { items, user };
 }
 
 export async function getDictationPageData() {
-  const db = createDatabase()
-  
-  try {
-    const { user } = await db.getUser(cookies());
-    if (!user) {
-      return { error: "User not found" };
-    }
-
-    const { items, error } = await db.getDictationPageData(user.id);
-    if (error) {
-      return { error };
-    }
-    
-    return { items, user };
-  } catch (error) {
-    console.error("Error fetching text items:", error);
-    return { error: "Failed to fetch text items." };
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
   }
+
+  const db = createDatabase()
+  const { items, error } = await db.getDictationPageData(user.id);
+  if (error) {
+    return { error };
+  }
+  
+  return { items, user };
 }
 
 export async function getPageSession() {
-  const db = createDatabase()
-  const { session } = await db.getSession(cookies())
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
   const isSupabaseConfigured =
     typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
     process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0 &&
     typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0;
 
+  session.user = {id: session.userId}
   return { session, isSupabaseConfigured };
 }
 
 export async function getDocumentById(documentId: string) {
-  const db = createDatabase()
-  
-  try {
-    const { user } = await db.getUser(cookies());
-    if (!user) {
-      return { error: "User not found" };
-    }
-
-    const { document, error } = await db.getDocumentById(documentId, user.id);
-    if (error) {
-      return { error };
-    }
-    
-    return { document, user };
-  } catch (error) {
-    console.error("Error fetching document:", error);
-    return { error: "Failed to fetch document." };
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
   }
+
+  const db = createDatabase()
+  const { document, error } = await db.getDocumentById(documentId, user.id);
+  if (error) {
+    return { error };
+  }
+  
+  return { document, user };
 }
 
 export async function getItemsPageData() {
-  const db = createDatabase()
-  
-  try {
-    const { user } = await db.getUser(cookies());
-    if (!user) {
-      return { error: "User not found" };
-    }
-
-    const { documents, error } = await db.getItemsPageData(user.id);
-    if (error) {
-      return { error };
-    }
-    
-    return { documents, user };
-  } catch (error) {
-    console.error("Error fetching documents for items page:", error);
-    return { error: "Failed to fetch documents for items page." };
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
   }
+
+  const db = createDatabase()
+  const { documents, error } = await db.getItemsPageData(user.id);
+  if (error) {
+    return { error };
+  }
+  
+  return { documents, user };
 }
 
 export async function getProfilePageData() {
-  const db = createDatabase()
-  
-  try {
-    const { user } = await db.getUser(cookies());
-    if (!user) {
-      return { error: "User not found" };
-    }
-
-    const { stats, error } = await db.getProfilePageData(user.id);
-    if (error) {
-      return { error };
-    }
-    
-    return { stats, user };
-  } catch (error) {
-    console.error("Error fetching profile page data:", error);
-    return { error: "Failed to fetch profile page data." };
+  const cookieStore = await cookies()
+  const session = await getIronSession(cookieStore, sessionOptions)
+  const user = session.user
+  if (!user) {
+    return { error: "User not found" }
   }
+
+  const db = createDatabase()
+  const { stats, error } = await db.getProfilePageData(user.id);
+  if (error) {
+    return { error };
+  }
+  
+  return { stats, user };
 }

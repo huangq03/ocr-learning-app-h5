@@ -5,8 +5,6 @@ import * as path from "path"
 import * as bcrypt from "bcrypt"
 import { sendConfirmationEmail } from "../email"
 import crypto from "crypto"
-import { getSession as getIronSession } from "../session"
-import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 // Helper function to get the database URL from environment variables
 function getDatabaseUrl(): string | undefined {
@@ -40,7 +38,7 @@ export class PostgresDatabase implements Database {
   }
 
   // Authentication methods
-  async signIn(email: string, password: string, cookies: ReadonlyRequestCookies) {
+  async signIn(email: string, password: string) {
     try {
       const result = await this.pool.query(
         "SELECT id, encrypted_password, email_confirmed_at FROM users WHERE email = $1",
@@ -63,11 +61,7 @@ export class PostgresDatabase implements Database {
         return { error: "Invalid email or password" }
       }
 
-      const session = await getIronSession(cookies)
-      session.userId = user.id
-      await session.save()
-
-      return { success: true }
+      return { user: { id: user.id, email: user.email } }
     } catch (error) {
       console.error("Login error:", error)
       return { error: "An unexpected error occurred. Please try again." }
@@ -102,40 +96,6 @@ export class PostgresDatabase implements Database {
       console.error("Sign up error:", error)
       return { error: "An unexpected error occurred. Please try again." }
     }
-  }
-
-  async signOut(cookies: ReadonlyRequestCookies) {
-    const session = await getIronSession(cookies)
-    session.destroy()
-  }
-
-  async getUser(cookies: ReadonlyRequestCookies) {
-    const session = await getIronSession(cookies)
-    const userId = session.userId
-
-    if (!userId) {
-      return { user: null }
-    }
-
-    const result = await this.pool.query(
-      "SELECT id, email FROM users WHERE id = $1",
-      [userId]
-    )
-
-    if (result.rows.length === 0) {
-      return { user: null }
-    }
-
-    return { user: result.rows[0] }
-  }
-
-  async getSession(cookies: ReadonlyRequestCookies) {
-    const session = await getIronSession(cookies)
-    if (!session.userId) {
-      return { session: null }
-    }
-    const { user } = await this.getUser(cookies)
-    return { session: { user } }
   }
 
   // Document methods
