@@ -411,49 +411,5 @@ export class PostgresDatabase implements Database {
     }
   }
 
-  async updateUserProgress(userId: string, studyTime: number) {
-    try {
-      const userProgressResult = await this.pool.query(
-        "SELECT * FROM user_progress WHERE user_id = $1",
-        [userId]
-      )
-
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (userProgressResult.rows.length > 0) {
-        const userProgress = userProgressResult.rows[0];
-        const lastStudyDate = new Date(userProgress.last_study_date);
-
-        let currentStreak = userProgress.current_streak_days;
-        let longestStreak = userProgress.longest_streak_days;
-
-        if (lastStudyDate.toDateString() === yesterday.toDateString()) {
-          currentStreak++;
-        } else if (lastStudyDate.toDateString() !== today.toDateString()) {
-          currentStreak = 1;
-        }
-
-        if (currentStreak > longestStreak) {
-          longestStreak = currentStreak;
-        }
-
-        await this.pool.query(
-          "UPDATE user_progress SET total_study_time_minutes = total_study_time_minutes + $1, last_study_date = $2, current_streak_days = $3, longest_streak_days = $4 WHERE user_id = $5",
-          [studyTime, today, currentStreak, longestStreak, userId]
-        )
-      } else {
-        await this.pool.query(
-          "INSERT INTO user_progress (user_id, total_study_time_minutes, last_study_date, current_streak_days, longest_streak_days) VALUES ($1, $2, $3, 1, 1)",
-          [userId, studyTime, today]
-        )
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error("Error updating user progress:", error);
-      return { error: "Failed to update user progress." };
-    }
-  }
+  
 }

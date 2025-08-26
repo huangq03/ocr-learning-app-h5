@@ -2,9 +2,8 @@
 
 import { redirect } from "next/navigation"
 import { createDatabase } from "./database"
-import { getIronSession } from "iron-session"
-import { sessionOptions } from "./session"
 import { cookies } from "next/headers"
+import { encrypt, getSession } from "./jwt"
 
 // Update the signIn function to handle redirects properly
 export async function signIn(prevState: any, formData: FormData) {
@@ -23,16 +22,20 @@ export async function signIn(prevState: any, formData: FormData) {
 
   const db = createDatabase()
   const result = await db.signIn(email.toString(), password.toString())
-  
-  const cookieStore = await cookies()
-  if (result.user) {
-    const session = await getIronSession(cookieStore, sessionOptions)
-    session.user = result.user
-    await session.save()
-    return { success: true }
+
+  if (result.error) {
+    return { error: result.error }
   }
-  
-  return { error: result.error }
+
+  // Create the session
+  const expires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+  const session = await encrypt({ user: result.user, expires })
+
+  // Save the session in a cookie
+  const cookie = await cookies()
+  cookie.set("session", session, { expires, httpOnly: true })
+
+  redirect("/dashboard")
 }
 
 // Update the signUp function to handle potential null formData
@@ -52,28 +55,34 @@ export async function signUp(prevState: any, formData: FormData) {
 
   const db = createDatabase()
   const result = await db.signUp(email.toString(), password.toString())
-  
+
   if (result.success) {
     return { success: result.success }
   }
-  
+
   return { error: result.error }
 }
 
 export async function signOut() {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  session.destroy()
+  // Destroy the session
+  const cookie = await cookies()
+  cookie.set("session", "", { expires: new Date(0) })
+
+  const db = createDatabase()
+  await db.signOut()
   redirect("/auth/login")
 }
 
-export async function getDashboardData() {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
+async function getUser() {
+  const session = await getSession()
+  if (!session?.user) {
+    redirect("/auth/login")
   }
+  return session.user
+}
+
+export async function getDashboardData() {
+  const user = await getUser()
   const db = createDatabase()
   return await db.getDashboardData(user.id)
 }
@@ -84,14 +93,8 @@ export async function saveDictationResult(result: any) {
 }
 
 export async function saveDocument(ocrResult: any, formData: FormData) {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
-  }
-
-  const file = formData.get('file') as File;
+  const user = await getUser()
+  const file = formData.get("file") as File
 
   if (!file) {
     return { error: "File is missing" }
@@ -102,154 +105,107 @@ export async function saveDocument(ocrResult: any, formData: FormData) {
 }
 
 export async function addToStudyPlanAction(documentId: string, items: string[]) {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
-  }
+  const user = await getUser()
   const db = createDatabase()
   return await db.addToStudyPlan(user.id, documentId, items)
 }
 
-export async function updateStudyScheduleAction(itemId: string, updatedSchedule: any) {
+export async function updateStudyScheduleAction(
+  itemId: string,
+  updatedSchedule: any
+) {
   const db = createDatabase()
   return await db.updateStudySchedule(itemId, updatedSchedule)
 }
 
-export async function saveSelectionsAndCreateReviewsAction(documentId: string, selections: any[]) {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
-  }
+export async function saveSelectionsAndCreateReviewsAction(
+  documentId: string,
+  selections: any[]
+) {
+  const user = await getUser()
   const db = createDatabase()
   return await db.saveSelectionsAndCreateReviews(documentId, selections, user.id)
 }
 
 export async function getDocumentsPageData() {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
+  const user = await getUser()
+  const db = createDatabase()
+  const { documents, error } = await db.getDocuments(user.id)
+  if (error) {
+    return { error }
   }
 
-  const db = createDatabase()
-  const { documents, error } = await db.getDocuments(user.id);
-  if (error) {
-    return { error };
-  }
-  
-  return { documents, user };
+  return { documents, user }
 }
 
 export async function deleteDocument(documentId: string) {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
-  }
+  const user = await getUser()
   const db = createDatabase()
   return await db.deleteDocument(documentId, user.id)
 }
 
 export async function getStudyPageData(studySessionItems?: string[]) {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
+  const user = await getUser()
+  const db = createDatabase()
+  const { items, error } = await db.getStudyPageData(user.id, studySessionItems)
+  if (error) {
+    return { error }
   }
 
-  const db = createDatabase()
-  const { items, error } = await db.getStudyPageData(user.id, studySessionItems);
-  if (error) {
-    return { error };
-  }
-  
-  return { items, user };
+  return { items, user }
 }
 
 export async function getDictationPageData() {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
+  const user = await getUser()
+  const db = createDatabase()
+  const { items, error } = await db.getDictationPageData(user.id)
+  if (error) {
+    return { error }
   }
 
-  const db = createDatabase()
-  const { items, error } = await db.getDictationPageData(user.id);
-  if (error) {
-    return { error };
-  }
-  
-  return { items, user };
+  return { items, user }
 }
 
 export async function getPageSession() {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
   const isSupabaseConfigured =
-    typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0 &&
-    typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0;
+      typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
+      process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0 &&
+      typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0;
 
-  session.user = {id: session.userId}
-  return { session, isSupabaseConfigured };
+  const session = await getSession()
+  return { session, isSupabaseConfigured }
 }
 
 export async function getDocumentById(documentId: string) {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
+  const user = await getUser()
+  const db = createDatabase()
+  const { document, error } = await db.getDocumentById(documentId, user.id)
+  if (error) {
+    return { error }
   }
 
-  const db = createDatabase()
-  const { document, error } = await db.getDocumentById(documentId, user.id);
-  if (error) {
-    return { error };
-  }
-  
-  return { document, user };
+  return { document, user }
 }
 
 export async function getItemsPageData() {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
+  const user = await getUser()
+  const db = createDatabase()
+  const { documents, error } = await db.getItemsPageData(user.id)
+  if (error) {
+    return { error }
   }
 
-  const db = createDatabase()
-  const { documents, error } = await db.getItemsPageData(user.id);
-  if (error) {
-    return { error };
-  }
-  
-  return { documents, user };
+  return { documents, user }
 }
 
 export async function getProfilePageData() {
-  const cookieStore = await cookies()
-  const session = await getIronSession(cookieStore, sessionOptions)
-  const user = session.user
-  if (!user) {
-    return { error: "User not found" }
+  const user = await getUser()
+  const db = createDatabase()
+  const { stats, error } = await db.getProfilePageData(user.id)
+  if (error) {
+    return { error }
   }
 
-  const db = createDatabase()
-  const { stats, error } = await db.getProfilePageData(user.id);
-  if (error) {
-    return { error };
-  }
-  
-  return { stats, user };
+  return { stats, user }
 }
