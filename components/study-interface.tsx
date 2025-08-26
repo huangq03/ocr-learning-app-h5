@@ -150,7 +150,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
             <div className="text-center p-8">
                 <h2 className="text-2xl font-bold mb-4">No items due for review today!</h2>
                 <p className="text-gray-600 mb-6">Great job staying on top of your studies.</p>
-                <Button onClick={() => router.push('/')}>Back to Dashboard</Button>
+                <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
             </div>
         );
     }
@@ -167,7 +167,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                         <div className="flex flex-col items-center"><Meh className="w-8 h-8 text-yellow-500" /><span>{sessionStats.good} Good</span></div>
                         <div className="flex flex-col items-center"><Smile className="w-8 h-8 text-green-500" /><span>{sessionStats.easy} Easy</span></div>
                     </div>
-                    <Button onClick={() => router.push('/')}>Back to Dashboard</Button>
+                    <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
                 </Card>
             </div>
         );
@@ -187,18 +187,18 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                     <div>
                         <div className="flex items-center justify-center gap-4">
                             <p className="text-2xl font-bold mb-2">
-                                {currentItem.text_items.content.split(/(\s+)/).map((word, wordIndex) => (
+                                {currentItem.content.split(/(\s+)/).map((word, wordIndex) => (
                                     <span key={wordIndex} className={nowPlaying === currentItem.text_items.content && highlightedWordIndex === Math.floor(wordIndex / 2) ? 'bg-yellow-200' : ''}>
                                         {word}
                                     </span>
                                 ))}
                             </p>
                             <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.text_items.content)}>
-                                <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.text_items.content ? 'text-purple-600' : ''}`} />
+                                <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.content ? 'text-purple-600' : ''}`} />
                             </Button>
                         </div>
                         <p className="text-lg text-gray-600">{currentItem.text_items.context}</p>
-                        <p className="text-md text-gray-500 italic">{currentItem.text_items.user_definition}</p>
+                        <p className="text-md text-gray-500 italic">{currentItem.user_definition}</p>
                     </div>
                 </CardContent>
                 <CardFooter className="flex flex-col items-center">
