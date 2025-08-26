@@ -13,6 +13,7 @@ This is a full-stack web application built with Next.js that allows users to cap
   - **Recitation**: A flashcard-style mode for reading and reviewing items.
   - **Dictation**: An interactive mode that uses browser speech synthesis to read items aloud for spelling and listening practice.
 - **Dashboard**: An overview of user statistics, including total documents, total items, and recent activity.
+- **JWT-based Authentication**: Secure authentication for both Supabase and PostgreSQL using JSON Web Tokens.
 - **Internationalization (i18n)**: Full support for English and Chinese, switchable at runtime.
 
 ## Tech Stack
@@ -22,6 +23,7 @@ This is a full-stack web application built with Next.js that allows users to cap
 - **Backend & DB**: [Supabase](https://supabase.com/) (Authentication, Postgres Database, Storage) or [PostgreSQL](https://www.postgresql.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Authentication**: [jose](https://github.com/panva/jose)
 - **Internationalization**: [react-i18next](https://react-i18next.com/)
 
 ## Setup and Installation
@@ -79,15 +81,30 @@ The application supports two database options:
 
 ### 5. Set up Database Schema
 
-This is a critical step. You must run the SQL scripts in the `/scripts` directory in the correct order to set up your database tables, storage, and functions.
+This is a critical step. You must run the SQL scripts to set up your database tables, storage, and functions.
 
-Navigate to the **SQL Editor** in your Supabase project dashboard (or use your PostgreSQL client) and run the contents of the following files **one by one, in this specific order**:
+#### For Supabase
+
+Navigate to the **SQL Editor** in your Supabase project dashboard and run the contents of the following files **one by one, in this specific order**:
 
 1.  `scripts/001_create_initial_schema.sql`
 2.  `scripts/002_create_storage_bucket.sql`
 3.  `scripts/003_create_functions_and_triggers.sql`
-4.  `scripts/004_create_app_tables.sql`
-5.  `scripts/005_create_progress_table.sql`
+4.  `scripts/007_create_add_to_study_plan_function.sql`
+5.  `scripts/008_create_dashboard_functions.sql`
+
+#### For PostgreSQL
+
+Run the following scripts in your PostgreSQL client **one by one, in this specific order**:
+
+1.  `scripts/postgres/001_create_users_and_documents_tables.sql`
+2.  `scripts/postgres/002_create_text_items_table.sql`
+3.  `scripts/postgres/003_create_spaced_repetition_schedule_table.sql`
+4.  `scripts/postgres/004_create_user_progress.sql`
+5.  `scripts/postgres/005_create_selections_and_reviews_tables.sql`
+6.  `scripts/postgres/006_create_dictation_exercises_table.sql`
+7.  `scripts/postgres/007_create_dashboard_functions.sql`
+8.  `scripts/postgres/008_create_add_to_study_plan_function.sql`
 
 After running these scripts, your database will be ready.
 
