@@ -352,10 +352,10 @@ export class PostgresDatabase implements Database {
   async saveDictationResult(result: any) {
     try {
       await this.pool.query(
-        "INSERT INTO dictation_exercises (user_id, text, accuracy, wpm, duration) VALUES ($1, $2, $3, $4, $5)",
-        [result.userId, result.text, result.accuracy, result.wpm, result.duration]
+        "INSERT INTO dictation_exercises (user_id, text_item_id, target_text, user_input, accuracy_score, mistakes_count, completion_time_seconds, completed_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())",
+        [result.user_id, result.text_item_id, result.target_text, result.user_input, result.accuracy_score, result.mistakes_count, result.completion_time_seconds]
       )
-      await this.updateUserProgress(result.userId, result.duration / 60000) // Convert ms to minutes
+      //await this.updateUserProgress(result.userId, result.duration / 60000) // Convert ms to minutes
       return { success: true }
     } catch (error) {
       console.error("Error saving dictation result:", error)
