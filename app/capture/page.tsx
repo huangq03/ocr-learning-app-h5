@@ -21,7 +21,7 @@ export default async function CapturePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100">
-      <PhotoCaptureInterface user={session.user} />
+      <PhotoCaptureInterface />
     </div>
   )
 }

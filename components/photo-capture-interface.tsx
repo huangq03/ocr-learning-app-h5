@@ -201,7 +201,7 @@ export default function PhotoCaptureInterface({
       const formData = new FormData();
       formData.append("file", blob);
 
-      const result = await saveDocument(user.id, ocrResult, formData);
+      const result = await saveDocument(ocrResult, formData);
 
       if (result.error) {
         throw new Error(result.error);
@@ -213,7 +213,7 @@ export default function PhotoCaptureInterface({
       console.error("Upload error:", err);
       setStatus("confirming");
     }
-  }, [capturedImage, ocrResult, user.id, router, t]);
+  }, [capturedImage, ocrResult, router, t]);
 
   const resetCapture = useCallback(() => {
     setCapturedImage(null);

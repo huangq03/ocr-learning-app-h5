@@ -52,7 +52,7 @@ export default function StudySessionCreator({ document }: { document: Document }
 
   const addToStudyPlan = async (items: string[]) => {
     setIsLoading(true);
-    const result = await addToStudyPlanAction(document.user_id, document.id, items);
+    const result = await addToStudyPlanAction(document.id, items);
     setIsLoading(false);
     return result;
   };

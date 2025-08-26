@@ -4,7 +4,7 @@ create table IF NOT EXISTS public.text_items (
   user_id uuid not null,
   document_id uuid not null,
   content text not null,
-  item_type character varying(20) not null,
+  item_type character varying(20),
   start_position integer null,
   end_position integer null,
   context text null,
