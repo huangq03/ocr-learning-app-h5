@@ -365,7 +365,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       const notificationMessage = t('autoModeStartNotification', { timeoutValue });
       const utterance = new SpeechSynthesisUtterance(notificationMessage);
       let lang = i18n.language;
-      if (lang === 'zh') {
+      if (lang === 'zh-CN') {
         utterance.lang = 'zh-CN';
       } else {
         utterance.lang = 'en-US';
