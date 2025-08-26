@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, BookOpen, ScanText, Ear } from 'lucide-react';
 import LanguageSwitcher from './language-switcher';
 
-export default function LandingPage() {
+export default function LandingPage({ session }: { session: any }) { 
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
@@ -21,12 +21,20 @@ export default function LandingPage() {
           </Link>
           <nav className="flex items-center">
             <LanguageSwitcher />
-            <Link href="/auth/login">
-              <Button variant="ghost">{t('landingPage.login')}</Button>
-            </Link>
-            <Link href="/auth/sign-up">
-              <Button className="ml-2">{t('landingPage.signUp')}</Button>
-            </Link>
+            {session ? (
+              <Link href="/dashboard">
+                <Button variant="ghost">{t('landingPage.dashboard')}</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="ghost">{t('landingPage.login')}</Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button className="ml-2">{t('landingPage.signUp')}</Button>
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
