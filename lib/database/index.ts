@@ -6,6 +6,7 @@ export interface Database {
   // Authentication methods
   signIn: (email: string, password: string) => Promise<{ user?: any; error?: string; success?: boolean }>
   signUp: (email: string, password: string) => Promise<{ error?: string; success?: string }>
+  signOut: () => Promise<void>
 
 
   // Document methods

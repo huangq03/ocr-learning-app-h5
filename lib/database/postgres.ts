@@ -265,43 +265,18 @@ export class PostgresDatabase implements Database {
     }
   }
 
+  async signOut() {
+    return
+  }
+
   async addToStudyPlan(userId: string, documentId: string, items: string[]) {
     try {
-      // This is a simplified version - in a real implementation you would need
-      // to handle the creation of text_items and spaced_repetition_schedule records
-      let insertedCount = 0
-      
-      for (const item of items) {
-        // Check if text item already exists
-        const existingItem = await this.pool.query(
-          "SELECT id FROM text_items WHERE content = $1 AND document_id = $2 AND user_id = $3",
-          [item, documentId, userId]
-        )
-        
-        let textItemId: string
-        if (existingItem.rows.length > 0) {
-          textItemId = existingItem.rows[0].id
-        } else {
-          // Create new text item
-          const newItem = await this.pool.query(
-            "INSERT INTO text_items (content, document_id, user_id) VALUES ($1, $2, $3) RETURNING id",
-            [item, documentId, userId]
-          )
-          textItemId = newItem.rows[0].id
-        }
-        
-        // Create spaced repetition schedule
-        const scheduleResult = await this.pool.query(
-          "INSERT INTO spaced_repetition_schedule (text_item_id, user_id, next_review_date, interval_days, ease_factor, repetition_number) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
-          [textItemId, userId, new Date(Date.now() + 24 * 60 * 60 * 1000), 1, 2.5, 0]
-        )
-        
-        if (scheduleResult.rowCount && scheduleResult.rowCount > 0) {
-          insertedCount++
-        }
-      }
-      
-      return { insertedCount }
+      const result = await this.pool.query(
+        "SELECT add_to_study_plan($1, $2, $3)",
+        [userId, documentId, items]
+      )
+      const insertedCount = result.rows[0].add_to_study_plan;
+      return { insertedCount };
     } catch (error) {
       console.error("Error adding to study plan:", error)
       return { error: "Failed to add to study plan." }
