@@ -188,16 +188,16 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                         <div className="flex items-center justify-center gap-4">
                             <p className="text-2xl font-bold mb-2">
                                 {currentItem.content.split(/(\s+)/).map((word, wordIndex) => (
-                                    <span key={wordIndex} className={nowPlaying === currentItem.text_items.content && highlightedWordIndex === Math.floor(wordIndex / 2) ? 'bg-yellow-200' : ''}>
+                                    <span key={wordIndex} className={nowPlaying === currentItem.content && highlightedWordIndex === Math.floor(wordIndex / 2) ? 'bg-yellow-200' : ''}>
                                         {word}
                                     </span>
                                 ))}
                             </p>
-                            <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.text_items.content)}>
+                            <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.content)}>
                                 <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.content ? 'text-purple-600' : ''}`} />
                             </Button>
                         </div>
-                        <p className="text-lg text-gray-600">{currentItem.text_items.context}</p>
+                        <p className="text-lg text-gray-600">{currentItem.context}</p>
                         <p className="text-md text-gray-500 italic">{currentItem.user_definition}</p>
                     </div>
                 </CardContent>
