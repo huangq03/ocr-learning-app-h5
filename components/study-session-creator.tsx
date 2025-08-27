@@ -72,7 +72,7 @@ export default function StudySessionCreator({ document }: { document: Document }
         return indexA - indexB;
     });
 
-    const { error } = await addToStudyPlan(sortedSelectedItems);
+    const { insertedItems, error } = await addToStudyPlan(sortedSelectedItems);
 
     if (error) {
       toast({
@@ -83,7 +83,7 @@ export default function StudySessionCreator({ document }: { document: Document }
       return;
     }
 
-    const studySession = { type, items: sortedSelectedItems, documentId: document.id };
+    const studySession = { type, items: insertedItems, documentId: document.id };
     localStorage.setItem('studySession', JSON.stringify(studySession));
     if (type === 'dictation') {
       router.push('/dictation');

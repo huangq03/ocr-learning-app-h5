@@ -20,7 +20,7 @@ export default function DictationPage() {
         const studySession = JSON.parse(studySessionString);
         if (studySession.type === 'dictation') {
           // The items are strings, we need to convert them to the format expected by DictationInterface
-          const formattedItems = studySession.items.map((item: string, index: number) => ({ id: `local-${index}`, content: item }));
+          const formattedItems = studySession.items.map((item: string, index: number) => ({ id: item.id, content: item.content }));
           const result = await getDictationPageData();
           if (result.error) {
             console.error('Error fetching user:', result.error);

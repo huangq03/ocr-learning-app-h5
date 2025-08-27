@@ -19,7 +19,7 @@ export interface Database {
   getDashboardData: (userId: string) => Promise<any>
   getStudyPageData: (userId: string, studySessionItems?: string[]) => Promise<any>
   updateStudySchedule: (itemId: string, updatedSchedule: any) => Promise<{ success?: boolean; error?: string }>
-  addToStudyPlan: (userId: string, documentId: string, items: string[]) => Promise<{ insertedCount?: number; error?: string }>
+  addToStudyPlan: (userId: string, documentId: string, items: string[]) => Promise<{ insertedItems?: any[]; insertedCount?: number; error?: string }>
   saveSelectionsAndCreateReviews: (documentId: string, selections: any[], userId: string) => Promise<{ success?: boolean; error?: string }>
 
   // Dictation methods

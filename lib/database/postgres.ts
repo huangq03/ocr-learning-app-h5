@@ -272,11 +272,11 @@ export class PostgresDatabase implements Database {
   async addToStudyPlan(userId: string, documentId: string, items: string[]) {
     try {
       const result = await this.pool.query(
-        "SELECT add_to_study_plan($1, $2, $3)",
+        "SELECT * FROM add_to_study_plan($1, $2, $3)",
         [userId, documentId, items]
       )
-      const insertedCount = result.rows[0].add_to_study_plan;
-      return { insertedCount };
+      const insertedItems = result.rows;
+      return { insertedItems, insertedCount: insertedItems.length };
     } catch (error) {
       console.error("Error adding to study plan:", error)
       return { error: "Failed to add to study plan." }
