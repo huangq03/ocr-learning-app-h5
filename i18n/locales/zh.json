@@ -173,6 +173,18 @@
     "dayStreak": "连续学习天数",
     "studyHours": "学习小时数"
   },
+  "study": {
+    "noItemsDue": "今天没有需要复习的项目！",
+    "greatJob": "做得很好，请继续保持。",
+    "backToDashboard": "返回仪表盘",
+    "sessionComplete": "练习完成！",
+    "reviewedItems": "您在此次练习中复习了 {{count}} 个项目。",
+    "again": "重来",
+    "hard": "困难",
+    "good": "良好",
+    "easy": "简单",
+    "studySession": "学习环节"
+  },
   "common": {
     "english": "英语",
     "chinese": "中文"

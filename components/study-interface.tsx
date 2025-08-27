@@ -203,10 +203,10 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                 </CardContent>
                 <CardFooter className="flex flex-col items-center">
                     <div className="flex justify-around w-full">
-                        <Button variant="destructive" onClick={() => handleRating(0)}>Again</Button>
-                        <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => handleRating(3)}>Hard</Button>
-                        <Button className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => handleRating(4)}>Good</Button>
-                        <Button className="bg-green-500 hover:bg-green-600 text-white" onClick={() => handleRating(5)}>Easy</Button>
+                        <Button variant="destructive" onClick={() => handleRating(0)}>{t('study.again')}</Button>
+                        <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => handleRating(3)}>{t('study.hard')}</Button>
+                        <Button className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => handleRating(4)}>{t('study.good')}</Button>
+                        <Button className="bg-green-500 hover:bg-green-600 text-white" onClick={() => handleRating(5)}>{t('study.easy')}</Button>
                     </div>
                 </CardFooter>
             </Card>

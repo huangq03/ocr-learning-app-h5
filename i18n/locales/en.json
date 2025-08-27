@@ -173,6 +173,18 @@
     "dayStreak": "Day Streak",
     "studyHours": "Study Hours"
   },
+  "study": {
+    "noItemsDue": "No items due for review today!",
+    "greatJob": "Great job staying on top of your studies.",
+    "backToDashboard": "Back to Dashboard",
+    "sessionComplete": "Session Complete!",
+    "reviewedItems": "You reviewed {{count}} items in this session.",
+    "again": "Again",
+    "hard": "Hard",
+    "good": "Good",
+    "easy": "Easy",
+    "studySession": "Study Session"
+  },
   "common": {
     "english": "English",
     "chinese": "Chinese"
