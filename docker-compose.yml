@@ -7,6 +7,37 @@ services:
     env_file:
       - ./.env.local
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17
+    container_name: ocr-learning-postgres
+    restart: unless-stopped
+    env_file:
+      - ./.env.local
+    environment:
+      - POSTGRES_USER=ocr
+      - POSTGRES_PASSWORD=ocr
+      - POSTGRES_DB=ocr
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres/001_fixed_create_users_and_documents_tables.sql:/docker-entrypoint-initdb.d/001_create_users_and_documents_tables.sql
+      - ./scripts/postgres/002_create_text_items_table.sql:/docker-entrypoint-initdb.d/002_create_text_items_table.sql
+      - ./scripts/postgres/003_create_spaced_repetition_schedule_table.sql:/docker-entrypoint-initdb.d/003_create_spaced_repetition_schedule_table.sql
+      - ./scripts/postgres/004_create_user_progress.sql:/docker-entrypoint-initdb.d/004_create_user_progress.sql
+      - ./scripts/postgres/005_create_selections_and_reviews_tables.sql:/docker-entrypoint-initdb.d/005_create_selections_and_reviews_tables.sql
+      - ./scripts/postgres/006_create_dictation_exercises_table.sql:/docker-entrypoint-initdb.d/006_create_dictation_exercises_table.sql
+      - ./scripts/postgres/007_create_dashboard_functions.sql:/docker-entrypoint-initdb.d/007_create_dashboard_functions.sql
+      - ./scripts/postgres/008_create_add_to_study_plan_function.sql:/docker-entrypoint-initdb.d/008_create_add_to_study_plan_function.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ocr -d ocr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nginx:
     image: nginx:latest
@@ -30,3 +61,6 @@ services:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
     command: ["echo"]
+
+volumes:
+  postgres_data:

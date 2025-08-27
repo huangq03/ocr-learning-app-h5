@@ -122,6 +122,9 @@ importers:
       baidu-aip-sdk:
         specifier: ^4.16.16
         version: 4.16.16
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -243,9 +246,6 @@ importers:
       '@types/sharp':
         specifier: ^0.32.0
         version: 0.32.0
-      bcrypt:
-        specifier: ^6.0.0
-        version: 6.0.0
       postcss:
         specifier: ^8.5
         version: 8.5.6
