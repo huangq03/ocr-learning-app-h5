@@ -9,9 +9,10 @@ const pool = new Pool({
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const token = searchParams.get('token')
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || request.url;
 
   if (!token) {
-    return NextResponse.redirect(new URL('/auth/login?error=No token provided', request.url))
+    return NextResponse.redirect(new URL('/auth/login?error=No token provided', siteUrl))
   }
 
   try {
@@ -21,14 +22,14 @@ export async function GET(request: NextRequest) {
     );
 
     if (result.rows.length === 0) {
-      return NextResponse.redirect(new URL('/auth/login?error=Invalid token', request.url))
+      return NextResponse.redirect(new URL('/auth/login?error=Invalid token', siteUrl))
     }
 
     const user = result.rows[0];
     const tokenExpiry = new Date(user.confirmation_sent_at).getTime() + 24 * 60 * 60 * 1000; // 24 hours
 
     if (Date.now() > tokenExpiry) {
-      return NextResponse.redirect(new URL('/auth/login?error=Token expired', request.url))
+      return NextResponse.redirect(new URL('/auth/login?error=Token expired', siteUrl))
     }
 
     await pool.query(
@@ -36,9 +37,9 @@ export async function GET(request: NextRequest) {
       [user.id]
     );
 
-    return NextResponse.redirect(new URL('/auth/login?message=Email confirmed successfully. You can now log in.', request.url))
+    return NextResponse.redirect(new URL('/auth/login?message=Email confirmed successfully. You can now log in.', siteUrl))
   } catch (error) {
     console.error('Confirmation error:', error);
-    return NextResponse.redirect(new URL('/auth/login?error=An unexpected error occurred', request.url))
+    return NextResponse.redirect(new URL('/auth/login?error=An unexpected error occurred', siteUrl))
   }
 }
