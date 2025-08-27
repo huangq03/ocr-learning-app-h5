@@ -1,12 +1,4 @@
 -- Create user_progress table
-CREATE TABLE IF NOT EXISTS user_progress (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    total_documents INTEGER DEFAULT 0,
-    total_text_items INTEGER DEFAULT 0,
-    total_study_time_minutes INTEGER DEFAULT 0
-);
-
-
 create table IF NOT EXISTS public.user_progress (
   user_id uuid not null,
   total_documents integer null default 0,
