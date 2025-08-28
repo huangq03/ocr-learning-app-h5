@@ -8,6 +8,8 @@ import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { Smile, Meh, Frown, Angry, Volume2 } from 'lucide-react';
 import { updateStudyScheduleAction } from '@/lib/actions';
+import { useTranslation } from 'react-i18next';
+
 
 // SM-2 Algorithm Implementation
 const calculateSm2 = (item: any, quality: number) => {
@@ -58,6 +60,8 @@ interface SessionStats {
 }
 
 export default function StudyInterface({ initialItems, user }: StudyInterfaceProps) {
+    const { t } = useTranslation();
+
     const router = useRouter();
     const [items, setItems] = useState(initialItems);
     const [currentIndex, setCurrentIndex] = useState(0);

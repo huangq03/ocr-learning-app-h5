@@ -236,7 +236,7 @@ export class PostgresDatabase implements Database {
         const today = new Date().toISOString().split("T")[0]
         const result = await this.pool.query(
           `
-          SELECT srs.*, ti.content as text_content
+          SELECT srs.*, ti.content as content
           FROM spaced_repetition_schedule srs
           JOIN text_items ti ON srs.text_item_id = ti.id
           WHERE srs.user_id = $1 AND srs.is_active = TRUE AND srs.next_review_date <= $2
