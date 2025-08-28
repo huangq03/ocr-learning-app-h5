@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { Smile, Meh, Frown, Angry, Volume2 } from 'lucide-react';
-import { updateStudyScheduleAction } from '@/lib/actions';
+import { updateStudyScheduleAction, saveExerciseResult } from '@/lib/actions';
 import { useTranslation } from 'react-i18next';
 
 
@@ -126,6 +126,26 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
         else if (quality === 3) setSessionStats(prev => ({ ...prev, hard: prev.hard + 1 }));
         else if (quality === 4) setSessionStats(prev => ({ ...prev, good: prev.good + 1 }));
         else if (quality === 5) setSessionStats(prev => ({ ...prev, easy: prev.easy + 1 }));
+
+        // Save the recitation exercise result
+        const qualityToAccuracyMap: { [key: number]: number } = {
+            0: 0,   // Again
+            3: 50,  // Hard
+            4: 80,  // Good
+            5: 100, // Easy
+        };
+
+        await saveExerciseResult({
+            user_id: user.id,
+            text_item_id: currentItem.id,
+            target_text: currentItem.content,
+            user_input: "[recited]",
+            accuracy_score: qualityToAccuracyMap[quality],
+            mistakes_count: 0,
+            completion_time_seconds: 0, // Not tracked in this interface
+            details: { self_assessed_quality: quality },
+            completed_at: new Date().toISOString(),
+        }, 'recitation');
 
         await updateStudyScheduleAction(currentItem.id, updatedSchedule);
 
