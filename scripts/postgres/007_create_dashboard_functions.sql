@@ -41,41 +41,36 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_day_streak(p_user_id UUID)
 RETURNS INT AS $func$
 DECLARE
-    streak INT := 0;
-    last_date DATE := NULL;
-    current_date DATE;
+    streak_length INT;
 BEGIN
-    FOR current_date IN
-        SELECT DISTINCT completed_at::date
+    WITH daily_activity AS (
+        -- 1. Get all unique days the user had activity
+        SELECT DISTINCT completed_at::date AS activity_date
         FROM dictation_exercises
         WHERE user_id = p_user_id
-        ORDER BY completed_at::date DESC
-    LOOP
-        IF last_date IS NULL THEN
-            -- This is the most recent activity day. Start the streak.
-            streak := 1;
-        ELSE
-            -- Check if the next activity day is consecutive.
-            IF current_date = last_date - INTERVAL '1 day' THEN
-                streak := streak + 1;
-            ELSE
-                -- Gap in dates, the streak is broken.
-                EXIT;
-            END IF;
-        END IF;
-        last_date := current_date;
-    END LOOP;
+    ),
+    streaks AS (
+        -- 2. Group consecutive days together using a window function.
+        -- The difference between a date and its row number (when ordered by date)
+        -- will be constant for any consecutive sequence of dates.
+        SELECT
+            activity_date,
+            activity_date - (ROW_NUMBER() OVER (ORDER BY activity_date))::int AS streak_group
+        FROM daily_activity
+    )
+    -- 3. Count the days in the most recent streak, but only if it's current.
+    SELECT COUNT(*)
+    INTO streak_length
+    FROM streaks
+    WHERE streak_group = (
+        -- Subquery to find the streak_group for the most recent activity day
+        SELECT streak_group FROM streaks ORDER BY activity_date DESC LIMIT 1
+    )
+    AND (
+        -- Subquery to ensure the most recent activity day was today or yesterday
+        SELECT MAX(activity_date) FROM streaks
+    ) >= (NOW() AT TIME ZONE 'utc')::date - INTERVAL '1 day';
 
-    -- If there was no activity at all, streak is 0.
-    IF last_date IS NULL THEN
-        RETURN 0;
-    END IF;
-
-    -- A streak is only valid if the last activity was today or yesterday.
-    IF last_date < (NOW() AT TIME ZONE 'utc')::date - INTERVAL '1 day' THEN
-        RETURN 0;
-    END IF;
-
-    RETURN streak;
+    RETURN COALESCE(streak_length, 0);
 END;
 $func$ LANGUAGE plpgsql;
