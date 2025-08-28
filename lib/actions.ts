@@ -87,9 +87,9 @@ export async function getDashboardData() {
   return await db.getDashboardData(user.id)
 }
 
-export async function saveDictationResult(result: any) {
+export async function saveExerciseResult(result: any, exerciseType: 'dictation' | 'recitation') {
   const db = createDatabase()
-  return await db.saveDictationResult(result)
+  return await db.saveExerciseResult(result, exerciseType)
 }
 
 export async function saveDocument(ocrResult: any, formData: FormData) {

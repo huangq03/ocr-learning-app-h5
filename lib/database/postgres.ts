@@ -313,7 +313,7 @@ export class PostgresDatabase implements Database {
     }
   }
 
-  // Dictation methods
+  // Exercise methods
   async getDictationPageData(userId: string) {
     try {
       const result = await this.pool.query(
@@ -327,17 +327,28 @@ export class PostgresDatabase implements Database {
     }
   }
 
-  async saveDictationResult(result: any) {
+  async saveExerciseResult(result: any, exerciseType: 'dictation' | 'recitation') {
     try {
+      const {
+        user_id,
+        text_item_id,
+        target_text,
+        user_input,
+        accuracy_score,
+        mistakes_count,
+        completion_time_seconds,
+        details,
+      } = result;
+
       await this.pool.query(
-        "INSERT INTO dictation_exercises (user_id, text_item_id, target_text, user_input, accuracy_score, mistakes_count, completion_time_seconds, completed_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())",
-        [result.user_id, result.text_item_id, result.target_text, result.user_input, result.accuracy_score, result.mistakes_count, result.completion_time_seconds]
+        "INSERT INTO exercises (user_id, text_item_id, exercise_type, target_text, user_input, accuracy_score, mistakes_count, completion_time_seconds, details, completed_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())",
+        [user_id, text_item_id, exerciseType, target_text, user_input, accuracy_score, mistakes_count, completion_time_seconds, details || null]
       )
       //await this.updateUserProgress(result.userId, result.duration / 60000) // Convert ms to minutes
       return { success: true }
     } catch (error) {
-      console.error("Error saving dictation result:", error)
-      return { error: "Failed to save dictation result." }
+      console.error("Error saving exercise result:", error)
+      return { error: "Failed to save exercise result." }
     }
   }
 

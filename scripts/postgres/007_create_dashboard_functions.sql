@@ -1,16 +1,16 @@
 CREATE OR REPLACE FUNCTION get_mastered_items_count(p_user_id UUID)
-RETURNS INT AS $$
+RETURNS INT AS $
 DECLARE
     mastered_count INT;
 BEGIN
-    WITH last_dictation AS (
+    WITH last_exercise AS (
         SELECT
             text_item_id,
             MAX(completed_at) AS last_completed_at
         FROM
-            dictation_exercises
+            exercises
         WHERE
-            user_id = p_user_id
+            user_id = p_user_id AND exercise_type = 'dictation'
         GROUP BY
             text_item_id
     ),
@@ -19,11 +19,11 @@ BEGIN
             d.text_item_id,
             d.accuracy_score
         FROM
-            dictation_exercises d
+            exercises d
         INNER JOIN
-            last_dictation ld ON d.text_item_id = ld.text_item_id AND d.completed_at = ld.last_completed_at
+            last_exercise le ON d.text_item_id = le.text_item_id AND d.completed_at = le.last_completed_at
         WHERE
-            d.user_id = p_user_id
+            d.user_id = p_user_id AND d.exercise_type = 'dictation'
     )
     SELECT
         COUNT(*)
@@ -36,7 +36,7 @@ BEGIN
 
     RETURN mastered_count;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_day_streak(p_user_id UUID)
 RETURNS INT AS $func$
@@ -44,9 +44,9 @@ DECLARE
     streak_length INT;
 BEGIN
     WITH daily_activity AS (
-        -- 1. Get all unique days the user had activity
+        -- 1. Get all unique days the user had activity from any exercise type
         SELECT DISTINCT completed_at::date AS activity_date
-        FROM dictation_exercises
+        FROM exercises
         WHERE user_id = p_user_id
     ),
     streaks AS (

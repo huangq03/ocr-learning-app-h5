@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import type { User } from "@supabase/supabase-js"
 import { useTranslation } from 'react-i18next'
 import '@/i18n'
-import { saveDictationResult } from "@/lib/actions"
+import { saveExerciseResult } from "@/lib/actions"
 import { calculateAccuracy } from "@/lib/dictation-utils"
 import { StartScreen } from "@/components/dictation-start-screen"
 import { DictationItemView } from "@/components/dictation-item-view"
@@ -144,7 +144,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
     setSessionResults([...sessionResults, result])
 
-    await saveDictationResult({
+    await saveExerciseResult({
       user_id: user.id,
       text_item_id: result.text_item_id,
       target_text: result.original_text,
@@ -153,7 +153,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       mistakes_count: mode === 'typing' ? attempts - 1 : 0,
       completion_time_seconds: completionTime,
       completed_at: new Date().toISOString(),
-    })
+    }, 'dictation')
   }
 
   const handleRestart = () => {
@@ -226,7 +226,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
     setSessionResults(prev => [...prev, result]);
 
-    await saveDictationResult({
+    await saveExerciseResult({
       user_id: user.id,
       text_item_id: result.text_item_id,
       target_text: result.original_text,
@@ -235,7 +235,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       mistakes_count: mode === 'typing' ? newAttempts - 1 : 0,
       completion_time_seconds: completionTime,
       completed_at: new Date().toISOString(),
-    });
+    }, 'dictation');
 
     handleNext()
   }

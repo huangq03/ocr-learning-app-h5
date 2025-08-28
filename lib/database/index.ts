@@ -22,9 +22,9 @@ export interface Database {
   addToStudyPlan: (userId: string, documentId: string, items: string[]) => Promise<{ insertedItems?: any[]; insertedCount?: number; error?: string }>
   saveSelectionsAndCreateReviews: (documentId: string, selections: any[], userId: string) => Promise<{ success?: boolean; error?: string }>
 
-  // Dictation methods
+  // Exercise methods
   getDictationPageData: (userId: string) => Promise<{ items: any[]; error?: string }>
-  saveDictationResult: (result: any) => Promise<{ success?: boolean; error?: string }>
+  saveExerciseResult: (result: any, exerciseType: 'dictation' | 'recitation') => Promise<{ success?: boolean; error?: string }>
 
   // Items methods
   getItemsPageData: (userId: string) => Promise<{ documents: any[]; error?: string }>

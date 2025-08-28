@@ -167,7 +167,7 @@ export class SupabaseDatabase implements Database {
     }
   }
 
-  async saveDictationResult(result: any) {
+  async saveExerciseResult(result: any, exerciseType: 'dictation' | 'recitation') {
     if (!isSupabaseConfigured) {
       return { error: "Supabase is not configured" }
     }
@@ -176,15 +176,18 @@ export class SupabaseDatabase implements Database {
     const supabase = createServerActionClient({ cookies: () => cookieStore })
 
     try {
-      const { error } = await supabase.from("dictation_exercises").insert(result);
+      const { error } = await supabase.from("exercises").insert({
+        ...result,
+        exercise_type: exerciseType,
+      });
       if (error) {
-        console.error("Error saving dictation result:", error);
-        return { error: "Failed to save dictation result." };
+        console.error("Error saving exercise result:", error);
+        return { error: "Failed to save exercise result." };
       }
       return { success: true };
     } catch (error) {
-      console.error("Error saving dictation result:", error);
-      return { error: "Failed to save dictation result." };
+      console.error("Error saving exercise result:", error);
+      return { error: "Failed to save exercise result." };
     }
   }
 
