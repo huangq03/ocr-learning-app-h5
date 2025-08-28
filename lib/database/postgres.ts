@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from "pg"
+import { Pool, QueryResult, types } from "pg"
 import { Database } from "."
 import * as fs from "fs"
 import * as path from "path"
@@ -16,6 +16,9 @@ let pool: Pool | null = null
 
 function initializePool(): Pool {
   if (!pool) {
+    // The pg driver returns numeric types as strings. This converts them to numbers.
+    types.setTypeParser(1700, parseFloat)
+
     const databaseUrl = getDatabaseUrl()
     if (!databaseUrl) {
       throw new Error("DATABASE_URL is not set")
@@ -222,14 +225,14 @@ export class PostgresDatabase implements Database {
   async getStudyPageData(userId: string, studySessionItems?: string[]) {
     try {
       if (studySessionItems && studySessionItems.length > 0) {
-        const placeholders = studySessionItems.map((_, i) => `$${i + 2}`).join(",")
+        const placeholders = studySessionItems.map(i => `'${i.content}'`).join(",")
         const query = `
           SELECT srs.*, ti.* 
           FROM spaced_repetition_schedule srs
           JOIN text_items ti ON srs.text_item_id = ti.id
           WHERE srs.user_id = $1 AND ti.content IN (${placeholders})
         `
-        const values = [userId, ...studySessionItems]
+        const values = [userId]
         const result = await this.pool.query(query, values)
         return { items: result.rows }
       } else {
