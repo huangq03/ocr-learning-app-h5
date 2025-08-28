@@ -1,6 +1,7 @@
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { useTranslation } from 'react-i18next'
+import { useEffect } from "react"
 
 interface DictationModeSettingsProps {
   autoMode: boolean
@@ -16,6 +17,14 @@ export function DictationModeSettings({
   setMode
 }: DictationModeSettingsProps) {
   const { t } = useTranslation()
+
+  useEffect(() => {
+    if (autoMode) {
+      setMode('paper');
+    } else {
+      setMode('typing');
+    }
+  }, [autoMode, setMode]);
 
   return (
     <div className="flex items-center space-x-4">
@@ -36,7 +45,7 @@ export function DictationModeSettings({
           value={mode}
           onChange={(e) => setMode(e.target.value)}
           className="border rounded p-1 text-sm"
-          disabled={autoMode} // Disable mode change in auto mode
+          disabled={true}
         >
           <option value="paper">{t('dictationModePaper')}</option>
           <option value="typing">{t('dictationModeType')}</option>
