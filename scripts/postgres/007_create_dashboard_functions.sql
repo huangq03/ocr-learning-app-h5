@@ -39,12 +39,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_day_streak(p_user_id UUID)
-RETURNS INT AS $$
+RETURNS INT AS $func$
 DECLARE
     streak INT := 0;
     last_date DATE := NULL;
     current_date DATE;
-    is_today BOOLEAN := FALSE;
 BEGIN
     FOR current_date IN
         SELECT DISTINCT completed_at::date
@@ -53,27 +52,30 @@ BEGIN
         ORDER BY completed_at::date DESC
     LOOP
         IF last_date IS NULL THEN
-            -- First iteration
-            IF current_date = (NOW() AT TIME ZONE 'utc')::date THEN
-                streak := 1;
-                is_today := TRUE;
-            ELSIF current_date = (NOW() AT TIME ZONE 'utc')::date - INTERVAL '1 day' THEN
-                streak := 1;
-            ELSE
-                RETURN 0; -- No activity today or yesterday, so streak is 0
-            END IF;
+            -- This is the most recent activity day. Start the streak.
+            streak := 1;
         ELSE
-            -- Subsequent iterations
+            -- Check if the next activity day is consecutive.
             IF current_date = last_date - INTERVAL '1 day' THEN
                 streak := streak + 1;
             ELSE
-                -- Gap in dates, so streak is broken
+                -- Gap in dates, the streak is broken.
                 EXIT;
             END IF;
         END IF;
         last_date := current_date;
     END LOOP;
 
+    -- If there was no activity at all, streak is 0.
+    IF last_date IS NULL THEN
+        RETURN 0;
+    END IF;
+
+    -- A streak is only valid if the last activity was today or yesterday.
+    IF last_date < (NOW() AT TIME ZONE 'utc')::date - INTERVAL '1 day' THEN
+        RETURN 0;
+    END IF;
+
     RETURN streak;
 END;
-$$ LANGUAGE plpgsql;
+$func$ LANGUAGE plpgsql;

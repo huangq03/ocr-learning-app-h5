@@ -172,26 +172,26 @@ export class PostgresDatabase implements Database {
   // Study methods
   async getDashboardData(userId: string) {
     try {
-      // Get user progress
-      const userProgressResult = await this.pool.query(
-        "SELECT * FROM user_progress WHERE user_id = $1",
-        [userId]
-      )
-      const userProgress = userProgressResult.rows[0] || {}
-
-      // Get due items count
       const today = new Date().toISOString().split("T")[0]
-      const dueItemsResult = await this.pool.query(
-        "SELECT COUNT(*) as count FROM spaced_repetition_schedule WHERE user_id = $1 AND is_active = TRUE AND next_review_date <= $2",
-        [userId, today]
-      )
-      const dueItemsCount = parseInt(dueItemsResult.rows[0]?.count || "0")
 
-      // Get recent documents
-      const recentTextItemsResult = await this.pool.query(
-        "SELECT document_id, created_at FROM text_items WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10",
-        [userId]
-      )
+      const [
+        userProgressResult,
+        dueItemsResult,
+        masteredItemsResult,
+        dayStreakResult,
+        recentTextItemsResult,
+      ] = await Promise.all([
+        this.pool.query("SELECT total_documents, total_text_items, total_study_time_minutes FROM user_progress WHERE user_id = $1", [userId]),
+        this.pool.query("SELECT COUNT(*) as count FROM spaced_repetition_schedule WHERE user_id = $1 AND is_active = TRUE AND next_review_date <= $2", [userId, today]),
+        this.pool.query("SELECT get_mastered_items_count($1) as count", [userId]),
+        this.pool.query("SELECT get_day_streak($1) as streak", [userId]),
+        this.pool.query("SELECT document_id, created_at FROM text_items WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10", [userId]),
+      ])
+
+      const userProgress = userProgressResult.rows[0] || {}
+      const dueItemsCount = parseInt(dueItemsResult.rows[0]?.count || "0")
+      const masteredItemsCount = masteredItemsResult.rows[0]?.count || 0
+      const currentStreak = dayStreakResult.rows[0]?.streak || 0
       const recentTextItems = recentTextItemsResult.rows
 
       let recentDocuments: any[] = []
@@ -210,8 +210,8 @@ export class PostgresDatabase implements Database {
         totalDocuments: userProgress.total_documents || 0,
         totalItems: userProgress.total_text_items || 0,
         itemsDue: dueItemsCount,
-        masteredItems: userProgress.items_mastered || 0,
-        currentStreak: userProgress.current_streak_days || 0,
+        masteredItems: masteredItemsCount,
+        currentStreak: currentStreak,
         studyTimeHours: Math.round((userProgress.total_study_time_minutes || 0) / 60),
       }
 
