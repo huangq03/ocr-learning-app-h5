@@ -3,14 +3,14 @@ RETURNS INT AS $$
 DECLARE
     mastered_count INT;
 BEGIN
-    WITH last_dictation AS (
+    WITH last_exercise AS (
         SELECT
             text_item_id,
             MAX(completed_at) AS last_completed_at
         FROM
-            dictation_exercises
+            exercises
         WHERE
-            user_id = p_user_id
+            user_id = p_user_id AND exercise_type = 'dictation'
         GROUP BY
             text_item_id
     ),
@@ -19,11 +19,11 @@ BEGIN
             d.text_item_id,
             d.accuracy_score
         FROM
-            dictation_exercises d
+            exercises d
         INNER JOIN
-            last_dictation ld ON d.text_item_id = ld.text_item_id AND d.completed_at = ld.last_completed_at
+            last_exercise le ON d.text_item_id = le.text_item_id AND d.completed_at = le.last_completed_at
         WHERE
-            d.user_id = p_user_id
+            d.user_id = p_user_id AND d.exercise_type = 'dictation'
     )
     SELECT
         COUNT(*)
@@ -39,41 +39,38 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_day_streak(p_user_id UUID)
-RETURNS INT AS $$
+RETURNS INT AS $func$
 DECLARE
-    streak INT := 0;
-    last_date DATE := NULL;
-    current_date DATE;
-    is_today BOOLEAN := FALSE;
+    streak_length INT;
 BEGIN
-    FOR current_date IN
-        SELECT DISTINCT completed_at::date
-        FROM dictation_exercises
+    WITH daily_activity AS (
+        -- 1. Get all unique days the user had activity from any exercise type
+        SELECT DISTINCT completed_at::date AS activity_date
+        FROM exercises
         WHERE user_id = p_user_id
-        ORDER BY completed_at::date DESC
-    LOOP
-        IF last_date IS NULL THEN
-            -- First iteration
-            IF current_date = (NOW() AT TIME ZONE 'utc')::date THEN
-                streak := 1;
-                is_today := TRUE;
-            ELSIF current_date = (NOW() AT TIME ZONE 'utc')::date - INTERVAL '1 day' THEN
-                streak := 1;
-            ELSE
-                RETURN 0; -- No activity today or yesterday, so streak is 0
-            END IF;
-        ELSE
-            -- Subsequent iterations
-            IF current_date = last_date - INTERVAL '1 day' THEN
-                streak := streak + 1;
-            ELSE
-                -- Gap in dates, so streak is broken
-                EXIT;
-            END IF;
-        END IF;
-        last_date := current_date;
-    END LOOP;
+    ),
+    streaks AS (
+        -- 2. Group consecutive days together using a window function.
+        -- The difference between a date and its row number (when ordered by date)
+        -- will be constant for any consecutive sequence of dates.
+        SELECT
+            activity_date,
+            activity_date - (ROW_NUMBER() OVER (ORDER BY activity_date))::int AS streak_group
+        FROM daily_activity
+    )
+    -- 3. Count the days in the most recent streak, but only if it's current.
+    SELECT COUNT(*)
+    INTO streak_length
+    FROM streaks
+    WHERE streak_group = (
+        -- Subquery to find the streak_group for the most recent activity day
+        SELECT streak_group FROM streaks ORDER BY activity_date DESC LIMIT 1
+    )
+    AND (
+        -- Subquery to ensure the most recent activity day was today or yesterday
+        SELECT MAX(activity_date) FROM streaks
+    ) >= (NOW() AT TIME ZONE 'utc')::date - INTERVAL '1 day';
 
-    RETURN streak;
+    RETURN COALESCE(streak_length, 0);
 END;
-$$ LANGUAGE plpgsql;
+$func$ LANGUAGE plpgsql;
