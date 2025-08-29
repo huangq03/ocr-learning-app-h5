@@ -3,6 +3,14 @@ export const LLM_PROMPT = `The following text is raw output from an OCR service 
 	{
 		"cleaned_text": "地点：school 学校 library 图书馆 museum 博物馆 classroom 教室 park 公园 zoo 动物园 cinema 电影院 短语：put them in order 把它们整理好 tidy up my room 整理我的房间",
 		"items": ["school", "library", "museum", "classroom", "park", "zoo", "cinema", "put them in order", "tidy up my room"]
+	},
+	{
+		"cleaned_text": "Unit 1 Hello! Lesson 1 Greetings and Introductions 1. Hello! 2. Hi! 3. Good morning! 4. Good afternoon! 5. Good evening! 6. Goodbye! 7. See you! 8. How are you? 9. I'm fine, thank you. And you? 10. I'm good, thanks.",
+		"items": ["Hello!", "Hi!", "Good morning!", "Good afternoon!", "Good evening!", "Goodbye!", "See you!", "How are you?", "I'm fine, thank you. And you?", "I'm good, thanks."]
+	},
+	{
+		"cleaned_text": "happy-高兴的 sad-难过的 angry- 生气的 worried-担心 scared-害怕的",
+		"items": ["happy", "sad", "angry", "worried", "scared"]
 	}
 }
 important: do not translate the Chinese content, leave it as is
@@ -10,5 +18,6 @@ important: make sure the items in sentences attribute are complete sentences but
 important: make sure sentences and verb_or_phrases attribures contain only English
 important: every item can only be a verb_phrase or a sentence, but not both
 important: the content may be a conversation, make sure one person's speech is kepted in a single sentence item
+important: ignore unnecessary punctuations in items, for example if the raw text is 'worried - 担心', the item should be 'worried'
 important: insert proper new lines to the cleanded_text for readability
 The raw text is:`
