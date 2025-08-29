@@ -5,6 +5,7 @@ import './globals.css'
 import { Providers } from "./providers"
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ocr-learning-app.com'),
   title: {
     default: "OCR Learning App",
     template: `%s - OCR Learning App`,
