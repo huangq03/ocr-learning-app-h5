@@ -190,6 +190,12 @@
     "summaryGood": "良好",
     "summaryEasy": "简单"
   },
+  "items": {
+    "logInPrompt": "请登录以查看您的项目。",
+    "errorLoading": "加载项目时出错。",
+    "pageTitle": "所有项目",
+    "loading": "加载中..."
+  },
   "common": {
     "english": "英语",
     "chinese": "中文"

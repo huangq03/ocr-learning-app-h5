@@ -190,6 +190,12 @@
     "summaryGood": "Good",
     "summaryEasy": "Easy"
   },
+  "items": {
+    "logInPrompt": "Please log in to see your items.",
+    "errorLoading": "Error loading items.",
+    "pageTitle": "All Items",
+    "loading": "Loading..."
+  },
   "common": {
     "english": "English",
     "chinese": "Chinese"
