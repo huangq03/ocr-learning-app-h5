@@ -183,7 +183,12 @@
     "hard": "Hard",
     "good": "Good",
     "easy": "Easy",
-    "studySession": "Study Session"
+    "studySession": "Study Session",
+    "sessionTitle": "Study Session",
+    "summaryAgain": "Again",
+    "summaryHard": "Hard",
+    "summaryGood": "Good",
+    "summaryEasy": "Easy"
   },
   "common": {
     "english": "English",

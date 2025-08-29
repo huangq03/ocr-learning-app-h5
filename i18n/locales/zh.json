@@ -183,7 +183,12 @@
     "hard": "困难",
     "good": "良好",
     "easy": "简单",
-    "studySession": "学习环节"
+    "studySession": "学习环节",
+    "sessionTitle": "学习环节",
+    "summaryAgain": "重来",
+    "summaryHard": "困难",
+    "summaryGood": "良好",
+    "summaryEasy": "简单"
   },
   "common": {
     "english": "英语",

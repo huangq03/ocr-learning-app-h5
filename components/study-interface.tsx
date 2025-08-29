@@ -172,9 +172,9 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
     if (items.length === 0) {
         return (
             <div className="text-center p-8">
-                <h2 className="text-2xl font-bold mb-4">No items due for review today!</h2>
-                <p className="text-gray-600 mb-6">Great job staying on top of your studies.</p>
-                <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
+                <h2 className="text-2xl font-bold mb-4">{t('study.noItemsDue')}</h2>
+                <p className="text-gray-600 mb-6">{t('study.greatJob')}</p>
+                <Button onClick={() => router.push('/dashboard')}>{t('study.backToDashboard')}</Button>
             </div>
         );
     }
@@ -183,15 +183,15 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
         return (
             <div className="p-4 max-w-2xl mx-auto">
                 <Card className="p-6 text-center">
-                    <h2 className="text-3xl font-bold mb-4 text-purple-700">Session Complete!</h2>
-                    <p className="text-gray-600 mb-6">You reviewed {items.length} items in this session.</p>
+                    <h2 className="text-3xl font-bold mb-4 text-purple-700">{t('study.sessionComplete')}</h2>
+                    <p className="text-gray-600 mb-6">{t('study.reviewedItems', { count: items.length })}</p>
                     <div className="flex justify-around my-6">
-                        <div className="flex flex-col items-center"><Angry className="w-8 h-8 text-red-500" /><span>{sessionStats.again} Again</span></div>
-                        <div className="flex flex-col items-center"><Frown className="w-8 h-8 text-orange-500" /><span>{sessionStats.hard} Hard</span></div>
-                        <div className="flex flex-col items-center"><Meh className="w-8 h-8 text-yellow-500" /><span>{sessionStats.good} Good</span></div>
-                        <div className="flex flex-col items-center"><Smile className="w-8 h-8 text-green-500" /><span>{sessionStats.easy} Easy</span></div>
+                        <div className="flex flex-col items-center"><Angry className="w-8 h-8 text-red-500" /><span>{sessionStats.again} {t('study.summaryAgain')}</span></div>
+                        <div className="flex flex-col items-center"><Frown className="w-8 h-8 text-orange-500" /><span>{sessionStats.hard} {t('study.summaryHard')}</span></div>
+                        <div className="flex flex-col items-center"><Meh className="w-8 h-8 text-yellow-500" /><span>{sessionStats.good} {t('study.summaryGood')}</span></div>
+                        <div className="flex flex-col items-center"><Smile className="w-8 h-8 text-green-500" /><span>{sessionStats.easy} {t('study.summaryEasy')}</span></div>
                     </div>
-                    <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
+                    <Button onClick={() => router.push('/dashboard')}>{t('study.backToDashboard')}</Button>
                 </Card>
             </div>
         );
@@ -204,7 +204,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
         <div className="p-4 max-w-2xl mx-auto overflow-hidden">
             <Card className={`w-full transition-transform duration-300 ease-in-out ${animationClass}`}>
                 <CardHeader>
-                    <CardTitle>Study Session</CardTitle>
+                    <CardTitle>{t('study.sessionTitle')}</CardTitle>
                     <Progress value={progress} className="mt-2" />
                 </CardHeader>
                 <CardContent className="min-h-[200px] flex items-center justify-center text-center">
