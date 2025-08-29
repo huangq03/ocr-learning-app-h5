@@ -196,6 +196,20 @@
     "pageTitle": "所有项目",
     "loading": "加载中..."
   },
+  "documents": {
+    "loading": "正在加载文档...",
+    "backToDashboard": "返回仪表盘",
+    "pageTitle": "文档管理",
+    "addNew": "添加新文档",
+    "noText": "未识别到文本。",
+    "createdOn": "创建于 {{date}}",
+    "editStudy": "编辑 / 学习",
+    "delete": "删除",
+    "noDocuments": "您还没有创建任何文档。",
+    "createFirst": "创建您的第一份文档",
+    "deleteConfirm": "您确定要删除此文档吗？",
+    "deleteError": "删除文档失败。请重试。"
+  },
   "common": {
     "english": "英语",
     "chinese": "中文"

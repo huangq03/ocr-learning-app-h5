@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import { useTranslation } from 'react-i18next';
+import '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Trash2, Edit, PlusCircle, ArrowLeft, FileText } from 'lucide-react';
@@ -20,6 +22,7 @@ interface Document {
 }
 
 export default function DocumentManagementPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -44,7 +47,7 @@ export default function DocumentManagementPage() {
 
   const handleDelete = async (documentId: string) => {
     if (!user) return;
-    if (!confirm('Are you sure you want to delete this document?')) {
+    if (!confirm(t('documents.deleteConfirm'))) {
       return;
     }
 
@@ -52,28 +55,28 @@ export default function DocumentManagementPage() {
 
     if (result.error) {
       console.error('Error soft-deleting document:', result.error);
-      alert('Failed to delete the document. Please try again.');
+      alert(t('documents.deleteError'));
     } else {
       setDocuments(documents.filter(doc => doc.id !== documentId));
     }
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><p>Loading documents...</p></div>;
+    return <div className="min-h-screen flex items-center justify-center"><p>{t('documents.loading')}</p></div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-            <Button variant="outline" onClick={() => router.push('/')}>
+            <Button variant="outline" onClick={() => router.push('/dashboard')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
+                {t('documents.backToDashboard')}
             </Button>
-            <h1 className="text-2xl font-bold text-gray-800">Document Management</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{t('documents.pageTitle')}</h1>
             <Button onClick={() => router.push('/capture')}>
                 <PlusCircle className="w-4 h-4 mr-2" />
-                Add New Document
+                {t('documents.addNew')}
             </Button>
         </div>
 
@@ -85,26 +88,26 @@ export default function DocumentManagementPage() {
               </div>
               <div className="flex-grow">
                 <p className="text-sm text-gray-600 line-clamp-2">
-                  {doc.recognized_text?.cleaned_text || 'No text recognized.'}
+                  {doc.recognized_text?.cleaned_text || t('documents.noText')}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Created on {new Date(doc.created_at).toLocaleDateString()}
+                  {t('documents.createdOn', { date: new Date(doc.created_at).toLocaleDateString() })}
                 </p>
               </div>
               <div className="flex-shrink-0 flex sm:flex-col gap-2 self-end sm:self-center">
                 <Button variant="outline" size="sm" onClick={() => router.push(`/documents/${doc.id}`)}>
-                  <Edit className="w-4 h-4 mr-2" /> Edit / Study
+                  <Edit className="w-4 h-4 mr-2" /> {t('documents.editStudy')}
                 </Button>
                 <Button variant="destructive" size="sm" onClick={() => handleDelete(doc.id)}>
-                  <Trash2 className="w-4 h-4 mr-2" /> Delete
+                  <Trash2 className="w-4 h-4 mr-2" /> {t('documents.delete')}
                 </Button>
               </div>
             </Card>
           ))}
           {documents.length === 0 && (
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                <p className="text-gray-500">You haven't created any documents yet.</p>
-                <Button className="mt-4" onClick={() => router.push('/capture')}>Create Your First Document</Button>
+                <p className="text-gray-500">{t('documents.noDocuments')}</p>
+                <Button className="mt-4" onClick={() => router.push('/capture')}>{t('documents.createFirst')}</Button>
             </div>
           )}
         </div>
