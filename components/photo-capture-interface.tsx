@@ -37,6 +37,10 @@ interface PhotoCaptureInterfaceProps {
   user: User;
 }
 
+function trimCharacter(str: string, char: string) {
+  return str.split(char).filter(Boolean).join(char);
+}
+
 // --- HELPER FUNCTIONS & COMPONENTS ---
 const enrichOcrResult = (
   result: Omit<OCRResult, "newlyFoundItems">,
@@ -49,7 +53,7 @@ const enrichOcrResult = (
   for (const line of lines) {
     const potentialPhrases = line.match(/([a-zA-Z'-]+\s*)+/g) || [];
     for (const phrase of potentialPhrases) {
-      const trimmedPhrase = phrase.trim();
+      const trimmedPhrase = trimCharacter(phrase.trim(), "-");
       if (
         trimmedPhrase.length > 2 &&
         !existingItemsSet.has(trimmedPhrase.toLowerCase())
