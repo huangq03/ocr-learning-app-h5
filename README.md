@@ -105,6 +105,7 @@ Run the following scripts in your PostgreSQL client **one by one, in this specif
 6.  `scripts/postgres/006_create_dictation_exercises_table.sql`
 7.  `scripts/postgres/007_create_dashboard_functions.sql`
 8.  `scripts/postgres/008_create_add_to_study_plan_function.sql`
+9.  `scripts/postgres/009_add_exercises_table.sql`
 
 After running these scripts, your database will be ready.
 

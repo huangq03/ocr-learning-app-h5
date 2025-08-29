@@ -33,6 +33,7 @@ services:
       - ./scripts/postgres/006_create_dictation_exercises_table.sql:/docker-entrypoint-initdb.d/006_create_dictation_exercises_table.sql
       - ./scripts/postgres/007_create_dashboard_functions.sql:/docker-entrypoint-initdb.d/007_create_dashboard_functions.sql
       - ./scripts/postgres/008_create_add_to_study_plan_function.sql:/docker-entrypoint-initdb.d/008_create_add_to_study_plan_function.sql
+      - ./scripts/postgres/009_add_exercises_table.sql:/docker-entrypoint-initdb.d/009_add_exercises_table.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ocr -d ocr"]
       interval: 10s
