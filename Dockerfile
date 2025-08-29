@@ -31,6 +31,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json .
 COPY --from=builder /app/pnpm-lock.yaml .
 COPY --from=builder /app/next.config.mjs .
+COPY --from=builder /app/eng.traineddata .
+COPY --from=builder /app/osd.traineddata .
 
 RUN pnpm install --prod
 
