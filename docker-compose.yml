@@ -24,7 +24,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./.docker/postgres-data:/var/lib/postgresql/data
       - ./scripts/postgres/001_fixed_create_users_and_documents_tables.sql:/docker-entrypoint-initdb.d/001_create_users_and_documents_tables.sql
       - ./scripts/postgres/002_create_text_items_table.sql:/docker-entrypoint-initdb.d/002_create_text_items_table.sql
       - ./scripts/postgres/003_create_spaced_repetition_schedule_table.sql:/docker-entrypoint-initdb.d/003_create_spaced_repetition_schedule_table.sql
@@ -62,6 +62,3 @@ services:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
     command: ["echo"]
-
-volumes:
-  postgres_data:
