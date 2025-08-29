@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION get_mastered_items_count(p_user_id UUID)
-RETURNS INT AS $
+RETURNS INT AS $func$
 DECLARE
     mastered_count INT;
 BEGIN
@@ -36,7 +36,7 @@ BEGIN
 
     RETURN mastered_count;
 END;
-$ LANGUAGE plpgsql;
+$func$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_day_streak(p_user_id UUID)
 RETURNS INT AS $func$
