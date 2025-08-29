@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'next/navigation';
 import '@/i18n';
 import ItemGroup from '@/components/item-group';
 import { getItemsPageData, getPageSession } from '@/lib/actions';
 import type { User } from '@supabase/supabase-js';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ItemsManagementPage() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [documents, setDocuments] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +73,12 @@ export default function ItemsManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
+        <div className="flex items-center mb-6">
+            <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {t('documents.backToDashboard')}
+            </Button>
+        </div>
         <h1 className="text-3xl font-bold text-gray-800 mb-6">{t('items.pageTitle')}</h1>
         <div className="space-y-6">
           {documents?.map(doc => (
