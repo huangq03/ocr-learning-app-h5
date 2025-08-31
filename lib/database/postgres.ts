@@ -353,16 +353,22 @@ export class PostgresDatabase implements Database {
   }
 
   // Items methods
-  async getItemsPageData(userId: string) {
+  async getItemsPageData(userId: string, filter?: string | null) {
     try {
-      const result = await this.pool.query(
-        "SELECT id, created_at, recognized_text FROM documents WHERE user_id = $1 ORDER BY created_at DESC",
-        [userId]
-      )
-      return { documents: result.rows }
+      let query;
+      const params: any[] = [userId];
+
+      if (filter === 'mastered') {
+        query = "SELECT * FROM get_mastered_documents($1)";
+      } else {
+        query = "SELECT id, created_at, recognized_text FROM documents WHERE user_id = $1 ORDER BY created_at DESC";
+      }
+
+      const result = await this.pool.query(query, params);
+      return { documents: result.rows };
     } catch (error) {
-      console.error("Error fetching documents for items page:", error)
-      return { error: "Failed to fetch documents for items page." }
+      console.error("Error fetching documents for items page:", error);
+      return { error: "Failed to fetch documents for items page." };
     }
   }
 

@@ -27,7 +27,7 @@ export interface Database {
   saveExerciseResult: (result: any, exerciseType: 'dictation' | 'recitation') => Promise<{ success?: boolean; error?: string }>
 
   // Items methods
-  getItemsPageData: (userId: string) => Promise<{ documents: any[]; error?: string }>
+  getItemsPageData: (userId: string, filter?: string | null) => Promise<{ documents: any[]; error?: string }>
 
   // Profile methods
   getProfilePageData: (userId: string) => Promise<any>

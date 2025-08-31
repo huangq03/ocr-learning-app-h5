@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import '@/i18n';
 import ItemGroup from '@/components/item-group';
 import { getItemsPageData, getPageSession } from '@/lib/actions';
@@ -10,9 +10,12 @@ import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-export default function ItemsManagementPage() {
+function ItemsManagementContent() {
   const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const filter = searchParams.get('filter');
+
   const [session, setSession] = useState<any>(null);
   const [documents, setDocuments] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +32,7 @@ export default function ItemsManagementPage() {
           return;
         }
 
-        const { documents: fetchedDocuments, error: fetchError } = await getItemsPageData(pageSession.user.id);
+        const { documents: fetchedDocuments, error: fetchError } = await getItemsPageData(filter);
 
         if (fetchError) {
           setError(t('items.errorLoading'));
@@ -44,7 +47,7 @@ export default function ItemsManagementPage() {
     };
 
     fetchData();
-  }, [t]);
+  }, [t, filter]);
 
   if (loading) {
     return (
@@ -70,6 +73,8 @@ export default function ItemsManagementPage() {
     );
   }
 
+  const pageTitle = filter === 'mastered' ? t('items.masteredItemsTitle') : t('items.pageTitle');
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
@@ -79,13 +84,25 @@ export default function ItemsManagementPage() {
                 {t('documents.backToDashboard')}
             </Button>
         </div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">{t('items.pageTitle')}</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">{pageTitle}</h1>
         <div className="space-y-6">
-          {documents?.map(doc => (
-            <ItemGroup key={doc.id} document={doc as any} />
-          ))}
+          {documents && documents.length > 0 ? (
+            documents.map(doc => (
+              <ItemGroup key={doc.id} document={doc as any} />
+            ))
+          ) : (
+            <p>{t('items.noItemsFound')}</p>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ItemsManagementPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ItemsManagementContent />
+    </Suspense>
   );
 }

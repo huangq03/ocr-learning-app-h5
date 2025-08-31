@@ -469,20 +469,27 @@ export class SupabaseDatabase implements Database {
     }
   }
 
-  async getItemsPageData(userId: string) {
+  async getItemsPageData(userId: string, filter?: string | null) {
     if (!isSupabaseConfigured) {
-      return { error: "Supabase is not configured" }
+      return { error: "Supabase is not configured" };
     }
 
-    const cookieStore = await cookies()
-    const supabase = createServerActionClient({ cookies: () => cookieStore })
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
 
     try {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('id, created_at, recognized_text')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+      let query;
+      if (filter === 'mastered') {
+        query = supabase.rpc('get_mastered_documents', { p_user_id: userId });
+      } else {
+        query = supabase
+          .from('documents')
+          .select('id, created_at, recognized_text')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching documents for items page:", error);

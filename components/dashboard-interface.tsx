@@ -133,7 +133,7 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
               </div>
             </div>
           </Card>
-          <Card className="p-4 bg-white shadow-lg border-0 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/study')}>
+          <Card className="p-4 bg-white shadow-lg border-0 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/items?filter=mastered')}>
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Trophy className="w-5 h-5 text-green-600" />

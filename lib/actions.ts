@@ -188,10 +188,10 @@ export async function getDocumentById(documentId: string) {
   return { document, user }
 }
 
-export async function getItemsPageData() {
+export async function getItemsPageData(filter?: string | null) {
   const user = await getUser()
   const db = createDatabase()
-  const { documents, error } = await db.getItemsPageData(user.id)
+  const { documents, error } = await db.getItemsPageData(user.id, filter)
   if (error) {
     return { error }
   }

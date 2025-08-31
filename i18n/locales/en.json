@@ -194,6 +194,8 @@
     "logInPrompt": "Please log in to see your items.",
     "errorLoading": "Error loading items.",
     "pageTitle": "All Items",
+    "masteredItemsTitle": "Mastered Items",
+    "noItemsFound": "No items found.",
     "loading": "Loading..."
   },
   "documents": {
