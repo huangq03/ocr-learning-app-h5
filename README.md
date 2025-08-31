@@ -12,6 +12,7 @@ This is a full-stack web application built with Next.js that allows users to cap
 - **Multiple Study Modes**:
   - **Recitation**: A flashcard-style mode for reading and reviewing items.
   - **Dictation**: An interactive mode that uses browser speech synthesis to read items aloud for spelling and listening practice.
+- **Mastered Items Filter**: View all items that you have mastered through practice.
 - **Dashboard**: An overview of user statistics, including total documents, total items, and recent activity.
 - **JWT-based Authentication**: Secure authentication for both Supabase and PostgreSQL using JSON Web Tokens.
 - **Internationalization (i18n)**: Full support for English and Chinese, switchable at runtime.
@@ -92,6 +93,8 @@ Navigate to the **SQL Editor** in your Supabase project dashboard and run the co
 3.  `scripts/003_create_functions_and_triggers.sql`
 4.  `scripts/007_create_add_to_study_plan_function.sql`
 5.  `scripts/008_create_dashboard_functions.sql`
+6.  `scripts/009_add_exercises_table.sql`
+7.  `scripts/010_create_get_mastered_documents_function.sql`
 
 #### For PostgreSQL
 
@@ -106,6 +109,7 @@ Run the following scripts in your PostgreSQL client **one by one, in this specif
 7.  `scripts/postgres/007_create_dashboard_functions.sql`
 8.  `scripts/postgres/008_create_add_to_study_plan_function.sql`
 9.  `scripts/postgres/009_add_exercises_table.sql`
+10. `scripts/010_create_get_mastered_documents_function.sql`
 
 After running these scripts, your database will be ready.
 
