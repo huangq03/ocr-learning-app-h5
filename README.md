@@ -47,38 +47,40 @@ cd ocr-learning-app
 pnpm install
 ```
 
-### 4. Configure Database
+### 4. Configure Database and Environment Variables
 
-The application supports two database options:
-1. **Supabase** (default) - A hosted PostgreSQL database with additional features
-2. **PostgreSQL** - A self-hosted PostgreSQL database
+The application supports two database options. Based on your choice, create a `.env` file in the project root with the corresponding content.
+
+**Important Note for Docker Users:** The file **must be named `.env`** (not `.env.local`). The Docker Compose setup reads this specific file to get variables required during the application build process.
 
 #### Option 1: Using Supabase (Default)
 
 1.  **Create a Supabase Project**: Go to [supabase.com](https://supabase.com), create a new project, and save your project's URL and `anon` key.
-2.  **Configure Environment Variables**: Create a new file named `.env.local` in the root of the project by copying the example file:
-    ```bash
-    cp .env.example .env.local
-    ```
-3.  **Add Supabase Keys**: Open `.env.local` and add your Supabase project URL and anon key:
+2.  **Create `.env` file**: Create a file named `.env` and add the following, replacing the placeholder values:
     ```
     DATABASE_TYPE=supabase
     NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL
     NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+
+    # This is required for the dictation audio feature
+    NEXT_PUBLIC_AUDIO_BASE_URL=/audios
     ```
 
-#### Option 2: Using PostgreSQL
+#### Option 2: Using PostgreSQL (including Docker setup)
 
-1.  **Set up PostgreSQL**: Install and configure a PostgreSQL database.
-2.  **Configure Environment Variables**: Create a new file named `.env.local` in the root of the project by copying the example file:
-    ```bash
-    cp .env.example .env.local
-    ```
-3.  **Add Database Connection**: Open `.env.local` and configure the database connection:
+1.  **Set up PostgreSQL**: You can use the PostgreSQL service included in the `docker-compose.yml` file or a separate instance.
+2.  **Create `.env` file**: Create a file named `.env` and add the following. These credentials match the default `docker-compose.yml` setup.
     ```
     DATABASE_TYPE=postgres
-    DATABASE_URL=postgresql://username:password@host:port/database
+    DATABASE_URL=postgresql://username:password@localhost:5433/ocr
+    POSTGRES_USER=ocr
+    POSTGRES_PASSWORD=ocr
+    POSTGRES_DB=ocr
+
+    # This is required for the dictation audio feature
+    NEXT_PUBLIC_AUDIO_BASE_URL=/audios
     ```
+    *Note: If you are using a self-hosted PostgreSQL instance with different credentials, make sure to update `DATABASE_URL` and the `POSTGRES_*` variables accordingly.*
 
 ### 5. Set up Database Schema
 
