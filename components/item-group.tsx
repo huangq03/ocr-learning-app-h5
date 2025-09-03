@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
 import '@/i18n';
+import { speakText } from '@/lib/speech';
 
 interface Document {
   id: string;
@@ -18,10 +19,8 @@ interface Document {
 }
 
 export default function ItemGroup({ document }: { document: Document }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [nowPlaying, setNowPlaying] = useState<string | null>(null);
-  const [highlightedWordIndex, setHighlightedWordIndex] = useState(-1);
   const items = document.recognized_text?.items || [];
   const cleaned_text = document.recognized_text?.cleaned_text || '';
 
@@ -34,37 +33,7 @@ export default function ItemGroup({ document }: { document: Document }) {
   });
 
   const handlePlay = (text: string) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-      if (nowPlaying === text) {
-        setNowPlaying(null);
-        setHighlightedWordIndex(-1);
-        return;
-      }
-    }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-
-    let wordIndex = 0;
-    utterance.onboundary = (event) => {
-      if (event.name === 'word') {
-        setHighlightedWordIndex(wordIndex++);
-      }
-    };
-
-    utterance.onstart = () => {
-      setNowPlaying(text);
-      setHighlightedWordIndex(-1);
-      wordIndex = 0;
-    };
-    utterance.onend = () => {
-      setNowPlaying(null);
-      setHighlightedWordIndex(-1);
-    };
-    window.speechSynthesis.speak(utterance);
+    speakText(text, 'en');
   };
 
   return (
@@ -91,14 +60,10 @@ export default function ItemGroup({ document }: { document: Document }) {
             {sortedItems.map((item, index) => (
               <li key={index} className="p-2 bg-gray-100 rounded-md text-gray-800 flex items-center justify-between">
                 <span>
-                  {item.split(/(\s+)/).map((word, wordIndex) => (
-                    <span key={wordIndex} className={nowPlaying === item && highlightedWordIndex === Math.floor(wordIndex / 2) ? 'bg-yellow-200' : ''}>
-                      {word}
-                    </span>
-                  ))}
+                  {item}
                 </span>
                 <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handlePlay(item); }}>
-                  <Volume2 className={`w-4 h-4 ${nowPlaying === item ? 'text-purple-600' : ''}`} />
+                  <Volume2 className='w-4 h-4' />
                 </Button>
               </li>
             ))}

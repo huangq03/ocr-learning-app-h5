@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Smile, Meh, Frown, Angry, Volume2 } from 'lucide-react';
 import { updateStudyScheduleAction, saveExerciseResult } from '@/lib/actions';
 import { useTranslation } from 'react-i18next';
+import { speakText } from '@/lib/speech';
 
 
 // SM-2 Algorithm Implementation
@@ -60,15 +61,13 @@ interface SessionStats {
 }
 
 export default function StudyInterface({ initialItems, user }: StudyInterfaceProps) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     const router = useRouter();
     const [items, setItems] = useState(initialItems);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showSummary, setShowSummary] = useState(false);
     const [sessionStats, setSessionStats] = useState<SessionStats>({ again: 0, hard: 0, good: 0, easy: 0 });
-    const [nowPlaying, setNowPlaying] = useState<string | null>(null);
-    const [highlightedWordIndex, setHighlightedWordIndex] = useState(-1);
     const [isAnimating, setIsAnimating] = useState(false);
     const [animationClass, setAnimationClass] = useState('transform translate-x-full');
 
@@ -81,37 +80,7 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
     }, []);
 
     const handlePlay = (text: string) => {
-        if (typeof window === 'undefined' || !window.speechSynthesis) return;
-
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-            if (nowPlaying === text) {
-                setNowPlaying(null);
-                setHighlightedWordIndex(-1);
-                return;
-            }
-        }
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-
-        let wordIndex = 0;
-        utterance.onboundary = (event) => {
-            if (event.name === 'word') {
-                setHighlightedWordIndex(wordIndex++);
-            }
-        };
-
-        utterance.onstart = () => {
-            setNowPlaying(text);
-            setHighlightedWordIndex(-1);
-            wordIndex = 0;
-        };
-        utterance.onend = () => {
-            setNowPlaying(null);
-            setHighlightedWordIndex(-1);
-        };
-        window.speechSynthesis.speak(utterance);
+        speakText(text, 'en');
     };
 
     const handleRating = async (quality: number) => {
@@ -211,14 +180,10 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                     <div>
                         <div className="flex items-center justify-center gap-4">
                             <p className="text-2xl font-bold mb-2">
-                                {currentItem.content.split(/(\s+)/).map((word, wordIndex) => (
-                                    <span key={wordIndex} className={nowPlaying === currentItem.content && highlightedWordIndex === Math.floor(wordIndex / 2) ? 'bg-yellow-200' : ''}>
-                                        {word}
-                                    </span>
-                                ))}
+                                {currentItem.content}
                             </p>
                             <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.content)}>
-                                <Volume2 className={`w-6 h-6 ${nowPlaying === currentItem.content ? 'text-purple-600' : ''}`} />
+                                <Volume2 className='w-6 h-6' />
                             </Button>
                         </div>
                         <p className="text-lg text-gray-600">{currentItem.context}</p>

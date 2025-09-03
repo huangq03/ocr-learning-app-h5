@@ -9,6 +9,7 @@ import { calculateAccuracy } from "@/lib/dictation-utils"
 import { StartScreen } from "@/components/dictation-start-screen"
 import { DictationItemView } from "@/components/dictation-item-view"
 import { SummaryScreen } from "@/components/dictation-summary-screen"
+import { speakText } from "@/lib/speech"
 
 interface DictationInterfaceProps {
   user: User
@@ -286,19 +287,15 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   }
 
   const handleListen = () => {
-    const currentSelection = selections[currentSelectionIndex]
-    if (!currentSelection || typeof window === 'undefined') return
-    const utterance = new SpeechSynthesisUtterance(currentSelection.content)
-    utterance.lang = 'en-US'
-    
-    utterance.onend = () => {
-      if (autoMode && autoSessionStarted) {
-        setTimeLeft(timeoutValue)
-      }
+    const currentSelection = selections[currentSelectionIndex];
+    if (!currentSelection) return;
+
+    speakText(currentSelection.content, 'en');
+
+    if (autoMode && autoSessionStarted) {
+      setTimeLeft(timeoutValue);
     }
-    
-    window.speechSynthesis.speak(utterance)
-  }
+  };
 
   const startAutoSession = () => {
     setAutoSessionStarted(true)
@@ -315,12 +312,6 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
       clearTimeout(autoTimerRef.current)
     }
   }
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.getVoices()
-    }
-  }, [])
 
   useEffect(() => {
     if (!autoMode) {
@@ -363,19 +354,16 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
     if (autoMode) {
       setIsStartingSession(true);
       const notificationMessage = t('autoModeStartNotification', { timeoutValue });
+
       const utterance = new SpeechSynthesisUtterance(notificationMessage);
-      let lang = i18n.language;
-      if (lang === 'zh-CN') {
-        utterance.lang = 'zh-CN';
-      } else {
-        utterance.lang = 'en-US';
-      }
+      utterance.lang = i18n.language;
       utterance.onend = () => {
         setIsStartingSession(false);
         setIsSessionStarted(true);
         startAutoSession();
       };
       window.speechSynthesis.speak(utterance);
+
     } else {
       setIsSessionStarted(true);
       setCurrentSelectionIndex(0);
