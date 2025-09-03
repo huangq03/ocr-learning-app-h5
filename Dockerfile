@@ -2,6 +2,12 @@
 
 # 1. Builder stage
 FROM node:22-alpine AS builder
+
+# The build argument
+ARG NEXT_PUBLIC_AUDIO_BASE_URL
+# The environment variable
+ENV NEXT_PUBLIC_AUDIO_BASE_URL=${NEXT_PUBLIC_AUDIO_BASE_URL}
+
 WORKDIR /app
 
 # Install pnpm

@@ -3,9 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_AUDIO_BASE_URL=${NEXT_PUBLIC_AUDIO_BASE_URL}
     container_name: ocr-learning-app
     env_file:
-      - ./.env.local
+      - ./.env
     restart: unless-stopped
     depends_on:
       postgres:
@@ -16,7 +18,7 @@ services:
     container_name: ocr-learning-postgres
     restart: unless-stopped
     env_file:
-      - ./.env.local
+      - ./.env
     environment:
       - POSTGRES_USER=ocr
       - POSTGRES_PASSWORD=ocr

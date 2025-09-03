@@ -7,7 +7,9 @@ export const speakText = (text: string, lang: string) => {
   const isSingleWord = !text.includes(' ');
 
   if (isSingleWord && lang.startsWith('en')) {
-    const audioUrl = `${process.env.NEXT_PUBLIC_AUDIO_BASE_URL}/${text.toLowerCase()}1.mp3`;
+    const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL;
+    const audioFile = `${text.toLowerCase()}1.mp3`;
+    const audioUrl = baseUrl ? `${baseUrl.replace(/\/$/, '')}/${audioFile}` : `/${audioFile}`;
     const audio = new Audio(audioUrl);
 
     audio.onerror = () => {
