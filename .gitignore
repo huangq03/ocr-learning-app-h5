@@ -26,3 +26,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 *.traineddata
+
+env.local
+ocr-learning-app-h5
+public/audios
