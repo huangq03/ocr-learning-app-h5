@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DictationModeSettings } from "@/components/dictation-mode-settings"
-import { HelpCircle } from "lucide-react"
+import { HelpCircle, ArrowLeft } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -37,9 +38,14 @@ export function StartScreen({
   isStartingSession
 }: StartScreenProps) {
   const { t, i18n } = useTranslation()
+  const router = useRouter()
 
   return (
     <div className="p-4 max-w-2xl mx-auto relative">
+      <Button variant="outline" onClick={() => router.back()} className="mb-4">
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        {t('backButton')}
+      </Button>
       <Card className="p-6 relative flex flex-col items-center justify-center min-h-[500px]">
         <div className="absolute top-4 right-4">
           <DictationModeSettings 

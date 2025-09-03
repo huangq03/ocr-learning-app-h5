@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Progress } from '@/components/ui/progress';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { Smile, Meh, Frown, Angry, Volume2 } from 'lucide-react';
+import { Smile, Meh, Frown, Angry, Volume2, ArrowLeft } from 'lucide-react';
 import { updateStudyScheduleAction, saveExerciseResult } from '@/lib/actions';
 import { useTranslation } from 'react-i18next';
 import { speakText } from '@/lib/speech';
@@ -171,6 +171,10 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
 
     return (
         <div className="p-4 max-w-2xl mx-auto overflow-hidden">
+            <Button variant="outline" onClick={() => router.back()} className="mb-4">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {t('backButton')}
+            </Button>
             <Card className={`w-full transition-transform duration-300 ease-in-out ${animationClass}`}>
                 <CardHeader>
                     <CardTitle>{t('study.sessionTitle')}</CardTitle>
