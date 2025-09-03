@@ -30,3 +30,4 @@ next-env.d.ts
 env.local
 ocr-learning-app-h5
 public/audios
+.docker
