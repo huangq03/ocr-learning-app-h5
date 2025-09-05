@@ -215,5 +215,22 @@
   "common": {
     "english": "English",
     "chinese": "Chinese"
+  },
+  "share": {
+    "button": "Share",
+    "modalTitle": "Share Document Items",
+    "loadingItems": "Loading items...",
+    "titleLabel": "Share Title",
+    "selectAllLabel": "Select All",
+    "createLinkButton": "Create Share Link",
+    "linkReadyLabel": "Shareable Link:",
+    "errorMissingData": "Please provide a title and select at least one item.",
+    "errorFailedCreate": "Failed to create share link.",
+    "pageLoading": "Loading...",
+    "pageError": "Error: {{error}}",
+    "pageErrorFetch": "Failed to fetch shared set",
+    "pageNotFound": "Shared set not found.",
+    "noItemsMessage": "No study items found for this document.",
+    "noItemsHint": "Please go to \"Edit / Study\" to create items first."
   }
 }

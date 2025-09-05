@@ -16,6 +16,7 @@ This is a full-stack web application built with Next.js that allows users to cap
 - **Dashboard**: An overview of user statistics, including total documents, total items, and recent activity.
 - **JWT-based Authentication**: Secure authentication for both Supabase and PostgreSQL using JSON Web Tokens.
 - **Internationalization (i18n)**: Full support for English and Chinese, switchable at runtime.
+- **Sharing**: Logged-in users can create read-only, shareable links for their study sets. Anonymous users can access these links to view the content. Usage is tracked privately, including total views and unique visitor counts.
 
 ## Tech Stack
 
@@ -112,6 +113,7 @@ Run the following scripts in your PostgreSQL client **one by one, in this specif
 8.  `scripts/postgres/008_create_add_to_study_plan_function.sql`
 9.  `scripts/postgres/009_add_exercises_table.sql`
 10. `scripts/010_create_get_mastered_documents_function.sql`
+11. `scripts/postgres/011_create_shared_sessions.sql`
 
 After running these scripts, your database will be ready.
 

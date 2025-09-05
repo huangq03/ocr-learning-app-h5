@@ -28,6 +28,13 @@ export interface Database {
 
   // Items methods
   getItemsPageData: (userId: string, filter?: string | null) => Promise<{ documents: any[]; error?: string }>
+  getTextItemsForDocument: (documentId: string, userId: string) => Promise<{ items: any[]; error?: string }>
+
+  // Share and Tracking methods
+  trackVisit: (sharedSetId: string, visitorHash: string) => Promise<void>
+  trackEngagement: (sharedSetId: string) => Promise<void>
+  createSharedSet: (userId: string, title: string, itemIds: string[]) => Promise<{ id?: string; error?: string }>
+  getSharedSet: (id: string) => Promise<{ set?: any; items?: any[]; error?: string }>
 
   // Profile methods
   getProfilePageData: (userId: string) => Promise<any>

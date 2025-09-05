@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ShareDocumentButton } from '@/components/share-document-button';
 import { Trash2, Edit, PlusCircle, ArrowLeft, FileText } from 'lucide-react';
 import { getDocumentsPageData, deleteDocument } from '@/lib/actions';
 
@@ -101,6 +102,7 @@ export default function DocumentManagementPage() {
                 <Button variant="destructive" size="sm" onClick={() => handleDelete(doc.id)}>
                   <Trash2 className="w-4 h-4 mr-2" /> {t('documents.delete')}
                 </Button>
+                <ShareDocumentButton documentId={doc.id} />
               </div>
             </Card>
           ))}

@@ -215,5 +215,22 @@
   "common": {
     "english": "英语",
     "chinese": "中文"
+  },
+  "share": {
+    "button": "分享",
+    "modalTitle": "分享文档项目",
+    "loadingItems": "正在加载项目...",
+    "titleLabel": "分享标题",
+    "selectAllLabel": "全选",
+    "createLinkButton": "创建分享链接",
+    "linkReadyLabel": "分享链接:",
+    "errorMissingData": "请输入标题并至少选择一个项目。",
+    "errorFailedCreate": "创建分享链接失败。",
+    "pageLoading": "加载中...",
+    "pageError": "错误: {{error}}",
+    "pageErrorFetch": "获取分享内容失败",
+    "pageNotFound": "未找到分享内容。",
+    "noItemsMessage": "该文档没有可供学习的项目。",
+    "noItemsHint": "请先进入“编辑/学习”页面创建项目。"
   }
 }

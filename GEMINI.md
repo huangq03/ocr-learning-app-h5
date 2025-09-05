@@ -29,6 +29,10 @@ This document provides essential context for AI models interacting with this pro
     *   `/scripts`: SQL scripts for database schema creation and migration.
     *   `/i18n`: Configuration and locale files for internationalization.
     *   `/public`: Static assets like images and logos.
+* **Design Pattern:** The project follows a pattern with a clear separation of concerns, analogous to MVC (Model-View-Controller):
+    *   **Model:** The database schema (`/scripts`) and the data access layer (`/lib/database`).
+    *   **View:** React components (`/app/**/page.tsx`, `/components/**/*.tsx`).
+    *   **Controller:** API route handlers (`/app/api/**/route.ts`) and server-side logic in Server Components. All new code should adhere to this separation.
 
 ## 4. Coding Conventions & Style Guide
 
@@ -70,3 +74,11 @@ This document provides essential context for AI models interacting with this pro
 * **Security:** Ensure that no secrets or API keys are hardcoded. Use the `.env.local` file for all sensitive information.
 * **Dependencies:** Use `pnpm install` to add or update dependencies.
 * **Commit Messages:** Run `git log -n 5` to see the latest commit messages and follow the established style.
+
+### Standard Procedures for Changes
+
+When making any changes to the codebase, please adhere to the following procedures:
+
+*   **Internationalization (i18n):** This project supports multiple languages. If your changes introduce any new user-facing text, you *must* add support for it in the i18n locale files (`/i18n/locales`) and use the `useTranslation` hook in the components.
+*   **Update README.md:** If your changes add a new feature, modify the setup process, or alter the configuration, you *must* update the `README.md` file to reflect these changes.
+*   **Update Sitemap/SEO:** If you add or remove pages, review `app/sitemap.ts` and `app/robots.ts` to ensure they are correctly configured for SEO and crawler access.

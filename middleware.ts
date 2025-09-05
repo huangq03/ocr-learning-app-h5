@@ -4,8 +4,14 @@ import { getSession } from '@/lib/jwt';
 const protectedRoutes = ['/dashboard', '/profile', '/capture', '/documents', '/items', '/study', '/dictation'];
 
 export async function middleware(req: NextRequest) {
-  const session = await getSession();
   const { pathname } = req.nextUrl;
+
+  // Allow public access to share routes
+  if (pathname.startsWith('/share/') || pathname.startsWith('/api/shares/')) {
+    return NextResponse.next();
+  }
+
+  const session = await getSession();
 
   if (protectedRoutes.includes(pathname) && !session) {
     return NextResponse.redirect(new URL('/auth/login', req.url));

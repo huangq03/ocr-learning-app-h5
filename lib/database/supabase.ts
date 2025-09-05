@@ -542,4 +542,114 @@ export class SupabaseDatabase implements Database {
       return { error: "Failed to fetch profile page data." };
     }
   }
+
+  async getTextItemsForDocument(documentId: string, userId: string) {
+    if (!isSupabaseConfigured) {
+      return { error: "Supabase is not configured" };
+    }
+
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+
+    try {
+      const { data, error } = await supabase
+        .from('text_items')
+        .select('id, content')
+        .eq('document_id', documentId)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error("Error fetching text items:", error);
+        return { error: "Failed to fetch text items." };
+      }
+      return { items: data };
+    } catch (error) {
+      console.error("Error fetching text items:", error);
+      return { error: "Failed to fetch text items." };
+    }
+  }
+
+  // Share and Tracking methods
+  async trackVisit(sharedSetId: string, visitorHash: string) {
+    if (!isSupabaseConfigured) return;
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+    try {
+      await supabase.from('shared_set_visits').insert({ shared_set_id: sharedSetId, visitor_hash: visitorHash });
+      await supabase.from('shared_sets').update({ last_accessed_at: new Date().toISOString() }).eq('id', sharedSetId);
+    } catch (error) {
+      console.error("Error tracking visit:", error);
+    }
+  }
+
+  async trackEngagement(sharedSetId: string) {
+    if (!isSupabaseConfigured) return;
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+    try {
+      const { error } = await supabase.rpc('increment_engagement_count', { set_id: sharedSetId });
+      if (error) {
+        console.error("Error tracking engagement:", error);
+      }
+    } catch (error) {
+      console.error("Error tracking engagement:", error);
+    }
+  }
+
+  async createSharedSet(userId: string, title: string, itemIds: string[]) {
+    if (!isSupabaseConfigured) return { error: "Supabase is not configured" };
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+
+    try {
+      const { data, error } = await supabase.rpc('create_shared_set_and_link_items', {
+        p_user_id: userId,
+        p_title: title,
+        p_item_ids: itemIds
+      });
+
+      if (error) {
+        console.error("Error creating shared set:", error);
+        return { error: "Failed to create shared set." };
+      }
+      return { id: data };
+    } catch (error) {
+      console.error("Error creating shared set:", error);
+      return { error: "Failed to create shared set." };
+    }
+  }
+
+  async getSharedSet(id: string) {
+    if (!isSupabaseConfigured) return { error: "Supabase is not configured" };
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+
+    try {
+      const { data: set, error: setError } = await supabase
+        .from('shared_sets')
+        .select('id, title, owner_user_id')
+        .eq('id', id)
+        .single();
+
+      if (setError) {
+        console.error("Error fetching shared set:", setError);
+        return { error: "Shared set not found" };
+      }
+
+      const { data: items, error: itemsError } = await supabase
+        .from('shared_set_items')
+        .select('text_items(*)')
+        .eq('shared_set_id', id);
+
+      if (itemsError) {
+        console.error("Error fetching shared set items:", itemsError);
+        return { error: "Failed to fetch items for shared set." };
+      }
+
+      return { set, items: items.map(i => i.text_items) };
+    } catch (error) {
+      console.error("Error fetching shared set:", error);
+      return { error: "Failed to fetch shared set." };
+    }
+  }
 }

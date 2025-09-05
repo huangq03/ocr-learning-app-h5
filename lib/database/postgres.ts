@@ -372,6 +372,94 @@ export class PostgresDatabase implements Database {
     }
   }
 
+  async getTextItemsForDocument(documentId: string, userId: string) {
+    try {
+      const result = await this.pool.query(
+        'SELECT id, content FROM text_items WHERE document_id = $1 AND user_id = $2',
+        [documentId, userId]
+      );
+      return { items: result.rows };
+    } catch (error) {
+      console.error("Error fetching text items:", error);
+      return { error: "Failed to fetch text items." };
+    }
+  }
+
+  // Share and Tracking methods
+  async trackVisit(sharedSetId: string, visitorHash: string) {
+    try {
+      await this.pool.query(
+        'INSERT INTO shared_set_visits (shared_set_id, visitor_hash) VALUES ($1, $2)',
+        [sharedSetId, visitorHash]
+      );
+      await this.pool.query(
+        'UPDATE shared_sets SET last_accessed_at = NOW() WHERE id = $1',
+        [sharedSetId]
+      );
+    } catch (error) {
+      console.error("Error tracking visit:", error);
+      // Fail silently
+    }
+  }
+
+  async trackEngagement(sharedSetId: string) {
+    try {
+      await this.pool.query(
+        'UPDATE shared_sets SET engagement_count = engagement_count + 1 WHERE id = $1',
+        [sharedSetId]
+      );
+    } catch (error) {
+      console.error("Error tracking engagement:", error);
+      // Fail silently
+    }
+  }
+
+  async createSharedSet(userId: string, title: string, itemIds: string[]) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const newSetResult = await client.query(
+        'INSERT INTO shared_sets (owner_user_id, title) VALUES ($1, $2) RETURNING id',
+        [userId, title]
+      );
+      const newSetId = newSetResult.rows[0].id;
+
+      const values = itemIds.map(itemId => `('${newSetId}', '${itemId}')`).join(',');
+      await client.query(`INSERT INTO shared_set_items (shared_set_id, text_item_id) VALUES ${values}`);
+      
+      await client.query('COMMIT');
+      return { id: newSetId };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error("Error creating shared set:", error);
+      return { error: "Failed to create shared set." };
+    } finally {
+      client.release();
+    }
+  }
+
+  async getSharedSet(id: string) {
+    try {
+      const setResult = await this.pool.query('SELECT id, title, owner_user_id FROM shared_sets WHERE id = $1', [id]);
+      if (setResult.rows.length === 0) {
+        return { error: "Shared set not found" };
+      }
+      const set = setResult.rows[0];
+
+      const itemsResult = await this.pool.query(`
+        SELECT ti.* 
+        FROM text_items ti
+        JOIN shared_set_items ssi ON ti.id = ssi.text_item_id
+        WHERE ssi.shared_set_id = $1
+      `, [id]);
+
+      return { set, items: itemsResult.rows };
+    } catch (error) {
+      console.error("Error fetching shared set:", error);
+      return { error: "Failed to fetch shared set." };
+    }
+  }
+
   // Profile methods
   async getProfilePageData(userId: string) {
     try {
