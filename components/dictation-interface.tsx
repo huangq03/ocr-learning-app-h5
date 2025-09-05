@@ -164,6 +164,7 @@ export default function DictationInterface({ user, textItems, shareId }: Dictati
   }
 
   const handleRestart = () => {
+    window.speechSynthesis.cancel(); // Clear any pending speech
     // Clear any existing timers
     if (autoTimerRef.current) {
       clearTimeout(autoTimerRef.current)
