@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BarChart, CheckCircle, XCircle } from "lucide-react"
+import { useRouter } from "next/navigation";
 import { useTranslation } from 'react-i18next'
 
 interface SessionResult {
@@ -18,10 +19,12 @@ interface SessionResult {
 interface SummaryScreenProps {
   sessionResults: SessionResult[]
   onRestart: () => void
+  isAnonymous: boolean
 }
 
-export function SummaryScreen({ sessionResults, onRestart }: SummaryScreenProps) {
+export function SummaryScreen({ sessionResults, onRestart, isAnonymous }: SummaryScreenProps) {
   const { t } = useTranslation()
+  const router = useRouter()
   
   const totalItems = sessionResults.length
   const correctOnFirstTry = sessionResults.filter(r => r.is_correct_on_first_try).length
@@ -71,8 +74,18 @@ export function SummaryScreen({ sessionResults, onRestart }: SummaryScreenProps)
             </Card>
           ))}
         </div>
-        <div className="text-center mt-6">
+        <div className="text-center mt-6 space-y-4">
           <Button onClick={onRestart}>{t('summaryPracticeAgain', 'Practice Again')}</Button>
+          {isAnonymous ? (
+            <div className="text-center border-t pt-4 mt-4">
+                <p className="mb-4 text-sm text-gray-600">{t('study.signUpPrompt')}</p>
+                <Button onClick={() => router.push('/auth/sign-up')} variant="secondary">{t('signUp.signUpButton')}</Button>
+            </div>
+          ) : (
+            <div className="text-center border-t pt-4 mt-4">
+                <Button onClick={() => router.push('/dashboard')} variant="secondary">{t('study.backToDashboard')}</Button>
+            </div>
+          )}
         </div>
       </Card>
     </div>

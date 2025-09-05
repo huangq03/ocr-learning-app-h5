@@ -12,8 +12,9 @@ import { SummaryScreen } from "@/components/dictation-summary-screen"
 import { speakText } from "@/lib/speech"
 
 interface DictationInterfaceProps {
-  user: User
+  user?: User
   textItems: any[]
+  shareId?: string
 }
 
 type DictationMode = 'typing' | 'paper';
@@ -28,7 +29,7 @@ interface SessionResult {
   completion_time_seconds: number
 }
 
-export default function DictationInterface({ user, textItems }: DictationInterfaceProps) {
+export default function DictationInterface({ user, textItems, shareId }: DictationInterfaceProps) {
   const { t, i18n } = useTranslation();
   const [selections, setSelections] = useState(textItems)
   const [currentSelectionIndex, setCurrentSelectionIndex] = useState(-1)
@@ -145,16 +146,21 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
     setSessionResults([...sessionResults, result])
 
-    await saveExerciseResult({
-      user_id: user.id,
-      text_item_id: result.text_item_id,
-      target_text: result.original_text,
-      user_input: result.user_input,
-      accuracy_score: result.character_accuracy,
-      mistakes_count: mode === 'typing' ? attempts - 1 : 0,
-      completion_time_seconds: completionTime,
-      completed_at: new Date().toISOString(),
-    }, 'dictation')
+    if (user) {
+      await saveExerciseResult({
+        user_id: user.id,
+        text_item_id: result.text_item_id,
+        target_text: result.original_text,
+        user_input: result.user_input,
+        accuracy_score: result.character_accuracy,
+        mistakes_count: mode === 'typing' ? attempts - 1 : 0,
+        completion_time_seconds: completionTime,
+        completed_at: new Date().toISOString(),
+      }, 'dictation')
+    } else if (shareId) {
+      // For anonymous users, just track the engagement
+      fetch(`/api/shares/${shareId}/complete-exercise`, { method: 'POST' });
+    }
   }
 
   const handleRestart = () => {
@@ -227,16 +233,20 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
 
     setSessionResults(prev => [...prev, result]);
 
-    await saveExerciseResult({
-      user_id: user.id,
-      text_item_id: result.text_item_id,
-      target_text: result.original_text,
-      user_input: result.user_input,
-      accuracy_score: result.character_accuracy,
-      mistakes_count: mode === 'typing' ? newAttempts - 1 : 0,
-      completion_time_seconds: completionTime,
-      completed_at: new Date().toISOString(),
-    }, 'dictation');
+    if (user) {
+      await saveExerciseResult({
+        user_id: user.id,
+        text_item_id: result.text_item_id,
+        target_text: result.original_text,
+        user_input: result.user_input,
+        accuracy_score: result.character_accuracy,
+        mistakes_count: mode === 'typing' ? newAttempts - 1 : 0,
+        completion_time_seconds: completionTime,
+        completed_at: new Date().toISOString(),
+      }, 'dictation');
+    } else if (shareId) {
+      fetch(`/api/shares/${shareId}/complete-exercise`, { method: 'POST' });
+    }
 
     handleNext()
   }
@@ -391,7 +401,7 @@ export default function DictationInterface({ user, textItems }: DictationInterfa
   }
 
   if (showSummary) {
-    return <SummaryScreen sessionResults={sessionResults} onRestart={handleRestart} />
+    return <SummaryScreen sessionResults={sessionResults} onRestart={handleRestart} isAnonymous={!user} />
   }
 
   const currentSelection = selections[currentSelectionIndex]

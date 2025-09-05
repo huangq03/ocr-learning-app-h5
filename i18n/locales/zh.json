@@ -108,7 +108,7 @@
   "summaryYourInput": "您的输入：",
   "summaryAccuracyTime": "准确率 / 时间",
   "summaryPracticeAgain": "再次练习",
-  "autoModeStartNotification": "听写即将开始。听到提示音后，3秒钟后将播放发音。您将有 {{timeoutValue}} 秒的时间写下您的答案。",
+  "autoModeStartNotification": "听写即将开始。听到提示音3秒钟后将播放发音。您将有 {{timeoutValue}} 秒的时间写下您的答案。",
   "dictationReadyTitle": "准备好听写了吗？",
   "dictationReadySubtitle": "点击下面的按钮开始听写。",
   "startSessionButton": "开始听写",
@@ -188,7 +188,8 @@
     "summaryAgain": "重来",
     "summaryHard": "困难",
     "summaryGood": "良好",
-    "summaryEasy": "简单"
+    "summaryEasy": "简单",
+    "signUpPrompt": "喜欢这个功能吗？注册一个账户来保存您的进度并创建您自己的学习集！"
   },
   "items": {
     "logInPrompt": "请登录以查看您的项目。",

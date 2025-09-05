@@ -50,7 +50,8 @@ const calculateSm2 = (item: any, quality: number) => {
 
 interface StudyInterfaceProps {
     initialItems: any[];
-    user: User;
+    user?: User;
+    shareId?: string;
 }
 
 interface SessionStats {
@@ -60,7 +61,7 @@ interface SessionStats {
     easy: number;
 }
 
-export default function StudyInterface({ initialItems, user }: StudyInterfaceProps) {
+export default function StudyInterface({ initialItems, user, shareId }: StudyInterfaceProps) {
     const { t, i18n } = useTranslation();
 
     const router = useRouter();
@@ -88,7 +89,6 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
         setIsAnimating(true);
 
         const currentItem = items[currentIndex];
-        const updatedSchedule = calculateSm2(currentItem, quality);
 
         // Update stats
         if (quality === 0) setSessionStats(prev => ({ ...prev, again: prev.again + 1 }));
@@ -96,27 +96,34 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
         else if (quality === 4) setSessionStats(prev => ({ ...prev, good: prev.good + 1 }));
         else if (quality === 5) setSessionStats(prev => ({ ...prev, easy: prev.easy + 1 }));
 
-        // Save the recitation exercise result
-        const qualityToAccuracyMap: { [key: number]: number } = {
-            0: 0,   // Again
-            3: 50,  // Hard
-            4: 80,  // Good
-            5: 100, // Easy
-        };
+        // --- Conditional Logic for Saving/Tracking ---
+        if (user) {
+            // For logged-in users, calculate and save the full result
+            const updatedSchedule = calculateSm2(currentItem, quality);
+            const qualityToAccuracyMap: { [key: number]: number } = {
+                0: 0,   // Again
+                3: 50,  // Hard
+                4: 80,  // Good
+                5: 100, // Easy
+            };
 
-        await saveExerciseResult({
-            user_id: user.id,
-            text_item_id: currentItem.id,
-            target_text: currentItem.content,
-            user_input: "[recited]",
-            accuracy_score: qualityToAccuracyMap[quality],
-            mistakes_count: 0,
-            completion_time_seconds: 0, // Not tracked in this interface
-            details: { self_assessed_quality: quality },
-            completed_at: new Date().toISOString(),
-        }, 'recitation');
-
-        await updateStudyScheduleAction(currentItem.id, updatedSchedule);
+            await saveExerciseResult({
+                user_id: user.id,
+                text_item_id: currentItem.id,
+                target_text: currentItem.content,
+                user_input: "[recited]",
+                accuracy_score: qualityToAccuracyMap[quality],
+                mistakes_count: 0,
+                completion_time_seconds: 0, // Not tracked in this interface
+                details: { self_assessed_quality: quality },
+                completed_at: new Date().toISOString(),
+            }, 'recitation');
+            await updateStudyScheduleAction(currentItem.id, updatedSchedule);
+        } else if (shareId) {
+            // For anonymous users, just track the engagement
+            fetch(`/api/shares/${shareId}/complete-exercise`, { method: 'POST' });
+        }
+        // --- End of Conditional Logic ---
 
         // Slide out to the left
         setAnimationClass('transform -translate-x-full');
@@ -160,7 +167,14 @@ export default function StudyInterface({ initialItems, user }: StudyInterfacePro
                         <div className="flex flex-col items-center"><Meh className="w-8 h-8 text-yellow-500" /><span>{sessionStats.good} {t('study.summaryGood')}</span></div>
                         <div className="flex flex-col items-center"><Smile className="w-8 h-8 text-green-500" /><span>{sessionStats.easy} {t('study.summaryEasy')}</span></div>
                     </div>
-                    <Button onClick={() => router.push('/dashboard')}>{t('study.backToDashboard')}</Button>
+                    {user ? (
+                        <Button onClick={() => router.push('/dashboard')}>{t('study.backToDashboard')}</Button>
+                    ) : (
+                        <div className="text-center">
+                            <p className="mb-4">{t('study.signUpPrompt')}</p>
+                            <Button onClick={() => router.push('/auth/sign-up')}>{t('signUp.signUpButton')}</Button>
+                        </div>
+                    )}
                 </Card>
             </div>
         );

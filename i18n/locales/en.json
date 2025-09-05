@@ -188,7 +188,8 @@
     "summaryAgain": "Again",
     "summaryHard": "Hard",
     "summaryGood": "Good",
-    "summaryEasy": "Easy"
+    "summaryEasy": "Easy",
+    "signUpPrompt": "Like this? Sign up to save your progress and create your own study sets!"
   },
   "items": {
     "logInPrompt": "Please log in to see your items.",
