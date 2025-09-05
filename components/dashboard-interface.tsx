@@ -10,6 +10,7 @@ import type { User } from "@supabase/supabase-js"
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import ItemGroup from "@/components/item-group";
+import { ShareStatsCard } from "@/components/share-stats-card";
 import { getDashboardData } from "@/lib/actions";
 
 interface DashboardStats {
@@ -46,15 +47,17 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
     studyTimeHours: 0,
   })
   const [recentItemGroups, setRecentItemGroups] = useState<Document[]>([])
+  const [shareStats, setShareStats] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const data = await getDashboardData(user.id);
+        const data = await getDashboardData();
         if (data && !data.error) {
           setStats(data.stats);
           setRecentItemGroups(data.recentDocuments);
+          setShareStats(data.shareStats);
         } else if (data && data.error) {
           console.error("Error fetching dashboard data:", data.error);
         }
@@ -66,7 +69,7 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
     }
 
     fetchDashboardData()
-  }, [user.id])
+  }, [])
 
   if (isLoading) {
     return (
@@ -181,6 +184,10 @@ export default function DashboardInterface({ user }: DashboardInterfaceProps) {
             </div>
           </Card>
         )}
+
+        <div className="mt-8">
+          <ShareStatsCard stats={shareStats} />
+        </div>
       </div>
     </div>
   )

@@ -652,4 +652,23 @@ export class SupabaseDatabase implements Database {
       return { error: "Failed to fetch shared set." };
     }
   }
+
+  async getShareStats(userId: string) {
+    if (!isSupabaseConfigured) return { error: "Supabase is not configured" };
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+
+    try {
+      const { data, error } = await supabase.rpc('get_user_share_stats', { p_user_id: userId });
+
+      if (error) {
+        console.error("Error fetching share stats:", error);
+        return { error: "Failed to fetch share stats." };
+      }
+      return { stats: data };
+    } catch (error) {
+      console.error("Error fetching share stats:", error);
+      return { error: "Failed to fetch share stats." };
+    }
+  }
 }

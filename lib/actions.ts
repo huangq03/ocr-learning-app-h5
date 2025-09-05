@@ -84,7 +84,9 @@ async function getUser() {
 export async function getDashboardData() {
   const user = await getUser()
   const db = createDatabase()
-  return await db.getDashboardData(user.id)
+  const dashboardData = await db.getDashboardData(user.id)
+  const shareStats = await db.getShareStats(user.id)
+  return { ...dashboardData, shareStats: shareStats.stats };
 }
 
 export async function saveExerciseResult(result: any, exerciseType: 'dictation' | 'recitation') {

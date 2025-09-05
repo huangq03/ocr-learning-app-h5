@@ -35,6 +35,7 @@ export interface Database {
   trackEngagement: (sharedSetId: string) => Promise<void>
   createSharedSet: (userId: string, title: string, itemIds: string[]) => Promise<{ id?: string; error?: string }>
   getSharedSet: (id: string) => Promise<{ set?: any; items?: any[]; error?: string }>
+  getShareStats: (userId: string) => Promise<{ stats: any[]; error?: string }>
 
   // Profile methods
   getProfilePageData: (userId: string) => Promise<any>

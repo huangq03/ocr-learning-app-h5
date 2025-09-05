@@ -60,4 +60,36 @@ BEGIN
 
   RETURN new_set_id;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
+
+-- Create a function to get all share stats for a user
+CREATE OR REPLACE FUNCTION get_user_share_stats(p_user_id UUID)
+RETURNS TABLE(
+    id UUID,
+    title TEXT,
+    engagement_count INTEGER,
+    created_at TIMESTAMPTZ,
+    total_views BIGINT,
+    unique_visitors BIGINT
+) AS $
+BEGIN
+    RETURN QUERY
+    SELECT
+        ss.id,
+        ss.title,
+        ss.engagement_count,
+        ss.created_at,
+        COUNT(ssv.id) AS total_views,
+        COUNT(DISTINCT ssv.visitor_hash) AS unique_visitors
+    FROM
+        shared_sets ss
+    LEFT JOIN
+        shared_set_visits ssv ON ss.id = ssv.shared_set_id
+    WHERE
+        ss.owner_user_id = p_user_id
+    GROUP BY
+        ss.id
+    ORDER BY
+        ss.created_at DESC;
+END;
+$ LANGUAGE plpgsql;

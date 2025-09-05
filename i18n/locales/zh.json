@@ -53,7 +53,7 @@
   "untitledDocument": "无标题文档",
   "backButton": "返回",
   "createStudySessionTitle": "创建学习环节",
-  "createStudySessionSubtitle": "从您的文档中选择要练习的项目。",
+  "createStudySessionSubtitle": "请选择要练习的项目。",
   "selectAllItems": "选择全部项目",
   "selectItemsAlert": "请至少选择一个项目进行学习。",
   "startRecitation": "开始朗读",
@@ -118,7 +118,16 @@
   "addFirstDocument": "添加您的第一份文档",
   "dashboard": {
     "title": "仪表板",
-    "description": "欢迎来到您的仪表板。"
+    "description": "欢迎来到您的仪表板。",
+    "shareStatsTitle": "分享内容分析",
+    "shareStatsLinkCopiedTitle": "链接已复制！",
+    "shareStatsLinkCopiedDesc": "分享链接已复制到您的剪贴板。",
+    "tableTitle": "标题",
+    "tableViews": "浏览量",
+    "tableVisitors": "访客数",
+    "tableEngagements": "互动次数",
+    "tableCreated": "创建时间",
+    "tableLink": "链接"
   },
   "landingPage": {
     "title": "OCR学习",

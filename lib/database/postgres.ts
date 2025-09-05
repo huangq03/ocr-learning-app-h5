@@ -460,6 +460,34 @@ export class PostgresDatabase implements Database {
     }
   }
 
+  async getShareStats(userId: string) {
+    try {
+      const result = await this.pool.query(`
+        SELECT
+            ss.id,
+            ss.title,
+            ss.engagement_count,
+            ss.created_at,
+            COUNT(ssv.id) AS total_views,
+            COUNT(DISTINCT ssv.visitor_hash) AS unique_visitors
+        FROM
+            shared_sets ss
+        LEFT JOIN
+            shared_set_visits ssv ON ss.id = ssv.shared_set_id
+        WHERE
+            ss.owner_user_id = $1
+        GROUP BY
+            ss.id
+        ORDER BY
+            ss.created_at DESC;
+      `, [userId]);
+      return { stats: result.rows };
+    } catch (error) {
+      console.error("Error fetching share stats:", error);
+      return { error: "Failed to fetch share stats." };
+    }
+  }
+
   // Profile methods
   async getProfilePageData(userId: string) {
     try {
