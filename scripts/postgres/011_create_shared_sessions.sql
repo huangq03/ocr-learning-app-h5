@@ -33,11 +33,11 @@ CREATE INDEX IF NOT EXISTS idx_shared_set_visits_visitor_hash ON public.shared_s
 
 -- Create a function to increment the engagement count for a shared set
 CREATE OR REPLACE FUNCTION increment_engagement_count(set_id UUID)
-RETURNS VOID AS $
+RETURNS VOID AS $$
   UPDATE shared_sets
   SET engagement_count = engagement_count + 1
   WHERE id = set_id;
-$ LANGUAGE sql;
+$$ LANGUAGE sql;
 
 -- Create a function to create a shared set and link items atomically
 CREATE OR REPLACE FUNCTION create_shared_set_and_link_items(
@@ -45,7 +45,7 @@ CREATE OR REPLACE FUNCTION create_shared_set_and_link_items(
   p_title TEXT,
   p_item_ids UUID[]
 )
-RETURNS UUID AS $
+RETURNS UUID AS $$
 DECLARE
   new_set_id UUID;
 BEGIN
@@ -60,4 +60,4 @@ BEGIN
 
   RETURN new_set_id;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
