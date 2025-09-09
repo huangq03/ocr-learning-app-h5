@@ -250,7 +250,7 @@ export class PostgresDatabase implements Database {
       `;
 
       if (studySessionItems && studySessionItems.length > 0) {
-        const placeholders = studySessionItems.map(i => `'${i}'`).join(",");
+        const placeholders = studySessionItems.map(i => `'${i.content}'`).join(",");
         const query = `${baseQuery} WHERE srs.user_id = $1 AND ti.content IN (${placeholders})`;
         result = await this.pool.query(query, [userId]);
       } else {
