@@ -55,6 +55,8 @@ export function DictationItemView({
     }
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL;
+
   return (
     <div className="p-4 max-w-2xl mx-auto relative overflow-hidden">
       <Card className={`p-6 relative transition-transform duration-300 ease-in-out ${getAnimationClass('none')}`}>
@@ -88,6 +90,27 @@ export function DictationItemView({
                 {t('playSoundButton')}
               </Button>
               <p className="text-sm text-gray-500 mt-2">{t('clickToHearAudio')}</p>
+
+              {currentSelection.name && (
+                <div className="mt-4 text-center space-y-2">
+                    <div className="text-sm text-gray-500 flex items-center justify-center space-x-4">
+                        {currentSelection.american_phonetic_symbol && <span>US: /{currentSelection.american_phonetic_symbol}/</span>}
+                        {currentSelection.english_phonetic_symbol && <span>UK: /{currentSelection.english_phonetic_symbol}/</span>}
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                        {currentSelection.us_pronunciation && (
+                            <Button variant="outline" size="sm" onClick={() => new Audio(baseUrl + currentSelection.us_pronunciation).play()}>
+                                <span className="text-xs mr-1">US</span> <Volume2 className="h-4 w-4" />
+                            </Button>
+                        )}
+                        {currentSelection.en_pronunciation && (
+                            <Button variant="outline" size="sm" onClick={() => new Audio(baseUrl + currentSelection.en_pronunciation).play()}>
+                                <span className="text-xs mr-1">UK</span> <Volume2 className="h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
+                </div>
+              )}
         </div>
 
         {mode === 'typing' ? (

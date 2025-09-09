@@ -301,7 +301,15 @@ export default function DictationInterface({ user, textItems, shareId }: Dictati
     const currentSelection = selections[currentSelectionIndex];
     if (!currentSelection) return;
 
-    speakText(currentSelection.content, 'en');
+    const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL || '';
+
+    if (currentSelection.us_pronunciation) {
+        new Audio(baseUrl + currentSelection.us_pronunciation).play();
+    } else if (currentSelection.en_pronunciation) {
+        new Audio(baseUrl + currentSelection.en_pronunciation).play();
+    } else {
+        speakText(currentSelection.content, 'en');
+    }
 
     if (autoMode && autoSessionStarted) {
       setTimeLeft(timeoutValue);
