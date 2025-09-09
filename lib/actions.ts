@@ -203,12 +203,12 @@ export async function getEnrichedDocumentItemsAction(documentId: string) {
 export async function getItemsPageData(filter?: string | null) {
   const user = await getUser()
   const db = createDatabase()
-  const { items, error } = await db.getItemsPageData(user.id, filter)
+  const { documents, error } = await db.getItemsPageData(user.id, filter)
   if (error) {
     return { error }
   }
 
-  return { items, user }
+  return { documents, user }
 }
 
 export async function getProfilePageData() {

@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import '@/i18n';
 import ItemGroup from '@/components/item-group';
 import { getItemsPageData, getPageSession } from '@/lib/actions';
-import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
@@ -23,6 +22,7 @@ function ItemsManagementContent() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const { session: pageSession } = await getPageSession();
         setSession(pageSession);
@@ -49,49 +49,47 @@ function ItemsManagementContent() {
     fetchData();
   }, [t, filter]);
 
+  const pageTitle = filter === 'mastered' ? t('items.masteredItemsTitle') : t('items.pageTitle');
+
   if (loading) {
-    return (
-      <div className="p-4 sm:p-6 md:p-8">
-        <p>{t('items.loading')}</p>
-      </div>
-    );
+    return <div className="p-8 text-center">{t('items.loading')}</div>;
   }
 
   if (!session) {
-    return (
-      <div className="p-4 sm:p-6 md:p-8">
-        <p>{t('items.logInPrompt')}</p>
-      </div>
-    );
+    return <div className="p-8 text-center">{t('items.logInPrompt')}</div>;
   }
 
   if (error) {
-    return (
-      <div className="p-4 sm:p-6 md:p-8">
-        <p>{error}</p>
-      </div>
-    );
+    return <div className="p-8 text-center text-red-500">{error}</div>;
   }
-
-  const pageTitle = filter === 'mastered' ? t('items.masteredItemsTitle') : t('items.pageTitle');
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center mb-6">
-            <Button variant="outline" onClick={() => router.push('/dashboard')}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                {t('documents.backToDashboard')}
-            </Button>
+          <Button variant="outline" onClick={() => router.push('/dashboard')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {t('documents.backToDashboard')}
+          </Button>
         </div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">{pageTitle}</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">{pageTitle}</h1>
+
+        <div className="flex space-x-1 border-b mb-4">
+          <Button variant={!filter ? 'ghost' : 'ghost'} className={`border-b-2 ${!filter ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500'}`} onClick={() => router.push('/items')}>
+            {t('items.pageTitle')}
+          </Button>
+          <Button variant={filter === 'mastered' ? 'ghost' : 'ghost'} className={`border-b-2 ${filter === 'mastered' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500'}`} onClick={() => router.push('/items?filter=mastered')}>
+            {t('items.masteredItemsTitle')}
+          </Button>
+        </div>
+
         <div className="space-y-6">
           {documents && documents.length > 0 ? (
             documents.map(doc => (
-              <ItemGroup key={doc.id} document={doc as any} />
+              <ItemGroup key={doc.id} document={doc} />
             ))
           ) : (
-            <p>{t('items.noItemsFound')}</p>
+            <p className="p-8 text-center text-gray-500">{t('items.noItemsFound')}</p>
           )}
         </div>
       </div>
@@ -101,7 +99,7 @@ function ItemsManagementContent() {
 
 export default function ItemsManagementPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
       <ItemsManagementContent />
     </Suspense>
   );

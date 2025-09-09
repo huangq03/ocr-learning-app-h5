@@ -8,32 +8,40 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
 import '@/i18n';
 import { speakText } from '@/lib/speech';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface Document {
-  id: string;
-  created_at: string;
-  recognized_text: {
-    items: string[];
-    cleaned_text: string;
-  };
+interface EnrichedTextItem {
+  text_item_id: string;
+  content: string;
+  is_mastered: boolean;
+  name?: string;
+  american_phonetic_symbol?: string;
+  english_phonetic_symbol?: string;
+  en_pronunciation?: string;
+  us_pronunciation?: string;
+  explanation?: string;
 }
 
-export default function ItemGroup({ document }: { document: Document }) {
-  const { t, i18n } = useTranslation();
+interface DocumentWithEnrichedItems {
+  id: string;
+  created_at: string;
+  items: EnrichedTextItem[];
+}
+
+export default function ItemGroup({ document }: { document: DocumentWithEnrichedItems }) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
-  const items = document.recognized_text?.items || [];
-  const cleaned_text = document.recognized_text?.cleaned_text || '';
+  const items = document.items || [];
+  const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL || '';
 
-  const sortedItems = [...items].sort((a, b) => {
-    const indexA = cleaned_text.indexOf(a);
-    const indexB = cleaned_text.indexOf(b);
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-    return indexA - indexB;
-  });
-
-  const handlePlay = (text: string) => {
-    speakText(text, 'en');
+  const handlePlay = (item: EnrichedTextItem) => {
+    if (item.us_pronunciation) {
+        new Audio(baseUrl + item.us_pronunciation).play();
+    } else if (item.en_pronunciation) {
+        new Audio(baseUrl + item.en_pronunciation).play();
+    } else {
+        speakText(item.content, 'en');
+    }
   };
 
   return (
@@ -46,28 +54,44 @@ export default function ItemGroup({ document }: { document: Document }) {
           <Badge variant="outline" className="mt-1">{items.length} {t('itemsCountLabel')}</Badge>
         </div>
         {items.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-          >
+          <Button variant="ghost" size="sm">
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </Button>
         )}
       </CardHeader>
       {isExpanded && (
         <CardContent>
-          <ul className="space-y-2 list-disc list-inside">
-            {sortedItems.map((item, index) => (
-              <li key={index} className="p-2 bg-gray-100 rounded-md text-gray-800 flex items-center justify-between">
-                <span>
-                  {item}
-                </span>
-                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handlePlay(item); }}>
-                  <Volume2 className='w-4 h-4' />
-                </Button>
-              </li>
-            ))}
-          </ul>
+          <TooltipProvider>
+            <ul className="space-y-1">
+              {items.map((item) => (
+                <li key={item.text_item_id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-50">
+                        <div className="flex-grow">
+                          <p className="text-sm font-medium">{item.content}</p>
+                          {item.name && (
+                            <div className="text-xs text-gray-500 flex items-center space-x-3">
+                              {item.american_phonetic_symbol && <span>US: /{item.american_phonetic_symbol}/</span>}
+                              {item.english_phonetic_symbol && <span>UK: /{item.english_phonetic_symbol}/</span>}
+                            </div>
+                          )}
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handlePlay(item); }}>
+                          <Volume2 className='w-4 h-4' />
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    {item.explanation && (
+                      <TooltipContent>
+                        <p>{item.explanation}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </li>
+              ))}
+            </ul>
+          </TooltipProvider>
         </CardContent>
       )}
     </Card>

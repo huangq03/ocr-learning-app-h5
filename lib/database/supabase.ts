@@ -497,6 +497,8 @@ export class SupabaseDatabase implements Database {
       let query = supabase
         .from('text_items')
         .select(`
+          document_id,
+          documents ( created_at, recognized_text ),
           text_item_id:id,
           content,
           is_mastered,
@@ -508,13 +510,34 @@ export class SupabaseDatabase implements Database {
         query = query.eq('is_mastered', true);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data: items, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error("Error fetching items page data:", error);
         return { error: "Failed to fetch items page data." };
       }
-      return { items: data };
+
+      const groupedByDocument = items.reduce((acc, item) => {
+        const docId = item.document_id;
+        if (!acc[docId]) {
+          acc[docId] = {
+            id: docId,
+            created_at: item.documents.created_at,
+            recognized_text: item.documents.recognized_text,
+            items: []
+          };
+        }
+        // Flatten the word data into the item
+        const enrichedItem = { ...item, ...(item.words || {}) };
+        delete enrichedItem.words; // clean up nested object
+        delete enrichedItem.documents; // clean up nested object
+        acc[docId].items.push(enrichedItem);
+        return acc;
+      }, {});
+
+      const documents = Object.values(groupedByDocument).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      return { documents };
     } catch (error) {
       console.error("Error fetching items page data:", error);
       return { error: "Failed to fetch items page data." };

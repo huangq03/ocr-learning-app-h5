@@ -385,21 +385,48 @@ export class PostgresDatabase implements Database {
 
       const query = `
         SELECT
+          d.id as document_id,
+          d.created_at as document_created_at,
+          d.recognized_text,
           ti.id as text_item_id,
           ti.content,
           ti.is_mastered,
-          w.*
+          w.name as word_name,
+          w.american_phonetic_symbol,
+          w.english_phonetic_symbol,
+          w.en_pronunciation,
+          w.us_pronunciation,
+          w.explanation
         FROM
           text_items ti
+        JOIN
+          documents d ON ti.document_id = d.id
         LEFT JOIN
           words w ON ti.word_id = w.id
         ${whereClause}
         ORDER BY
-          ti.created_at DESC;
+          d.created_at DESC, ti.created_at ASC;
       `;
 
       const result = await this.pool.query(query, params);
-      return { items: result.rows };
+
+      const groupedByDocument = result.rows.reduce((acc, row) => {
+          const { document_id, document_created_at, recognized_text, ...item } = row;
+          if (!acc[document_id]) {
+              acc[document_id] = {
+                  id: document_id,
+                  created_at: document_created_at,
+                  recognized_text: recognized_text,
+                  items: []
+              };
+          }
+          acc[document_id].items.push(item);
+          return acc;
+      }, {});
+
+      const documents = Object.values(groupedByDocument);
+      return { documents };
+
     } catch (error) {
       console.error("Error fetching items page data:", error);
       return { error: "Failed to fetch items page data." };
