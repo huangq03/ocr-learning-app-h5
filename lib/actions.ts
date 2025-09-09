@@ -190,15 +190,25 @@ export async function getDocumentById(documentId: string) {
   return { document, user }
 }
 
+export async function getEnrichedDocumentItemsAction(documentId: string) {
+  const user = await getUser();
+  const db = createDatabase();
+  const { items, error } = await db.getEnrichedDocumentItems(documentId, user.id);
+  if (error) {
+    return { error };
+  }
+  return { items };
+}
+
 export async function getItemsPageData(filter?: string | null) {
   const user = await getUser()
   const db = createDatabase()
-  const { documents, error } = await db.getItemsPageData(user.id, filter)
+  const { items, error } = await db.getItemsPageData(user.id, filter)
   if (error) {
     return { error }
   }
 
-  return { documents, user }
+  return { items, user }
 }
 
 export async function getProfilePageData() {

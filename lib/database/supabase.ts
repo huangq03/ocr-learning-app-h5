@@ -377,39 +377,45 @@ export class SupabaseDatabase implements Database {
     const supabase = createServerActionClient({ cookies: () => cookieStore })
 
     try {
-      if (studySessionItems) {
-        const { data, error } = await supabase
-          .from('spaced_repetition_schedule')
-          .select(`
-              *,
-              text_items!inner(*)
-          `)
-          .eq('user_id', userId)
-          .in('text_items.content', studySessionItems);
+      let query = supabase
+        .from('spaced_repetition_schedule')
+        .select(`
+          id, -- This is the schedule ID
+          repetition_number,
+          ease_factor,
+          interval_days,
+          text_items:text_item_id (
+            id,
+            content,
+            context,
+            user_definition,
+            words (*)
+          )
+        `)
+        .eq("user_id", userId);
 
-        if (error) {
-          console.error("Error fetching study session items:", error);
-          return { error: "Failed to fetch study session items." };
-        }
-        return { items: data };
+      if (studySessionItems && studySessionItems.length > 0) {
+        query = query.in('text_items.content', studySessionItems);
       } else {
         const today = new Date().toISOString().split("T")[0];
-        const { data, error } = await supabase
-          .from("spaced_repetition_schedule")
-          .select(`
-              *,
-              text_items:text_item_id (*)
-          `)
-          .eq("user_id", userId)
-          .eq("is_active", true)
-          .lte("next_review_date", today);
-
-        if (error) {
-          console.error("Error fetching due items:", error);
-          return { error: "Failed to fetch due items." };
-        }
-        return { items: data };
+        query = query.eq("is_active", true).lte("next_review_date", today);
       }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching study page data:", error);
+        return { error: "Failed to fetch study page data." };
+      }
+      
+      // The data structure from Supabase is nested. We need to flatten it.
+      const flattenedItems = data.map(item => ({
+        ...item,
+        content: item.text_items.content,
+        ...(item.text_items.words || {})
+      }));
+
+      return { items: flattenedItems };
     } catch (error) {
       console.error("Error fetching study page data:", error);
       return { error: "Failed to fetch study page data." };
@@ -427,18 +433,28 @@ export class SupabaseDatabase implements Database {
     try {
       const { data, error } = await supabase
         .from('text_items')
-        .select('*')
+        .select(`
+          id,
+          content,
+          words (*)
+        `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error("Error fetching text items:", error);
-        return { error: "Failed to fetch text items." };
+        console.error("Error fetching dictation page data:", error);
+        return { error: "Failed to fetch dictation page data." };
       }
-      return { items: data };
+      
+      const flattenedItems = data.map(item => ({
+        ...item,
+        ...(item.words || {})
+      }));
+
+      return { items: flattenedItems };
     } catch (error) {
-      console.error("Error fetching text items:", error);
-      return { error: "Failed to fetch text items." };
+      console.error("Error fetching dictation page data:", error);
+      return { error: "Failed to fetch dictation page data." };
     }
   }
 
@@ -478,27 +494,30 @@ export class SupabaseDatabase implements Database {
     const supabase = createServerActionClient({ cookies: () => cookieStore });
 
     try {
-      let query;
+      let query = supabase
+        .from('text_items')
+        .select(`
+          text_item_id:id,
+          content,
+          is_mastered,
+          words (*)
+        `)
+        .eq('user_id', userId);
+
       if (filter === 'mastered') {
-        query = supabase.rpc('get_mastered_documents', { p_user_id: userId });
-      } else {
-        query = supabase
-          .from('documents')
-          .select('id, created_at, recognized_text')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
+        query = query.eq('is_mastered', true);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
-        console.error("Error fetching documents for items page:", error);
-        return { error: "Failed to fetch documents for items page." };
+        console.error("Error fetching items page data:", error);
+        return { error: "Failed to fetch items page data." };
       }
-      return { documents: data };
+      return { items: data };
     } catch (error) {
-      console.error("Error fetching documents for items page:", error);
-      return { error: "Failed to fetch documents for items page." };
+      console.error("Error fetching items page data:", error);
+      return { error: "Failed to fetch items page data." };
     }
   }
 
@@ -650,6 +669,34 @@ export class SupabaseDatabase implements Database {
     } catch (error) {
       console.error("Error fetching shared set:", error);
       return { error: "Failed to fetch shared set." };
+    }
+  }
+
+  async getEnrichedDocumentItems(documentId: string, userId: string) {
+    if (!isSupabaseConfigured) return { error: "Supabase is not configured" };
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+
+    try {
+      const { data, error } = await supabase
+        .from('text_items')
+        .select(`
+          text_item_id:id,
+          content,
+          words (*)
+        `)
+        .eq('document_id', documentId)
+        .eq('user_id', userId)
+        .order('created_at');
+
+      if (error) {
+        console.error("Error fetching enriched document items:", error);
+        return { error: "Failed to fetch enriched document items." };
+      }
+      return { items: data };
+    } catch (error) {
+      console.error("Error fetching enriched document items:", error);
+      return { error: "Failed to fetch enriched document items." };
     }
   }
 

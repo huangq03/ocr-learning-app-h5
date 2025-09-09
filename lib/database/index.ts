@@ -27,7 +27,7 @@ export interface Database {
   saveExerciseResult: (result: any, exerciseType: 'dictation' | 'recitation') => Promise<{ success?: boolean; error?: string }>
 
   // Items methods
-  getItemsPageData: (userId: string, filter?: string | null) => Promise<{ documents: any[]; error?: string }>
+  getItemsPageData: (userId: string, filter?: string | null) => Promise<{ items: any[]; error?: string }>
   getTextItemsForDocument: (documentId: string, userId: string) => Promise<{ items: any[]; error?: string }>
 
   // Share and Tracking methods
@@ -36,6 +36,7 @@ export interface Database {
   createSharedSet: (userId: string, title: string, itemIds: string[]) => Promise<{ id?: string; error?: string }>
   getSharedSet: (id: string) => Promise<{ set?: any; items?: any[]; error?: string }>
   getShareStats: (userId: string) => Promise<{ stats: any[]; error?: string }>
+  getEnrichedDocumentItems: (documentId: string, userId: string) => Promise<{ items: any[]; error?: string }>
 
   // Profile methods
   getProfilePageData: (userId: string) => Promise<any>

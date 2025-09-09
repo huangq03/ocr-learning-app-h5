@@ -224,33 +224,44 @@ export class PostgresDatabase implements Database {
 
   async getStudyPageData(userId: string, studySessionItems?: string[]) {
     try {
+      let result: QueryResult;
+      const baseQuery = `
+        SELECT
+          srs.id, -- This is the schedule ID
+          srs.repetition_number,
+          srs.ease_factor,
+          srs.interval_days,
+          ti.id as text_item_id,
+          ti.content,
+          ti.context,
+          ti.user_definition,
+          w.name as word_name,
+          w.american_phonetic_symbol,
+          w.english_phonetic_symbol,
+          w.en_pronunciation,
+          w.us_pronunciation,
+          w.explanation
+        FROM
+          spaced_repetition_schedule srs
+        JOIN
+          text_items ti ON srs.text_item_id = ti.id
+        LEFT JOIN
+          words w ON ti.word_id = w.id
+      `;
+
       if (studySessionItems && studySessionItems.length > 0) {
-        const placeholders = studySessionItems.map(i => `'${i.content}'`).join(",")
-        const query = `
-          SELECT srs.*, ti.* 
-          FROM spaced_repetition_schedule srs
-          JOIN text_items ti ON srs.text_item_id = ti.id
-          WHERE srs.user_id = $1 AND ti.content IN (${placeholders})
-        `
-        const values = [userId]
-        const result = await this.pool.query(query, values)
-        return { items: result.rows }
+        const placeholders = studySessionItems.map(i => `'${i}'`).join(",");
+        const query = `${baseQuery} WHERE srs.user_id = $1 AND ti.content IN (${placeholders})`;
+        result = await this.pool.query(query, [userId]);
       } else {
-        const today = new Date().toISOString().split("T")[0]
-        const result = await this.pool.query(
-          `
-          SELECT srs.*, ti.content as content
-          FROM spaced_repetition_schedule srs
-          JOIN text_items ti ON srs.text_item_id = ti.id
-          WHERE srs.user_id = $1 AND srs.is_active = TRUE AND srs.next_review_date <= $2
-          `,
-          [userId, today]
-        )
-        return { items: result.rows }
+        const today = new Date().toISOString().split("T")[0];
+        const query = `${baseQuery} WHERE srs.user_id = $1 AND srs.is_active = TRUE AND srs.next_review_date <= $2`;
+        result = await this.pool.query(query, [userId, today]);
       }
+      return { items: result.rows };
     } catch (error) {
-      console.error("Error fetching study page data:", error)
-      return { error: "Failed to fetch study page data." }
+      console.error("Error fetching study page data:", error);
+      return { error: "Failed to fetch study page data." };
     }
   }
 
@@ -316,14 +327,24 @@ export class PostgresDatabase implements Database {
   // Exercise methods
   async getDictationPageData(userId: string) {
     try {
-      const result = await this.pool.query(
-        "SELECT * FROM text_items WHERE user_id = $1 ORDER BY created_at DESC",
-        [userId]
-      )
-      return { items: result.rows }
+      const result = await this.pool.query(`
+        SELECT
+          ti.id as text_item_id,
+          ti.content,
+          w.*
+        FROM
+          text_items ti
+        LEFT JOIN
+          words w ON ti.word_id = w.id
+        WHERE
+          ti.user_id = $1
+        ORDER BY
+          ti.created_at DESC;
+      `, [userId]);
+      return { items: result.rows };
     } catch (error) {
-      console.error("Error fetching text items:", error)
-      return { error: "Failed to fetch text items." }
+      console.error("Error fetching dictation page data:", error);
+      return { error: "Failed to fetch dictation page data." };
     }
   }
 
@@ -355,20 +376,33 @@ export class PostgresDatabase implements Database {
   // Items methods
   async getItemsPageData(userId: string, filter?: string | null) {
     try {
-      let query;
+      let whereClause = 'WHERE ti.user_id = $1';
       const params: any[] = [userId];
 
       if (filter === 'mastered') {
-        query = "SELECT * FROM get_mastered_documents($1)";
-      } else {
-        query = "SELECT id, created_at, recognized_text FROM documents WHERE user_id = $1 ORDER BY created_at DESC";
+        whereClause += ' AND ti.is_mastered = TRUE';
       }
 
+      const query = `
+        SELECT
+          ti.id as text_item_id,
+          ti.content,
+          ti.is_mastered,
+          w.*
+        FROM
+          text_items ti
+        LEFT JOIN
+          words w ON ti.word_id = w.id
+        ${whereClause}
+        ORDER BY
+          ti.created_at DESC;
+      `;
+
       const result = await this.pool.query(query, params);
-      return { documents: result.rows };
+      return { items: result.rows };
     } catch (error) {
-      console.error("Error fetching documents for items page:", error);
-      return { error: "Failed to fetch documents for items page." };
+      console.error("Error fetching items page data:", error);
+      return { error: "Failed to fetch items page data." };
     }
   }
 
@@ -457,6 +491,29 @@ export class PostgresDatabase implements Database {
     } catch (error) {
       console.error("Error fetching shared set:", error);
       return { error: "Failed to fetch shared set." };
+    }
+  }
+
+  async getEnrichedDocumentItems(documentId: string, userId: string) {
+    try {
+      const result = await this.pool.query(`
+        SELECT
+          ti.id as text_item_id,
+          ti.content,
+          w.*
+        FROM
+          text_items ti
+        LEFT JOIN
+          words w ON ti.word_id = w.id
+        WHERE
+          ti.document_id = $1 AND ti.user_id = $2
+        ORDER BY
+          ti.created_at;
+      `, [documentId, userId]);
+      return { items: result.rows };
+    } catch (error) {
+      console.error("Error fetching enriched document items:", error);
+      return { error: "Failed to fetch enriched document items." };
     }
   }
 
