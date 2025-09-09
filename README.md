@@ -8,6 +8,8 @@ This is a full-stack web application built with Next.js that allows users to cap
 - **OCR Processing**: Extracts text from images using a backend OCR engine.
 - **Smart Item Detection**: Intelligently scans the extracted text to find and suggest potential items (words and phrases) for study, highlighting them for review.
 - **Interactive Approval**: Users can click on highlighted text or use an "Add" button to approve suggested items and build their study list.
+- **Enriched Learning Experience**: Study items are automatically linked to a rich dictionary, providing phonetic symbols, US/UK audio pronunciations, and definitions directly in the study interface and item lists.
+- **Personal Glossary**: The 'All Items' page acts as a personal, interactive glossary, displaying all learned words with their full dictionary details.
 - **Study Session Creation**: Users can select which items from a document they want to study.
 - **Multiple Study Modes**:
   - **Recitation**: A flashcard-style mode for reading and reviewing items.
@@ -114,6 +116,10 @@ Run the following scripts in your PostgreSQL client **one by one, in this specif
 9.  `scripts/postgres/009_add_exercises_table.sql`
 10. `scripts/010_create_get_mastered_documents_function.sql`
 11. `scripts/postgres/011_create_shared_sessions.sql`
+12. `scripts/postgres/012_create_words_table.sql`
+13. `scripts/postgres/013_add_word_id_to_text_items.sql`
+14. `scripts/postgres/014_create_temp_pronunciations_table.sql`
+15. `scripts/postgres/015_create_temp_dictionary_table.sql`
 
 After running these scripts, your database will be ready.
 
