@@ -5,17 +5,21 @@ RETURNS TABLE(id UUID, user_id UUID, document_id UUID, content TEXT, item_type c
 DECLARE
     item_text TEXT;
     v_text_item_id UUID;
+    v_word_id UUID;
     schedule_exists BOOLEAN;
     inserted_count INTEGER := 0;
     newly_inserted_items UUID[] := ARRAY[]::UUID[];
 BEGIN
     FOREACH item_text IN ARRAY p_items
     LOOP
-        -- Get or create a text_item
-        INSERT INTO text_items AS ti (user_id, document_id, content, item_type)
-        VALUES (p_user_id, p_document_id, item_text, CASE WHEN array_length(string_to_array(item_text, ' '), 1) > 1 THEN 'phrase' ELSE 'word' END)
+        -- Look up the word in the dictionary
+        SELECT id INTO v_word_id FROM words WHERE name = item_text;
+
+        -- Get or create a text_item, now with word_id
+        INSERT INTO text_items AS ti (user_id, document_id, content, item_type, word_id)
+        VALUES (p_user_id, p_document_id, item_text, CASE WHEN array_length(string_to_array(item_text, ' '), 1) > 1 THEN 'phrase' ELSE 'word' END, v_word_id)
         ON CONFLICT (user_id, document_id, content)
-        DO UPDATE SET updated_at = NOW()  -- Update timestamp even if item exists
+        DO UPDATE SET updated_at = NOW(), word_id = v_word_id -- Also update word_id on conflict
         RETURNING ti.id INTO v_text_item_id;
 
         -- If the insert didn't return an ID (meaning it was an existing item), get the ID
