@@ -554,6 +554,19 @@ export class PostgresDatabase implements Database {
     }
   }
 
+  async getWordsData(words: string[]) {
+    try {
+      const result = await this.pool.query(
+        'SELECT * FROM words WHERE name = ANY($1)',
+        [words]
+      );
+      return { words: result.rows };
+    } catch (error) {
+      console.error("Error fetching words data:", error);
+      return { error: "Failed to fetch words data." };
+    }
+  }
+
   async getShareStats(userId: string) {
     try {
       const result = await this.pool.query(`

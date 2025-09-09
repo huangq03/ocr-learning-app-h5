@@ -731,6 +731,28 @@ export class SupabaseDatabase implements Database {
     }
   }
 
+  async getWordsData(words: string[]) {
+    if (!isSupabaseConfigured) return { error: "Supabase is not configured" };
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+
+    try {
+      const { data, error } = await supabase
+        .from('words')
+        .select('*')
+        .in('name', words);
+
+      if (error) {
+        console.error("Error fetching words data:", error);
+        return { error: "Failed to fetch words data." };
+      }
+      return { words: data };
+    } catch (error) {
+      console.error("Error fetching words data:", error);
+      return { error: "Failed to fetch words data." };
+    }
+  }
+
   async getShareStats(userId: string) {
     if (!isSupabaseConfigured) return { error: "Supabase is not configured" };
     const cookieStore = await cookies();

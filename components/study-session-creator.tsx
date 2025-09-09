@@ -1,28 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BookOpen, Headphones, ArrowLeft, BrainCircuit, Volume2 } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { useToast } from '@/hooks/use-toast';
-import { addToStudyPlanAction } from '@/lib/actions';
+import { addToStudyPlanAction, getWordsDataAction } from '@/lib/actions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface EnrichedTextItem {
-  text_item_id: string;
-  content: string;
-  // All fields from the 'words' table are available here, e.g.:
-  name?: string;
+interface Document {
+  id: string;
+  user_id: string;
+  created_at: string;
+  image_path: string;
+  recognized_text: {
+    items: string[];
+    cleaned_text: string;
+  };
+}
+
+interface WordData {
+  name: string;
   american_phonetic_symbol?: string;
   english_phonetic_symbol?: string;
   en_pronunciation?: string;
@@ -30,35 +33,47 @@ interface EnrichedTextItem {
   explanation?: string;
 }
 
-interface StudySessionCreatorProps {
-  items: EnrichedTextItem[];
-  documentId: string;
-}
-
-export default function StudySessionCreator({ items: allItems, documentId }: StudySessionCreatorProps) {
+export default function StudySessionCreator({ document }: { document: Document }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { toast } = useToast();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [enrichedData, setEnrichedData] = useState<Map<string, WordData>>(new Map());
+  const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL || '';
+
+  const allItems = (document.recognized_text?.items || []).sort((a, b) => {
+    const cleaned_text = document.recognized_text?.cleaned_text || '';
+    const indexA = cleaned_text.indexOf(a);
+    const indexB = cleaned_text.indexOf(b);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+
+  useEffect(() => {
+    const fetchEnrichedData = async () => {
+      if (allItems.length > 0) {
+        const { wordsData, error } = await getWordsDataAction(allItems);
+        if (wordsData) {
+          const dataMap = new Map(wordsData.map(word => [word.name, word]));
+          setEnrichedData(dataMap);
+        }
+      }
+    };
+    fetchEnrichedData();
+  }, [document]);
 
   const handleToggleAll = (checked: boolean) => {
-    setSelectedItems(checked ? allItems.map(item => item.content) : []);
+    setSelectedItems(checked ? allItems : []);
   };
 
-  const handleToggleItem = (itemContent: string, checked: boolean) => {
+  const handleToggleItem = (item: string, checked: boolean) => {
     if (checked) {
-      setSelectedItems((prev) => [...prev, itemContent]);
+      setSelectedItems((prev) => [...prev, item]);
     } else {
-      setSelectedItems((prev) => prev.filter((i) => i !== itemContent));
+      setSelectedItems((prev) => prev.filter((i) => i !== item));
     }
-  };
-
-  const addToStudyPlan = async (items: string[]) => {
-    setIsLoading(true);
-    const result = await addToStudyPlanAction(documentId, items);
-    setIsLoading(false);
-    return result;
   };
 
   const handleStartSession = async (type: 'recitation' | 'dictation') => {
@@ -67,23 +82,10 @@ export default function StudySessionCreator({ items: allItems, documentId }: Stu
       return;
     }
 
-    const cleaned_text = document.recognized_text?.cleaned_text || '';
-    const sortedSelectedItems = [...selectedItems].sort((a, b) => {
-        const indexA = cleaned_text.indexOf(a);
-        const indexB = cleaned_text.indexOf(b);
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA - indexB;
-    });
-
-    const { insertedItems, error } = await addToStudyPlan(sortedSelectedItems);
+    const { insertedItems, error } = await addToStudyPlanAction(document.id, selectedItems);
 
     if (error) {
-      toast({
-        title: <span className="text-white">{t('errorAddToStudyPlan')}</span>,
-        description: <span className="text-white">{error}</span>,
-        variant: 'destructive',
-      });
+      toast({ title: <span className="text-white">{t('errorAddToStudyPlan')}</span>, description: <span className="text-white">{error}</span>, variant: 'destructive' });
       return;
     }
 
@@ -102,23 +104,9 @@ export default function StudySessionCreator({ items: allItems, documentId }: Stu
       return;
     }
 
-    const cleaned_text = document.recognized_text?.cleaned_text || '';
-    const sortedSelectedItems = [...selectedItems].sort((a, b) => {
-        const indexA = cleaned_text.indexOf(a);
-        const indexB = cleaned_text.indexOf(b);
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA - indexB;
-    });
-
-    const { insertedCount, error } = await addToStudyPlan(sortedSelectedItems);
+    const { insertedCount, error } = await addToStudyPlanAction(document.id, selectedItems);
     if (error) {
-      console.error('Error adding items to study plan:', error);
-      toast({
-        title: <span className="text-white">{t('errorAddToStudyPlan')}</span>,
-        description: <span className="text-white">{error}</span>,
-        variant: 'destructive',
-      });
+      toast({ title: <span className="text-white">{t('errorAddToStudyPlan')}</span>, description: <span className="text-white">{error}</span>, variant: 'destructive' });
     } else {
       if (insertedCount && insertedCount > 0) {
         toast({ title: t('successAddToStudyPlan'), description: t('successAddToStudyPlanDesc', { count: insertedCount }) });
@@ -129,7 +117,15 @@ export default function StudySessionCreator({ items: allItems, documentId }: Stu
     }
   };
 
-  const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL;
+  const handlePlay = (item: WordData) => {
+    if (item.us_pronunciation) {
+        new Audio(baseUrl + item.us_pronunciation).play();
+    } else if (item.en_pronunciation) {
+        new Audio(baseUrl + item.en_pronunciation).play();
+    } else if (item.name) {
+        speakText(item.name, 'en');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 md:p-8">
@@ -156,45 +152,32 @@ export default function StudySessionCreator({ items: allItems, documentId }: Stu
               <ScrollArea className="h-64 w-full border-t pt-4">
                 <TooltipProvider>
                   <div className="space-y-2">
-                    {allItems.map((item, index) => (
-                      <Tooltip key={item.text_item_id}>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100">
-                            <Checkbox
-                              id={`item-${index}`}
-                              checked={selectedItems.includes(item.content)}
-                              onCheckedChange={(checked) => handleToggleItem(item.content, !!checked)}
-                            />
-                            <div className="flex-grow">
-                              <label htmlFor={`item-${index}`} className="text-sm font-medium">{item.content}</label>
-                              {item.name && (
-                                <div className="text-xs text-gray-500 flex items-center space-x-2">
-                                  {item.american_phonetic_symbol && <span>US: /{item.american_phonetic_symbol}/</span>}
-                                  {item.english_phonetic_symbol && <span>UK: /{item.english_phonetic_symbol}/</span>}
-                                </div>
-                              )}
-                            </div>
-                            {item.us_pronunciation && (
-                              <Button variant="ghost" size="icon" onClick={() => new Audio(baseUrl + item.us_pronunciation).play()}>
-                                <Volume2 className="h-4 w-4" />
-                                <span className="sr-only">Play US pronunciation</span>
-                              </Button>
-                            )}
-                            {item.en_pronunciation && (
-                              <Button variant="ghost" size="icon" onClick={() => new Audio(baseUrl + item.en_pronunciation).play()}>
-                                <Volume2 className="h-4 w-4" />
-                                <span className="sr-only">Play UK pronunciation</span>
-                              </Button>
+                    {allItems.map((item, index) => {
+                      const wordData = enrichedData.get(item);
+                      return (
+                        <div key={index} className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100">
+                          <Checkbox
+                            id={`item-${index}`}
+                            checked={selectedItems.includes(item)}
+                            onCheckedChange={(checked) => handleToggleItem(item, !!checked)}
+                          />
+                          <div className="flex-grow">
+                            <label htmlFor={`item-${index}`} className="text-sm font-medium">{item}</label>
+                            {wordData && (
+                              <div className="text-xs text-gray-500 flex items-center space-x-2">
+                                {wordData.american_phonetic_symbol && <span>US: /{wordData.american_phonetic_symbol}/</span>}
+                                {wordData.english_phonetic_symbol && <span>UK: /{wordData.english_phonetic_symbol}/</span>}
+                              </div>
                             )}
                           </div>
-                        </TooltipTrigger>
-                        {item.explanation && (
-                          <TooltipContent>
-                            <p>{item.explanation}</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    ))}
+                          {wordData && (wordData.us_pronunciation || wordData.en_pronunciation) && (
+                            <Button variant="ghost" size="icon" onClick={() => handlePlay(wordData)}>
+                              <Volume2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </TooltipProvider>
               </ScrollArea>
@@ -208,7 +191,7 @@ export default function StudySessionCreator({ items: allItems, documentId }: Stu
                 <Headphones className="w-5 h-5 mr-2" />
                 {t('startDictation')}
               </Button>
-              <Button onClick={handleAddToStudyPlan} disabled={isLoading} className="sm:col-span-2 bg-green-600 hover:bg-green-700">
+              <Button onClick={handleAddToStudyPlan} disabled={isLoading || selectedItems.length === 0} className="sm:col-span-2 bg-green-600 hover:bg-green-700">
                 <BrainCircuit className="w-5 h-5 mr-2" />
                 {isLoading ? t('addingToStudyPlan') : t('addToStudyPlan')}
               </Button>

@@ -200,6 +200,15 @@ export async function getEnrichedDocumentItemsAction(documentId: string) {
   return { items };
 }
 
+export async function getWordsDataAction(words: string[]) {
+  const db = createDatabase();
+  const { words: wordsData, error } = await db.getWordsData(words);
+  if (error) {
+    return { error };
+  }
+  return { wordsData };
+}
+
 export async function getItemsPageData(filter?: string | null) {
   const user = await getUser()
   const db = createDatabase()

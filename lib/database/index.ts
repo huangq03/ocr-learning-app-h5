@@ -37,6 +37,7 @@ export interface Database {
   getSharedSet: (id: string) => Promise<{ set?: any; items?: any[]; error?: string }>
   getShareStats: (userId: string) => Promise<{ stats: any[]; error?: string }>
   getEnrichedDocumentItems: (documentId: string, userId: string) => Promise<{ items: any[]; error?: string }>
+  getWordsData: (words: string[]) => Promise<{ words: any[]; error?: string }>
 
   // Profile methods
   getProfilePageData: (userId: string) => Promise<any>

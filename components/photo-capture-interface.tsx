@@ -226,7 +226,7 @@ export default function PhotoCaptureInterface({
     setStatus("idle");
   }, []);
 
-  const goToDashboard = useCallback(() => router.push("/"), [router]);
+  const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
 
   useEffect(() => {
     return () => {
