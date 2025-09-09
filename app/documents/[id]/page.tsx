@@ -1,18 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import StudySessionCreator from '@/components/study-session-creator';
-import { getPageSession, getDocumentById } from '@/lib/actions';
-
-// Define the type for our document data
-interface Document {
-  id: string;
-  user_id: string;
-  created_at: string;
-  file_path: string;
-  recognized_text: {
-    items: string[];
-    cleaned_text: string;
-  };
-}
+import { getPageSession, getEnrichedDocumentItemsAction } from '@/lib/actions';
 
 // Server Component that fetches data and passes it to the client component
 export default async function DocumentPage({ params }) {
@@ -23,11 +11,11 @@ export default async function DocumentPage({ params }) {
     redirect('/auth/login');
   }
 
-  const { document, error } = await getDocumentById(id, session.user.id);
+  const { items, error } = await getEnrichedDocumentItemsAction(id);
 
-  if (error || !document) {
+  if (error || !items) {
     notFound();
   }
 
-  return <StudySessionCreator document={document as unknown as Document} />;
+  return <StudySessionCreator items={items} documentId={id} />;
 }
