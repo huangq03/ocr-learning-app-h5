@@ -6,53 +6,57 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BookOpen, Headphones, ArrowLeft, BrainCircuit } from 'lucide-react';
+import { BookOpen, Headphones, ArrowLeft, BrainCircuit, Volume2 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { addToStudyPlanAction } from '@/lib/actions';
 
-interface Document {
-  id: string;
-  user_id: string;
-  created_at: string;
-  image_path: string;
-  recognized_text: {
-    items: string[];
-    cleaned_text: string;
-  };
+interface EnrichedTextItem {
+  text_item_id: string;
+  content: string;
+  // All fields from the 'words' table are available here, e.g.:
+  name?: string;
+  american_phonetic_symbol?: string;
+  english_phonetic_symbol?: string;
+  en_pronunciation?: string;
+  us_pronunciation?: string;
+  explanation?: string;
 }
 
-export default function StudySessionCreator({ document }: { document: Document }) {
+interface StudySessionCreatorProps {
+  items: EnrichedTextItem[];
+  documentId: string;
+}
+
+export default function StudySessionCreator({ items: allItems, documentId }: StudySessionCreatorProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const { toast } = useToast();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const allItems = (document.recognized_text?.items || []).sort((a, b) => {
-    const cleaned_text = document.recognized_text?.cleaned_text || '';
-    const indexA = cleaned_text.indexOf(a);
-    const indexB = cleaned_text.indexOf(b);
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-    return indexA - indexB;
-  });
 
   const handleToggleAll = (checked: boolean) => {
-    setSelectedItems(checked ? allItems : []);
+    setSelectedItems(checked ? allItems.map(item => item.content) : []);
   };
 
-  const handleToggleItem = (item: string, checked: boolean) => {
+  const handleToggleItem = (itemContent: string, checked: boolean) => {
     if (checked) {
-      setSelectedItems((prev) => [...prev, item]);
+      setSelectedItems((prev) => [...prev, itemContent]);
     } else {
-      setSelectedItems((prev) => prev.filter((i) => i !== item));
+      setSelectedItems((prev) => prev.filter((i) => i !== itemContent));
     }
   };
 
   const addToStudyPlan = async (items: string[]) => {
     setIsLoading(true);
-    const result = await addToStudyPlanAction(document.id, items);
+    const result = await addToStudyPlanAction(documentId, items);
     setIsLoading(false);
     return result;
   };
@@ -125,6 +129,8 @@ export default function StudySessionCreator({ document }: { document: Document }
     }
   };
 
+  const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 md:p-8">
       <div className="max-w-2xl mx-auto">
@@ -148,18 +154,49 @@ export default function StudySessionCreator({ document }: { document: Document }
                 <label htmlFor="select-all" className="text-sm font-medium">{t('selectAllItems')}</label>
               </div>
               <ScrollArea className="h-64 w-full border-t pt-4">
-                <div className="space-y-2">
-                  {allItems.map((item, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`item-${index}`}
-                        checked={selectedItems.includes(item)}
-                        onCheckedChange={(checked) => handleToggleItem(item, !!checked)}
-                      />
-                      <label htmlFor={`item-${index}`} className="text-sm">{item}</label>
-                    </div>
-                  ))}
-                </div>
+                <TooltipProvider>
+                  <div className="space-y-2">
+                    {allItems.map((item, index) => (
+                      <Tooltip key={item.text_item_id}>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100">
+                            <Checkbox
+                              id={`item-${index}`}
+                              checked={selectedItems.includes(item.content)}
+                              onCheckedChange={(checked) => handleToggleItem(item.content, !!checked)}
+                            />
+                            <div className="flex-grow">
+                              <label htmlFor={`item-${index}`} className="text-sm font-medium">{item.content}</label>
+                              {item.name && (
+                                <div className="text-xs text-gray-500 flex items-center space-x-2">
+                                  {item.american_phonetic_symbol && <span>US: /{item.american_phonetic_symbol}/</span>}
+                                  {item.english_phonetic_symbol && <span>UK: /{item.english_phonetic_symbol}/</span>}
+                                </div>
+                              )}
+                            </div>
+                            {item.us_pronunciation && (
+                              <Button variant="ghost" size="icon" onClick={() => new Audio(baseUrl + item.us_pronunciation).play()}>
+                                <Volume2 className="h-4 w-4" />
+                                <span className="sr-only">Play US pronunciation</span>
+                              </Button>
+                            )}
+                            {item.en_pronunciation && (
+                              <Button variant="ghost" size="icon" onClick={() => new Audio(baseUrl + item.en_pronunciation).play()}>
+                                <Volume2 className="h-4 w-4" />
+                                <span className="sr-only">Play UK pronunciation</span>
+                              </Button>
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        {item.explanation && (
+                          <TooltipContent>
+                            <p>{item.explanation}</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    ))}
+                  </div>
+                </TooltipProvider>
               </ScrollArea>
             </div>
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">

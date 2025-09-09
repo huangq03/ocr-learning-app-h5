@@ -7,6 +7,12 @@ import { Progress } from '@/components/ui/progress';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { Smile, Meh, Frown, Angry, Volume2, ArrowLeft } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { updateStudyScheduleAction, saveExerciseResult } from '@/lib/actions';
 import { useTranslation } from 'react-i18next';
 import { speakText } from '@/lib/speech';
@@ -63,6 +69,7 @@ interface SessionStats {
 
 export default function StudyInterface({ initialItems, user, shareId }: StudyInterfaceProps) {
     const { t, i18n } = useTranslation();
+    const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL || '';
 
     const router = useRouter();
     const [items, setItems] = useState(initialItems);
@@ -80,8 +87,14 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
         return () => clearTimeout(timer);
     }, []);
 
-    const handlePlay = (text: string) => {
-        speakText(text, 'en');
+    const handlePlay = (item: any) => {
+        if (item.us_pronunciation) {
+            new Audio(baseUrl + item.us_pronunciation).play();
+        } else if (item.en_pronunciation) {
+            new Audio(baseUrl + item.en_pronunciation).play();
+        } else {
+            speakText(item.content, 'en');
+        }
     };
 
     const handleRating = async (quality: number) => {
@@ -184,6 +197,7 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
     const progress = ((currentIndex + 1) / items.length) * 100;
 
     return (
+      <TooltipProvider>
         <div className="p-4 max-w-2xl mx-auto overflow-hidden">
             <Button variant="outline" onClick={() => router.back()} className="mb-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -196,16 +210,65 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
                 </CardHeader>
                 <CardContent className="min-h-[200px] flex items-center justify-center text-center">
                     <div>
-                        <div className="flex items-center justify-center gap-4">
-                            <p className="text-2xl font-bold mb-2">
+                        <div className="flex items-center justify-center gap-4 mb-2">
+                            <p className="text-3xl font-bold">
                                 {currentItem.content}
                             </p>
-                            <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem.content)}>
-                                <Volume2 className='w-6 h-6' />
-                            </Button>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem)}>
+                                        <Volume2 className='w-6 h-6' />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Play TTS Audio</p></TooltipContent>
+                            </Tooltip>
                         </div>
+
+                        {currentItem.word_name && (
+                            <div className="text-md text-gray-500 flex items-center justify-center space-x-4 mb-4">
+                                {currentItem.american_phonetic_symbol && <span>US: /{currentItem.american_phonetic_symbol}/</span>}
+                                {currentItem.english_phonetic_symbol && <span>UK: /{currentItem.english_phonetic_symbol}/</span>}
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-center gap-2 mb-4">
+                            {currentItem.us_pronunciation && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="outline" size="sm" onClick={() => new Audio(baseUrl + currentItem.us_pronunciation).play()}>
+                                            <span className="text-xs mr-1">US</span> <Volume2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Play US Pronunciation</p></TooltipContent>
+                                </Tooltip>
+                            )}
+                            {currentItem.en_pronunciation && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="outline" size="sm" onClick={() => new Audio(baseUrl + currentItem.en_pronunciation).play()}>
+                                            <span className="text-xs mr-1">UK</span> <Volume2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Play UK Pronunciation</p></TooltipContent>
+                                </Tooltip>
+                            )}
+                        </div>
+
                         <p className="text-lg text-gray-600">{currentItem.context}</p>
                         <p className="text-md text-gray-500 italic">{currentItem.user_definition}</p>
+
+                        {currentItem.explanation && (
+                            <div className="mt-4 pt-4 border-t text-left">
+                                <ul className="space-y-2">
+                                    {JSON.parse(currentItem.explanation).map((exp, index) => (
+                                        <li key={index} className="text-sm">
+                                            <span className="font-semibold text-purple-700 mr-2">{exp.pro}</span>
+                                            <span>{exp.content}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
                 <CardFooter className="flex flex-col items-center">
@@ -218,5 +281,6 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
                 </CardFooter>
             </Card>
         </div>
+      </TooltipProvider>
     );
 }
