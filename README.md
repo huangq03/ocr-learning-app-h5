@@ -100,6 +100,7 @@ Navigate to the **SQL Editor** in your Supabase project dashboard and run the co
 5.  `scripts/008_create_dashboard_functions.sql`
 6.  `scripts/009_add_exercises_table.sql`
 7.  `scripts/010_create_get_mastered_documents_function.sql`
+8.  `scripts/011_supabase_save_exercise_function.sql`
 
 #### For PostgreSQL
 
@@ -120,6 +121,8 @@ Run the following scripts in your PostgreSQL client **one by one, in this specif
 13. `scripts/postgres/013_add_word_id_to_text_items.sql`
 14. `scripts/postgres/014_create_temp_pronunciations_table.sql`
 15. `scripts/postgres/015_create_temp_dictionary_table.sql`
+16. `scripts/postgres/016_backfill_word_ids.sql`
+17. `scripts/postgres/017_backfill_is_mastered_flag.sql`
 
 After running these scripts, your database will be ready.
 

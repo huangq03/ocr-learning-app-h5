@@ -365,6 +365,16 @@ export class PostgresDatabase implements Database {
         "INSERT INTO exercises (user_id, text_item_id, exercise_type, target_text, user_input, accuracy_score, mistakes_count, completion_time_seconds, details, completed_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())",
         [user_id, text_item_id, exerciseType, target_text, user_input, accuracy_score, mistakes_count, completion_time_seconds, details || null]
       )
+
+      // After saving the result, update the is_mastered flag
+      if (exerciseType === 'dictation') {
+        const isMastered = accuracy_score === 100;
+        await this.pool.query(
+          'UPDATE text_items SET is_mastered = $1 WHERE id = $2',
+          [isMastered, text_item_id]
+        );
+      }
+
       //await this.updateUserProgress(result.userId, result.duration / 60000) // Convert ms to minutes
       return { success: true }
     } catch (error) {

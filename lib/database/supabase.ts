@@ -176,10 +176,18 @@ export class SupabaseDatabase implements Database {
     const supabase = createServerActionClient({ cookies: () => cookieStore })
 
     try {
-      const { error } = await supabase.from("exercises").insert({
-        ...result,
-        exercise_type: exerciseType,
+      const { error } = await supabase.rpc('save_exercise_and_update_mastery', {
+        p_user_id: result.user_id,
+        p_text_item_id: result.text_item_id,
+        p_exercise_type: exerciseType,
+        p_target_text: result.target_text,
+        p_user_input: result.user_input,
+        p_accuracy_score: result.accuracy_score,
+        p_mistakes_count: result.mistakes_count,
+        p_completion_time_seconds: result.completion_time_seconds,
+        p_details: result.details || null
       });
+
       if (error) {
         console.error("Error saving exercise result:", error);
         return { error: "Failed to save exercise result." };
