@@ -166,7 +166,7 @@ export function DictationItemView({
                 </>
               ) : (
                 <div className="flex justify-between w-full">
-                  <Button onClick={onPrevious} size="lg" variant="outline" disabled={false}>Previous</Button>
+                  <Button onClick={onPrevious} size="lg" variant="outline" disabled={false}>{t('previousButton')}</Button>
                   <Button onClick={onNext} size="lg">
                     {isLastItem ? t('finishButton') : t('nextButton')}
                   </Button>
