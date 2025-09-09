@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { redirect } from 'next/navigation';
 import DictationInterface from '@/components/dictation-interface';
 import type { User } from '@supabase/supabase-js';
-import { getDictationPageData } from '@/lib/actions';
+import { getDictationPageData, getPageSession } from '@/lib/actions';
 
 export default function DictationPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -19,18 +19,16 @@ export default function DictationPage() {
       if (studySessionString) {
         const studySession = JSON.parse(studySessionString);
         if (studySession.type === 'dictation') {
-          // The items are strings, we need to convert them to the format expected by DictationInterface
-          const formattedItems = studySession.items.map((item: string, index: number) => ({ id: item.id, content: item.content }));
-          const result = await getDictationPageData();
-          if (result.error) {
-            console.error('Error fetching user:', result.error);
+          const { session } = await getPageSession();
+          if (!session?.user) {
             redirect('/auth/login');
-          } else {
-            setUser(result.user);
-            setTextItems(formattedItems);
+            return;
           }
+          setUser(session.user as User);
+          setTextItems(studySession.items); // Use enriched items directly
           localStorage.removeItem('studySession'); // Clear after use
         } else {
+          // This path is unlikely, but keep it as a fallback
           const result = await getDictationPageData();
           if (result.error) {
             console.error('Error fetching text items:', result.error);
