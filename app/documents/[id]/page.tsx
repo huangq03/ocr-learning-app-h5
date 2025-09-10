@@ -4,7 +4,7 @@ import { getPageSession, getDocumentById } from '@/lib/actions';
 
 // Server Component that fetches data and passes it to the client component
 export default async function DocumentPage({ params }) {
-  const { id } = params;
+  const { id } = await params;
   const { session } = await getPageSession();
 
   if (!session) {
