@@ -111,7 +111,7 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
 
             await saveExerciseResult({
                 user_id: user.id,
-                text_item_id: currentItem.id,
+                text_item_id: currentItem.text_item_id,
                 target_text: currentItem.content,
                 user_input: "[recited]",
                 accuracy_score: qualityToAccuracyMap[quality],
