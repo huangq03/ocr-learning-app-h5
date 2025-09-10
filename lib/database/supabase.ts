@@ -137,16 +137,45 @@ export class SupabaseDatabase implements Database {
         .limit(10);
 
       let recentDocuments: any[] = []
-      if (recentTextItems) {
+      if (recentTextItems && recentTextItems.length > 0) {
           const recentDocumentIds = [...new Set(recentTextItems.map(item => item.document_id))].slice(0, 3);
           
           if (recentDocumentIds.length > 0) {
-              const { data: documents } = await supabase
-                  .from('documents')
-                  .select('id, created_at, recognized_text')
-                  .in('id', recentDocumentIds)
-                  .order('created_at', { ascending: false });
-              recentDocuments = documents || [];
+              const { data: items, error } = await supabase
+                .from('text_items')
+                .select(`
+                  document_id,
+                  documents ( created_at, recognized_text ),
+                  text_item_id:id,
+                  content,
+                  is_mastered,
+                  words (*)
+                `)
+                .in('document_id', recentDocumentIds)
+                .eq('user_id', userId);
+
+              if (error) {
+                console.error("Error fetching recent documents items:", error);
+              } else {
+                  const groupedByDocument = items.reduce((acc, item) => {
+                    const docId = item.document_id;
+                    if (!acc[docId]) {
+                      acc[docId] = {
+                        id: docId,
+                        created_at: item.documents.created_at,
+                        recognized_text: item.documents.recognized_text,
+                        items: []
+                      };
+                    }
+                    const enrichedItem = { ...item, ...(item.words || {}) };
+                    delete enrichedItem.words;
+                    delete enrichedItem.documents;
+                    acc[docId].items.push(enrichedItem);
+                    return acc;
+                  }, {});
+
+                  recentDocuments = Object.values(groupedByDocument).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+              }
           }
       }
 

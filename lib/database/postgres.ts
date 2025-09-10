@@ -198,11 +198,45 @@ export class PostgresDatabase implements Database {
       if (recentTextItems.length > 0) {
         const recentDocumentIds = [...new Set(recentTextItems.map(item => item.document_id))].slice(0, 3)
         if (recentDocumentIds.length > 0) {
-          const documentsResult = await this.pool.query(
-            "SELECT id, created_at, recognized_text FROM documents WHERE id = ANY($1) ORDER BY created_at DESC",
-            [recentDocumentIds]
-          )
-          recentDocuments = documentsResult.rows
+          const documentsResult = await this.pool.query(`
+            SELECT
+              d.id as document_id,
+              d.created_at as document_created_at,
+              d.recognized_text,
+              ti.id as text_item_id,
+              ti.content,
+              ti.is_mastered,
+              w.name as word_name,
+              w.american_phonetic_symbol,
+              w.english_phonetic_symbol,
+              w.en_pronunciation,
+              w.us_pronunciation,
+              w.explanation
+            FROM
+              text_items ti
+            JOIN
+              documents d ON ti.document_id = d.id
+            LEFT JOIN
+              words w ON ti.word_id = w.id
+            WHERE
+              d.id = ANY($1) AND ti.user_id = $2
+          `, [recentDocumentIds, userId]);
+
+          const groupedByDocument = documentsResult.rows.reduce((acc, row) => {
+              const { document_id, document_created_at, recognized_text, ...item } = row;
+              if (!acc[document_id]) {
+                  acc[document_id] = {
+                      id: document_id,
+                      created_at: document_created_at,
+                      recognized_text: recognized_text,
+                      items: []
+                  };
+              }
+              acc[document_id].items.push(item);
+              return acc;
+          }, {});
+
+          recentDocuments = Object.values(groupedByDocument).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         }
       }
 
