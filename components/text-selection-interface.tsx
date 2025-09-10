@@ -16,7 +16,8 @@ interface TextSelectionInterfaceProps {
 
 export default function TextSelectionInterface({ user, document, extractedText, existingItems }: TextSelectionInterfaceProps) {
   const router = useRouter()
-  const [selections, setSelections] = useState<any[]>([])
+  const [status, setStatus] = useState("idle")
+  const [documentName, setDocumentName] = useState("");
 
   const handleSelection = () => {
     const selection = window.getSelection()

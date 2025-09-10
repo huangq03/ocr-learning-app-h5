@@ -129,6 +129,16 @@
     "tableCreated": "Created",
     "tableLink": "Link"
   },
+  "editableTitle": {
+    "untitled": "Untitled Document",
+    "editAriaLabel": "Edit name",
+    "saveAriaLabel": "Save name",
+    "cancelAriaLabel": "Cancel editing",
+    "success": "Success",
+    "successDescription": "Document name updated.",
+    "error": "Error",
+    "errorDescription": "Failed to update document name."
+  },
   "landingPage": {
     "title": "OCR Learning",
     "login": "Login",

@@ -129,6 +129,16 @@
     "tableCreated": "创建时间",
     "tableLink": "链接"
   },
+  "editableTitle": {
+    "untitled": "无标题文档",
+    "editAriaLabel": "编辑名称",
+    "saveAriaLabel": "保存名称",
+    "cancelAriaLabel": "取消编辑",
+    "success": "成功",
+    "successDescription": "文档名称已更新。",
+    "error": "错误",
+    "errorDescription": "更新文档名称失败。"
+  },
   "landingPage": {
     "title": "OCR学习",
     "login": "登录",

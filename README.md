@@ -123,6 +123,7 @@ Run the following scripts in your PostgreSQL client **one by one, in this specif
 15. `scripts/postgres/015_create_temp_dictionary_table.sql`
 16. `scripts/postgres/016_backfill_word_ids.sql`
 17. `scripts/postgres/017_backfill_is_mastered_flag.sql`
+18. `scripts/postgres/018_create_save_exercise_function.sql`
 
 After running these scripts, your database will be ready.
 

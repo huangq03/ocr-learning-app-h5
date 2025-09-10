@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
 import '@/i18n';
 import { playAudio } from '@/lib/audio-player';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { EditableTitle } from '@/components/editable-title';
 
 interface EnrichedTextItem {
   text_item_id: string;
@@ -25,6 +26,7 @@ interface EnrichedTextItem {
 interface DocumentWithEnrichedItems {
   id: string;
   created_at: string;
+  name?: string;
   items: EnrichedTextItem[];
 }
 
@@ -39,15 +41,13 @@ export default function ItemGroup({ document }: { document: DocumentWithEnriched
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <div>
-          <CardTitle className="text-lg font-medium">
-            <span>{t('documentFrom')} {new Date(document.created_at).toLocaleDateString()}</span>
-          </CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div onClick={() => setIsExpanded(!isExpanded)} className="flex-grow cursor-pointer">
+          <EditableTitle documentId={document.id} initialTitle={document.name || `${t('documentFrom')} ${new Date(document.created_at).toLocaleDateString()}`} />
           <Badge variant="outline" className="mt-1">{items.length} {t('itemsCountLabel')}</Badge>
         </div>
         {items.length > 0 && (
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </Button>
         )}

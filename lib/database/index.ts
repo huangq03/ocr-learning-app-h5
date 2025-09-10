@@ -12,7 +12,8 @@ export interface Database {
   // Document methods
   getDocuments: (userId: string) => Promise<{ documents: any[]; error?: string }>
   getDocumentById: (documentId: string, userId: string) => Promise<{ document: any | null; error?: string }>
-  saveDocument: (userId: string, ocrResult: any, file: File) => Promise<{ documentId?: string; error?: string }>
+  saveDocument: (userId: string, ocrResult: any, file: File, name?: string) => Promise<{ documentId?: string; error?: string }>
+  updateDocumentName: (documentId: string, userId: string, name: string) => Promise<{ success?: boolean; error?: string }>
   deleteDocument: (documentId: string, userId: string) => Promise<{ success?: boolean; error?: string }>
 
   // Study methods

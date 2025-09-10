@@ -97,13 +97,20 @@ export async function saveExerciseResult(result: any, exerciseType: 'dictation' 
 export async function saveDocument(ocrResult: any, formData: FormData) {
   const user = await getUser()
   const file = formData.get("file") as File
+  const name = formData.get("name") as string | undefined
 
   if (!file) {
     return { error: "File is missing" }
   }
 
   const db = createDatabase()
-  return await db.saveDocument(user.id, ocrResult, file)
+  return await db.saveDocument(user.id, ocrResult, file, name)
+}
+
+export async function updateDocumentNameAction(documentId: string, name: string) {
+  const user = await getUser();
+  const db = createDatabase();
+  return await db.updateDocumentName(documentId, user.id, name);
 }
 
 export async function addToStudyPlanAction(documentId: string, items: string[]) {

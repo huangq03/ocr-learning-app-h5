@@ -145,7 +145,7 @@ export class SupabaseDatabase implements Database {
                 .from('text_items')
                 .select(`
                   document_id,
-                  documents ( created_at, recognized_text ),
+                  documents ( name, created_at, recognized_text ),
                   text_item_id:id,
                   content,
                   is_mastered,
@@ -162,6 +162,7 @@ export class SupabaseDatabase implements Database {
                     if (!acc[docId]) {
                       acc[docId] = {
                         id: docId,
+                        name: item.documents.name,
                         created_at: item.documents.created_at,
                         recognized_text: item.documents.recognized_text,
                         items: []
@@ -228,7 +229,7 @@ export class SupabaseDatabase implements Database {
     }
   }
 
-  async saveDocument(userId: string, ocrResult: any, file: File) {
+  async saveDocument(userId: string, ocrResult: any, file: File, name?: string) {
     if (!isSupabaseConfigured) {
       return { error: "Supabase is not configured" }
     }
@@ -245,7 +246,7 @@ export class SupabaseDatabase implements Database {
 
       const { data: documentData, error: dbError } = await supabase
         .from("documents")
-        .insert({ user_id: userId, image_url: publicUrlData.publicUrl, image_path: fileName, recognized_text: { ...ocrResult, newlyFoundItems: undefined } })
+        .insert({ user_id: userId, name: name, image_url: publicUrlData.publicUrl, image_path: fileName, recognized_text: { ...ocrResult, newlyFoundItems: undefined } })
         .select("id").single()
 
       if (dbError) throw dbError
@@ -254,6 +255,32 @@ export class SupabaseDatabase implements Database {
     } catch (error) {
       console.error("Error saving document:", error);
       return { error: "Failed to save document." };
+    }
+  }
+
+  async updateDocumentName(documentId: string, userId: string, name: string) {
+    if (!isSupabaseConfigured) {
+      return { error: "Supabase is not configured" };
+    }
+
+    const cookieStore = await cookies();
+    const supabase = createServerActionClient({ cookies: () => cookieStore });
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ name: name })
+        .eq('id', documentId)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error("Error updating document name:", error);
+        return { error: "Failed to update document name." };
+      }
+      return { success: true };
+    } catch (error) {
+      console.error("Error updating document name:", error);
+      return { error: "Failed to update document name." };
     }
   }
 
@@ -363,7 +390,7 @@ export class SupabaseDatabase implements Database {
     try {
       const { data, error } = await supabase
         .from('documents')
-        .select('*')
+        .select('id, name, created_at, recognized_text')
         .eq('user_id', userId)
         .eq('is_deleted', false)
         .order('created_at', { ascending: false });
@@ -535,7 +562,7 @@ export class SupabaseDatabase implements Database {
         .from('text_items')
         .select(`
           document_id,
-          documents ( created_at, recognized_text ),
+          documents ( name, created_at, recognized_text ),
           text_item_id:id,
           content,
           is_mastered,
@@ -559,6 +586,7 @@ export class SupabaseDatabase implements Database {
         if (!acc[docId]) {
           acc[docId] = {
             id: docId,
+            name: item.documents.name,
             created_at: item.documents.created_at,
             recognized_text: item.documents.recognized_text,
             items: []

@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ShareDocumentButton } from '@/components/share-document-button';
 import { Trash2, Edit, PlusCircle, ArrowLeft, FileText } from 'lucide-react';
+import { EditableTitle } from '@/components/editable-title';
 import { getDocumentsPageData, deleteDocument } from '@/lib/actions';
 
 // Define the type for our document data
 interface Document {
   id: string;
+  name?: string;
   created_at: string;
   image_url: string;
   recognized_text: {
@@ -88,11 +90,9 @@ export default function DocumentManagementPage() {
                 <FileText className="w-12 h-12 text-gray-400" />
               </div>
               <div className="flex-grow">
-                <p className="text-sm text-gray-600 line-clamp-2">
+                <EditableTitle documentId={doc.id} initialTitle={doc.name || `${t('documentFrom')} ${new Date(doc.created_at).toLocaleDateString()}`} />
+                <p className="text-sm text-gray-600 line-clamp-2 mt-1">
                   {doc.recognized_text?.cleaned_text || t('documents.noText')}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {t('documents.createdOn', { date: new Date(doc.created_at).toLocaleDateString() })}
                 </p>
               </div>
               <div className="flex-shrink-0 flex sm:flex-col gap-2 self-end sm:self-center">

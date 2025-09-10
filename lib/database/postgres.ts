@@ -105,13 +105,13 @@ export class PostgresDatabase implements Database {
   async getDocuments(userId: string) {
     try {
       const result = await this.pool.query(
-        "SELECT * FROM documents WHERE user_id = $1 AND is_deleted = FALSE ORDER BY created_at DESC",
+        "SELECT id, name, created_at, recognized_text FROM documents WHERE user_id = $1 AND is_deleted = FALSE ORDER BY created_at DESC",
         [userId]
-      )
-      return { documents: result.rows }
+      );
+      return { documents: result.rows };
     } catch (error) {
-      console.error("Error fetching documents:", error)
-      return { error: "Failed to fetch documents." }
+      console.error("Error fetching documents:", error);
+      return { error: "Failed to fetch documents." };
     }
   }
 
@@ -133,26 +133,39 @@ export class PostgresDatabase implements Database {
     }
   }
 
-  async saveDocument(userId: string, ocrResult: any, file: File) {
+  async saveDocument(userId: string, ocrResult: any, file: File, name?: string) {
     try {
       // In a real implementation, you would save the file to storage
       // and store the file path in the database
       // This is a simplified version for demonstration
       
-      const fileName = `${userId}/${Date.now()}.jpg`
+      const fileName = `${userId}/${Date.now()}.jpg`;
       // In a real implementation, save the file to disk or cloud storage
       // const filePath = path.join(process.cwd(), "public", "uploads", fileName)
       // fs.writeFileSync(filePath, Buffer.from(await file.arrayBuffer()))
       
       const result = await this.pool.query(
-        "INSERT INTO documents (user_id, image_url, image_path, recognized_text) VALUES ($1, $2, $3, $4) RETURNING id",
-        [userId, `/uploads/${fileName}`, fileName, JSON.stringify(ocrResult)]
+        "INSERT INTO documents (user_id, name, image_url, image_path, recognized_text) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+        [userId, name, `/uploads/${fileName}`, fileName, JSON.stringify(ocrResult)]
       )
       
-      return { documentId: result.rows[0].id }
+      return { documentId: result.rows[0].id };
     } catch (error) {
-      console.error("Error saving document:", error)
-      return { error: "Failed to save document." }
+      console.error("Error saving document:", error);
+      return { error: "Failed to save document." };
+    }
+  }
+
+  async updateDocumentName(documentId: string, userId: string, name: string) {
+    try {
+      await this.pool.query(
+        "UPDATE documents SET name = $1 WHERE id = $2 AND user_id = $3",
+        [name, documentId, userId]
+      );
+      return { success: true };
+    } catch (error) {
+      console.error("Error updating document name:", error);
+      return { error: "Failed to update document name." };
     }
   }
 
@@ -201,6 +214,7 @@ export class PostgresDatabase implements Database {
           const documentsResult = await this.pool.query(`
             SELECT
               d.id as document_id,
+              d.name as document_name,
               d.created_at as document_created_at,
               d.recognized_text,
               ti.id as text_item_id,
@@ -223,10 +237,11 @@ export class PostgresDatabase implements Database {
           `, [recentDocumentIds, userId]);
 
           const groupedByDocument = documentsResult.rows.reduce((acc, row) => {
-              const { document_id, document_created_at, recognized_text, ...item } = row;
+              const { document_id, document_name, document_created_at, recognized_text, ...item } = row;
               if (!acc[document_id]) {
                   acc[document_id] = {
                       id: document_id,
+                      name: document_name,
                       created_at: document_created_at,
                       recognized_text: recognized_text,
                       items: []
@@ -430,6 +445,7 @@ export class PostgresDatabase implements Database {
       const query = `
         SELECT
           d.id as document_id,
+          d.name as document_name,
           d.created_at as document_created_at,
           d.recognized_text,
           ti.id as text_item_id,
@@ -455,10 +471,11 @@ export class PostgresDatabase implements Database {
       const result = await this.pool.query(query, params);
 
       const groupedByDocument = result.rows.reduce((acc, row) => {
-          const { document_id, document_created_at, recognized_text, ...item } = row;
+          const { document_id, document_name, document_created_at, recognized_text, ...item } = row;
           if (!acc[document_id]) {
               acc[document_id] = {
                   id: document_id,
+                  name: document_name,
                   created_at: document_created_at,
                   recognized_text: recognized_text,
                   items: []

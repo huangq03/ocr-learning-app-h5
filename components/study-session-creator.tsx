@@ -13,11 +13,13 @@ import { useToast } from '@/hooks/use-toast';
 import { addToStudyPlanAction, getWordsDataAction } from '@/lib/actions';
 import { playAudio } from '@/lib/audio-player';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { EditableTitle } from '@/components/editable-title';
 
 interface Document {
   id: string;
   user_id: string;
   created_at: string;
+  name?: string;
   image_path: string;
   recognized_text: {
     items: string[];
@@ -130,7 +132,7 @@ export default function StudySessionCreator({ document }: { document: Document }
         </Button>
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-gray-800">{t('createStudySessionTitle')}</CardTitle>
+            <EditableTitle documentId={document.id} initialTitle={document.name || `Document from ${new Date(document.created_at).toLocaleDateString()}`} />
             <p className="text-gray-500">{t('createStudySessionSubtitle')}</p>
           </CardHeader>
           <CardContent>
