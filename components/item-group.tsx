@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
 import '@/i18n';
-import { speakText } from '@/lib/speech';
+import { playAudio } from '@/lib/audio-player';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface EnrichedTextItem {
@@ -32,16 +32,9 @@ export default function ItemGroup({ document }: { document: DocumentWithEnriched
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const items = document.items || [];
-  const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL || '';
 
   const handlePlay = (item: EnrichedTextItem) => {
-    if (item.us_pronunciation) {
-        new Audio(baseUrl + item.us_pronunciation).play();
-    } else if (item.en_pronunciation) {
-        new Audio(baseUrl + item.en_pronunciation).play();
-    } else {
-        speakText(item.content, 'en');
-    }
+    playAudio(item);
   };
 
   return (

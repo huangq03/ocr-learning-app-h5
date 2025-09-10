@@ -1,42 +1,22 @@
-
 // lib/speech.ts
 
+/**
+ * Speaks the given text using the browser's Web Speech API (Text-to-Speech).
+ * @param text The string to be spoken.
+ * @param lang The language code (e.g., 'en-US').
+ */
 export const speakText = (text: string, lang: string) => {
-  if (!text) return;
-
-  const isSingleWord = !text.includes(' ');
-
-  if (isSingleWord && lang.startsWith('en')) {
-    const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL;
-    const audioFile = `${text.toLowerCase()}1.mp3`;
-    const audioUrl = baseUrl ? `${baseUrl.replace(/\/$/, '')}/${audioFile}` : `/${audioFile}`;
-    const audio = new Audio(audioUrl);
-
-    audio.onerror = () => {
-      // Fallback to speechSynthesis
-      speakWithSpeechSynthesis(text, lang);
-    };
-
-    audio.play().catch(() => {
-      // Fallback to speechSynthesis if play() is rejected
-      speakWithSpeechSynthesis(text, lang);
-    });
-  } else {
-    // Use speechSynthesis for phrases, sentences, or non-English text
-    speakWithSpeechSynthesis(text, lang);
+  if (typeof window === 'undefined' || !window.speechSynthesis || !text) {
+    return;
   }
-};
 
-const speakWithSpeechSynthesis = (text: string, lang: string) => {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-  }
+  // Cancel any ongoing speech to prevent overlap, then speak the new utterance.
+  window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
   
+  // Optional: Find and set a specific voice for the given language for better quality.
   const voices = window.speechSynthesis.getVoices();
   const voice = voices.find(v => v.lang === lang);
   if (voice) {

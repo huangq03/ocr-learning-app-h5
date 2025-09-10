@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Volume2, CheckCircle, XCircle } from "lucide-react"
 import { useTranslation } from 'react-i18next'
+import { playPronunciation } from '@/lib/audio-player';
 
 interface DictationItemViewProps {
   currentSelection: any
@@ -55,8 +56,6 @@ export function DictationItemView({
     }
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL;
-
   return (
     <div className="p-4 max-w-2xl mx-auto relative overflow-hidden">
       <Card className={`p-6 relative transition-transform duration-300 ease-in-out ${getAnimationClass('none')}`}>
@@ -99,12 +98,12 @@ export function DictationItemView({
                     </div>
                     <div className="flex items-center justify-center gap-2">
                         {currentSelection.us_pronunciation && (
-                            <Button variant="outline" size="sm" onClick={() => new Audio(baseUrl + currentSelection.us_pronunciation).play()}>
+                            <Button variant="outline" size="sm" onClick={() => playPronunciation(currentSelection, 'us')}>
                                 <span className="text-xs mr-1">US</span> <Volume2 className="h-4 w-4" />
                             </Button>
                         )}
                         {currentSelection.en_pronunciation && (
-                            <Button variant="outline" size="sm" onClick={() => new Audio(baseUrl + currentSelection.en_pronunciation).play()}>
+                            <Button variant="outline" size="sm" onClick={() => playPronunciation(currentSelection, 'en')}>
                                 <span className="text-xs mr-1">UK</span> <Volume2 className="h-4 w-4" />
                             </Button>
                         )}

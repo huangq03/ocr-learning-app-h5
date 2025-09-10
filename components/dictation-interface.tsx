@@ -9,7 +9,7 @@ import { calculateAccuracy } from "@/lib/dictation-utils"
 import { StartScreen } from "@/components/dictation-start-screen"
 import { DictationItemView } from "@/components/dictation-item-view"
 import { SummaryScreen } from "@/components/dictation-summary-screen"
-import { speakText } from "@/lib/speech"
+import { playAudio } from "@/lib/audio-player"
 
 interface DictationInterfaceProps {
   user?: User
@@ -301,15 +301,7 @@ export default function DictationInterface({ user, textItems, shareId }: Dictati
     const currentSelection = selections[currentSelectionIndex];
     if (!currentSelection) return;
 
-    const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL || '';
-
-    if (currentSelection.us_pronunciation) {
-        new Audio(baseUrl + currentSelection.us_pronunciation).play();
-    } else if (currentSelection.en_pronunciation) {
-        new Audio(baseUrl + currentSelection.en_pronunciation).play();
-    } else {
-        speakText(currentSelection.content, 'en');
-    }
+    playAudio(currentSelection);
 
     if (autoMode && autoSessionStarted) {
       setTimeLeft(timeoutValue);

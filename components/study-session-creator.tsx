@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { addToStudyPlanAction, getWordsDataAction } from '@/lib/actions';
+import { playAudio } from '@/lib/audio-player';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Document {
@@ -40,7 +41,6 @@ export default function StudySessionCreator({ document }: { document: Document }
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [enrichedData, setEnrichedData] = useState<Map<string, WordData>>(new Map());
-  const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL || '';
 
   const allItems = (document.recognized_text?.items || []).sort((a, b) => {
     const cleaned_text = document.recognized_text?.cleaned_text || '';
@@ -118,13 +118,7 @@ export default function StudySessionCreator({ document }: { document: Document }
   };
 
   const handlePlay = (item: WordData) => {
-    if (item.us_pronunciation) {
-        new Audio(baseUrl + item.us_pronunciation).play();
-    } else if (item.en_pronunciation) {
-        new Audio(baseUrl + item.en_pronunciation).play();
-    } else if (item.name) {
-        speakText(item.name, 'en');
-    }
+    playAudio(item);
   };
 
   return (

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 import { updateStudyScheduleAction, saveExerciseResult } from '@/lib/actions';
 import { useTranslation } from 'react-i18next';
-import { speakText } from '@/lib/speech';
+import { playAudio, playPronunciation } from '@/lib/audio-player';
 
 
 // SM-2 Algorithm Implementation
@@ -69,7 +69,6 @@ interface SessionStats {
 
 export default function StudyInterface({ initialItems, user, shareId }: StudyInterfaceProps) {
     const { t, i18n } = useTranslation();
-    const baseUrl = process.env.NEXT_PUBLIC_AUDIO_BASE_URL || '';
 
     const router = useRouter();
     const [items, setItems] = useState(initialItems);
@@ -86,16 +85,6 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
         }, 100); // Small delay to ensure the transition is applied
         return () => clearTimeout(timer);
     }, []);
-
-    const handlePlay = (item: any) => {
-        if (item.us_pronunciation) {
-            new Audio(baseUrl + item.us_pronunciation).play();
-        } else if (item.en_pronunciation) {
-            new Audio(baseUrl + item.en_pronunciation).play();
-        } else {
-            speakText(item.content, 'en');
-        }
-    };
 
     const handleRating = async (quality: number) => {
         if (isAnimating) return;
@@ -216,14 +205,14 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
                             </p>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => handlePlay(currentItem)}>
+                                    <Button variant="ghost" size="icon" onClick={() => playAudio(currentItem)}>
                                         <Volume2 className='w-6 h-6' />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent><p>Play TTS Audio</p></TooltipContent>
+                                <TooltipContent><p>Play Audio</p></TooltipContent>
                             </Tooltip>
                         </div>
-
+                        
                         {currentItem.word_name && (
                             <div className="text-md text-gray-500 flex items-center justify-center space-x-4 mb-4">
                                 {currentItem.american_phonetic_symbol && <span>US: /{currentItem.american_phonetic_symbol}/</span>}
@@ -235,7 +224,7 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
                             {currentItem.us_pronunciation && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="outline" size="sm" onClick={() => new Audio(baseUrl + currentItem.us_pronunciation).play()}>
+                                        <Button variant="outline" size="sm" onClick={() => playPronunciation(currentItem, 'us')}>
                                             <span className="text-xs mr-1">US</span> <Volume2 className="h-4 w-4" />
                                         </Button>
                                     </TooltipTrigger>
@@ -245,7 +234,7 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
                             {currentItem.en_pronunciation && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="outline" size="sm" onClick={() => new Audio(baseUrl + currentItem.en_pronunciation).play()}>
+                                        <Button variant="outline" size="sm" onClick={() => playPronunciation(currentItem, 'en')}>
                                             <span className="text-xs mr-1">UK</span> <Volume2 className="h-4 w-4" />
                                         </Button>
                                     </TooltipTrigger>
