@@ -150,31 +150,30 @@ This project includes a `docker-compose.yml` file to run the application and an 
 ### Steps
 
 1.  **Update Configuration Files:**
-    *   In `docker-compose.yml`, replace `your-email@example.com` with your actual email address.
-    *   In both `docker-compose.yml` and `nginx/nginx.conf`, replace `your-domain.com` with your actual domain name.
+    *   In your `.env` file, set `DOMAIN_NAME` to your actual domain (e.g., `DOMAIN_NAME=your-domain.com`).
+    *   In `docker-compose.yml`, find the `certbot-init` service and replace `your-email@example.com` with your actual email address.
 
 2.  **Run the Initialization Script:**
-    *   Before starting the containers, run the following command to download the necessary TLS parameters:
+    *   This script downloads security parameters for Nginx. It only needs to be run once.
         ```bash
         ./init-letsencrypt.sh
         ```
 
-3.  **Start the Nginx and App Containers:**
-    *   Bring up the `app` and `nginx` services:
+3.  **Obtain the Initial SSL Certificate:**
+    *   Run the `nginx-init` and `certbot-init` services. This will start a temporary Nginx server just to solve the Let's Encrypt challenge.
         ```bash
-        docker-compose up -d app nginx
+        docker-compose up -d nginx-init
+        docker-compose run --rm certbot-init
+        ```
+    *   After the certificate is successfully obtained, shut down the temporary Nginx server.
+        ```bash
+        docker-compose down
         ```
 
-4.  **Obtain the SSL Certificate:**
-    *   Run the following command to start the `certbot` container and request the certificate. Make sure you have replaced the placeholder domain and email in this command as well.
+4.  **Start All Services:**
+    *   Now that you have the certificate, you can start all the final services, including the main Nginx server and the automatic renewal service.
         ```bash
-        docker-compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot --email your-email@example.com --agree-tos --no-eff-email -d your-domain.com
-        ```
-
-5.  **Restart Nginx:**
-    *   After the certificate is successfully generated, restart the Nginx container to load the new SSL configuration:
-        ```bash
-        docker-compose restart nginx
+        docker-compose up -d
         ```
 
 Your application should now be accessible via `https://your-domain.com`. The certificate will be automatically renewed.
