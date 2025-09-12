@@ -137,46 +137,26 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-## Running with Docker and Let's Encrypt
+## Deployment with Docker
 
-This project includes a `docker-compose.yml` file to run the application and an Nginx proxy with SSL certificates from Let's Encrypt.
+This project includes a `docker-compose.yml` file to run the application and an Nginx proxy.
 
-### Prerequisites
+### 1. Set Your Domain
 
-- A public server with Docker and Docker Compose installed.
-- A registered domain name pointing to the server's IP address.
-- Ports 80 and 443 open on the server's firewall.
+In your `.env` file, set the `DOMAIN_NAME` variable to your actual domain (e.g., `DOMAIN_NAME=your-domain.com`).
 
-### Steps
+### 2. Configure SSL (HTTPS)
 
-1.  **Update Configuration Files:**
-    *   In your `.env` file, set `DOMAIN_NAME` to your actual domain (e.g., `DOMAIN_NAME=your-domain.com`).
-    *   In `docker-compose.yml`, find the `certbot-init` service and replace `your-email@example.com` with your actual email address.
+By default, the Nginx service is configured to use SSL. You must provide your own certificate files.
 
-2.  **Run the Initialization Script:**
-    *   This script downloads security parameters for Nginx. It only needs to be run once.
-        ```bash
-        ./init-letsencrypt.sh
-        ```
+- **Place Your Certificates**: Put your `fullchain.pem` and `privkey.pem` in the `./data/certbot/conf/live/your-domain.com/` directory.
+- **To Disable SSL**: If you want to run the application without HTTPS (for local testing or if SSL is handled upstream), edit the `nginx/conf.d/ocr_server.conf` file and comment out the `server` block for port 443 and the `return 301` line in the port 80 block, as instructed in the file's comments.
 
-3.  **Obtain the Initial SSL Certificate:**
-    *   Run the `nginx-init` and `certbot-init` services. This will start a temporary Nginx server just to solve the Let's Encrypt challenge.
-        ```bash
-        docker-compose up -d nginx-init
-        docker-compose run --rm certbot-init
-        ```
-    *   After the certificate is successfully obtained, shut down the temporary Nginx server.
-        ```bash
-        docker-compose down
-        ```
+### 3. Start the Services
 
-4.  **Start All Services:**
-    *   Now that you have the certificate, you can start all the final services, including the main Nginx server and the automatic renewal service.
-        ```bash
-        docker-compose up -d
-        ```
-
-Your application should now be accessible via `https://your-domain.com`. The certificate will be automatically renewed.
+```bash
+docker-compose up -d
+```
 
 ## Project Structure
 
