@@ -149,6 +149,7 @@ In your `.env` file, set the `DOMAIN_NAME` variable to your actual domain (e.g.,
 
 By default, the Nginx service is configured to use SSL. You must provide your own certificate files.
 
+- **Obtain Certificates**: A great tool for obtaining and managing Let's Encrypt certificates is [cert-tool](https://github.com/huangq03/cert-tool).
 - **Place Your Certificates**: Put your `fullchain.pem` and `privkey.pem` in the `./data/certbot/conf/live/your-domain.com/` directory.
 - **To Disable SSL**: If you want to run the application without HTTPS (for local testing or if SSL is handled upstream), edit the `nginx/conf.d/ocr_server.conf` file and comment out the `server` block for port 443 and the `return 301` line in the port 80 block, as instructed in the file's comments.
 
