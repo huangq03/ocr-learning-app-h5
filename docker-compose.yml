@@ -43,17 +43,17 @@ services:
       retries: 5
 
   nginx:
-    image: nginx:latest
+    build:
+      context: ./nginx
     container_name: ocr-learning-nginx
     ports:
       - "80:80"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d
-    command: ["/bin/sh", "-c", "envsubst '$DOMAIN_NAME' < /etc/nginx/conf.d/ocr_server.conf | tee /etc/nginx/conf.d/ocr_server.conf && nginx -g 'daemon off;'"]
-    depends_on:
-      - app
-    restart: unless-stopped
+      - ./nginx/templates:/etc/nginx/templates
     depends_on:
       - app
     restart: unless-stopped
