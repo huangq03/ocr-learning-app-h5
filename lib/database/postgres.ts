@@ -233,7 +233,7 @@ export class PostgresDatabase implements Database {
             LEFT JOIN
               words w ON ti.word_id = w.id
             WHERE
-              d.id = ANY($1) AND ti.user_id = $2
+              d.id = ANY($1) AND ti.user_id = $2 AND d.is_deleted = FALSE
           `, [recentDocumentIds, userId]);
 
           const groupedByDocument = documentsResult.rows.reduce((acc, row) => {

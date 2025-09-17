@@ -145,14 +145,15 @@ export class SupabaseDatabase implements Database {
                 .from('text_items')
                 .select(`
                   document_id,
-                  documents ( name, created_at, recognized_text ),
+                  documents!inner ( name, created_at, recognized_text ),
                   text_item_id:id,
                   content,
                   is_mastered,
                   words (*)
                 `)
                 .in('document_id', recentDocumentIds)
-                .eq('user_id', userId);
+                .eq('user_id', userId)
+                .eq('documents.is_deleted', false);
 
               if (error) {
                 console.error("Error fetching recent documents items:", error);
