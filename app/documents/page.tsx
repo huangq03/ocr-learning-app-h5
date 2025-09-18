@@ -8,7 +8,7 @@ import '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ShareDocumentButton } from '@/components/share-document-button';
-import { Trash2, Edit, PlusCircle, ArrowLeft, FileText } from 'lucide-react';
+import { Trash2, Edit, PlusCircle, ArrowLeft, FileHeart } from 'lucide-react';
 import { EditableTitle } from '@/components/editable-title';
 import { getDocumentsPageData, deleteDocument } from '@/lib/actions';
 
@@ -87,11 +87,11 @@ export default function DocumentManagementPage() {
           {documents.map(doc => (
             <Card key={doc.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="w-full sm:w-32 h-24 flex items-center justify-center bg-gray-100 rounded-md border">
-                <FileText className="w-12 h-12 text-gray-400" />
+                <FileHeart className="w-12 h-12 text-gray-400" />
               </div>
               <div className="flex-grow">
                 <EditableTitle documentId={doc.id} initialTitle={doc.name || `${t('documentFrom')} ${new Date(doc.created_at).toLocaleDateString()}`} />
-                <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   {doc.recognized_text?.cleaned_text || t('documents.noText')}
                 </p>
               </div>
