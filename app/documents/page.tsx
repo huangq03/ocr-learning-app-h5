@@ -86,12 +86,12 @@ export default function DocumentManagementPage() {
         <div className="space-y-4">
           {documents.map(doc => (
             <Card key={doc.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="w-full sm:w-32 h-24 flex items-center justify-center bg-gray-100 rounded-md border">
-                <FileHeart className="w-12 h-12 text-gray-400" />
-              </div>
               <div className="flex-grow">
-                <EditableTitle documentId={doc.id} initialTitle={doc.name || `${t('documentFrom')} ${new Date(doc.created_at).toLocaleDateString()}`} />
-                <p className="text-sm text-gray-600 mt-1">
+                <div className="flex items-center gap-3">
+                  <FileHeart className="w-6 h-6 text-purple-600" />
+                  <EditableTitle documentId={doc.id} initialTitle={doc.name || `${t('documentFrom')} ${new Date(doc.created_at).toLocaleDateString()}`} />
+                </div>
+                <p className="text-sm text-gray-600 mt-2 pt-1 pl-9">
                   {doc.recognized_text?.cleaned_text || t('documents.noText')}
                 </p>
               </div>
