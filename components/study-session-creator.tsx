@@ -16,22 +16,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { EditableTitle } from '@/components/editable-title';
 import { Document, DocumentItemsCard } from '@/components/document-items-card';
 
-interface WordData {
-  name: string;
-  american_phonetic_symbol?: string;
-  english_phonetic_symbol?: string;
-  en_pronunciation?: string;
-  us_pronunciation?: string;
-  explanation?: string;
-}
 
 export default function StudySessionCreator({ document }: { document: Document }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { toast } = useToast();
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [enrichedData, setEnrichedData] = useState<Map<string, WordData>>(new Map());
 
 
   const handleToggleItem = (item: string, checked: boolean) => {
@@ -94,6 +85,8 @@ export default function StudySessionCreator({ document }: { document: Document }
           title={t('createStudySessionTitle')}
           plainItems={document?.recognized_text?.items || []}
           document={document}
+          selectedItems={selectedItems}
+          setSelectedItems={setSelectedItems}
           handleStartSession={handleStartSession}
           onAddToStudyPlan={handleAddToStudyPlan}
           isLoading={isLoading}

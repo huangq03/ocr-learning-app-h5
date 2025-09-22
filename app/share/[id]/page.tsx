@@ -37,8 +37,8 @@ export default function SharedSetPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [view, setView] = useState<ViewState>('selection');
-  const [selectedItems, setSelectedItems] = useState<TextItem[]>([]);
+  const [view, setView] = useState<ViewState>('recitation');
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -57,23 +57,6 @@ export default function SharedSetPage() {
         });
     }
   }, [id, t]);
-
-  const handleToggleAll = (checked: boolean) => {
-    if (checked && sharedSet) {
-        const sortedItems = [...sharedSet.items].sort((a, b) => a.content.localeCompare(b.content));
-        setSelectedItems(sortedItems);
-    } else {
-        setSelectedItems([]);
-    }
-  };
-
-  const handleToggleItem = (item: TextItem, checked: boolean) => {
-    if (checked) {
-      setSelectedItems((prev) => [...prev, item].sort((a, b) => a.content.localeCompare(b.content)));
-    } else {
-      setSelectedItems((prev) => prev.filter((i) => i.id !== item.id));
-    }
-  };
 
   const handleStartSession = (type: 'recitation' | 'dictation') => {
     if (selectedItems.length === 0) {
@@ -109,6 +92,8 @@ export default function SharedSetPage() {
         <DocumentItemsCard
           title={sharedSet.title}
           plainItems={sharedSet.items.map(item => item.content)}
+          selectedItems={selectedItems}
+          setSelectedItems={setSelectedItems}
           handleStartSession={handleStartSession}
           isLoading={false}
         />

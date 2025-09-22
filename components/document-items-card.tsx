@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,17 +45,18 @@ interface Item {
 interface Props {
   title?: string;
   document?: Document;
-  plainItems ?: String[];
+  plainItems : String[];
+  selectedItems : WordData[];
+  setSelectedItems?: Dispatch<SetStateAction<[]>>;
   handleStartSession: (type: 'recitation' | 'dictation') => void;
   onAddToStudyPlan?: (items: Item[]) => void;
   isLoading?: boolean;
 }
 
-function DocumentItemsCard({ title, document, plainItems, handleStartSession, onAddToStudyPlan, isLoading = false }: Props) {
+function DocumentItemsCard({ title, document, plainItems, selectedItems, setSelectedItems, handleStartSession, onAddToStudyPlan, isLoading = false }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { toast } = useToast();
-  const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [enrichedData, setEnrichedData] = useState<Map<string, WordData>>(new Map());
 
   const items = (plainItems || []).sort((a, b) => {
