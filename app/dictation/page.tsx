@@ -24,8 +24,14 @@ export default function DictationPage() {
             redirect('/auth/login');
             return;
           }
-          setUser(session.user as User);
-          setItems(studySession.items); // Use enriched items directly
+          const result = await getDictationPageData(studySession.items);
+          if (result.error) {
+            console.error('Error fetching text items:', result.error);
+            redirect('/auth/login');
+          } else {
+            setUser(result.user);
+            setItems(result.items || []);
+          }
           localStorage.removeItem('studySession'); // Clear after use
         } else {
           // This path is unlikely, but keep it as a fallback
