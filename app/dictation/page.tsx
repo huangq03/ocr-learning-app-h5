@@ -24,7 +24,7 @@ export default function DictationPage() {
             redirect('/auth/login');
             return;
           }
-          const result = await getDictationPageData(studySession.items);
+          const result = await getDictationPageData({ studySessionItems: studySession.items });
           if (result.error) {
             console.error('Error fetching text items:', result.error);
             redirect('/auth/login');
@@ -35,7 +35,7 @@ export default function DictationPage() {
           localStorage.removeItem('studySession'); // Clear after use
         } else {
           // This path is unlikely, but keep it as a fallback
-          const result = await getDictationPageData();
+          const result = await getDictationPageData({});
           if (result.error) {
             console.error('Error fetching text items:', result.error);
             redirect('/auth/login');
@@ -45,7 +45,7 @@ export default function DictationPage() {
           }
         }
       } else {
-        const result = await getDictationPageData();
+        const result = await getDictationPageData({});
         if (result.error) {
           console.error('Error fetching text items:', result.error);
           redirect('/auth/login');

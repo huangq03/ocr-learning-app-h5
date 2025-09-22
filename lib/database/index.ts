@@ -18,13 +18,13 @@ export interface Database {
 
   // Study methods
   getDashboardData: (userId: string) => Promise<any>
-  getStudyPageData: (userId: string, studySessionItems?: string[]) => Promise<any>
+  getStudyPageData: (options: { userId?: string; shareId?: string; studySessionItems?: string[] }) => Promise<any>
   updateStudySchedule: (itemId: string, updatedSchedule: any) => Promise<{ success?: boolean; error?: string }>
   addToStudyPlan: (userId: string, documentId: string, items: string[]) => Promise<{ insertedItems?: any[]; insertedCount?: number; error?: string }>
   saveSelectionsAndCreateReviews: (documentId: string, selections: any[], userId: string) => Promise<{ success?: boolean; error?: string }>
 
   // Exercise methods
-  getDictationPageData: (userId: string, studySessionItems?: string[]) => Promise<any>
+  getDictationPageData: (options: { userId?: string; shareId?: string; studySessionItems?: string[] }) => Promise<any>
   saveExerciseResult: (result: any, exerciseType: 'dictation' | 'recitation') => Promise<{ success?: boolean; error?: string }>
 
   // Items methods

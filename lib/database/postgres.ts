@@ -271,44 +271,73 @@ export class PostgresDatabase implements Database {
     }
   }
 
-  async getStudyPageData(userId: string, studySessionItems?: string[]) {
+  async getStudyPageData(options: { userId?: string; shareId?: string; studySessionItems?: string[] }) {
     try {
-      const baseQuery = `
-        SELECT
-          srs.id, -- This is the schedule ID
-          srs.repetition_number,
-          srs.ease_factor,
-          srs.interval_days,
-          ti.id as text_item_id,
-          ti.content,
-          ti.context,
-          ti.user_definition,
-          w.name as word_name,
-          w.american_phonetic_symbol,
-          w.english_phonetic_symbol,
-          w.en_pronunciation,
-          w.us_pronunciation,
-          w.explanation
-        FROM
-          spaced_repetition_schedule srs
-        JOIN
-          text_items ti ON srs.text_item_id = ti.id
-        LEFT JOIN
-          words w ON ti.word_id = w.id
-      `;
-      let query: string;
-      let params: any[];
+      const { userId, shareId, studySessionItems } = options;
 
-      if (studySessionItems && studySessionItems.length > 0) {
-        query = `${baseQuery} WHERE srs.user_id = $1 AND ti.content = ANY($2)`;
-        params = [userId, studySessionItems];
-      } else {
-        const today = new Date().toISOString().split("T")[0];
-        query = `${baseQuery} WHERE srs.user_id = $1 AND srs.is_active = TRUE AND srs.next_review_date <= $2`;
-        params = [userId, today];
+      if (shareId) {
+        const query = `
+          SELECT
+            ti.id as text_item_id,
+            ti.content,
+            ti.context,
+            ti.user_definition,
+            w.name as word_name,
+            w.american_phonetic_symbol,
+            w.english_phonetic_symbol,
+            w.en_pronunciation,
+            w.us_pronunciation,
+            w.explanation
+          FROM
+            shared_set_items ssi
+          JOIN
+            text_items ti ON ssi.text_item_id = ti.id
+          LEFT JOIN
+            words w ON ti.word_id = w.id
+          WHERE
+            ssi.shared_set_id = $1
+        `;
+        const result = await this.pool.query(query, [shareId]);
+        return { items: result.rows };
+      } else if (userId) {
+        const baseQuery = `
+          SELECT
+            srs.id, -- This is the schedule ID
+            srs.repetition_number,
+            srs.ease_factor,
+            srs.interval_days,
+            ti.id as text_item_id,
+            ti.content,
+            ti.context,
+            ti.user_definition,
+            w.name as word_name,
+            w.american_phonetic_symbol,
+            w.english_phonetic_symbol,
+            w.en_pronunciation,
+            w.us_pronunciation,
+            w.explanation
+          FROM
+            spaced_repetition_schedule srs
+          JOIN
+            text_items ti ON srs.text_item_id = ti.id
+          LEFT JOIN
+            words w ON ti.word_id = w.id
+        `;
+        let query: string;
+        let params: any[];
+
+        if (studySessionItems && studySessionItems.length > 0) {
+          query = `${baseQuery} WHERE srs.user_id = $1 AND ti.content = ANY($2)`;
+          params = [userId, studySessionItems];
+        } else {
+          const today = new Date().toISOString().split("T")[0];
+          query = `${baseQuery} WHERE srs.user_id = $1 AND srs.is_active = TRUE AND srs.next_review_date <= $2`;
+          params = [userId, today];
+        }
+        const result = await this.pool.query(query, params);
+        return { items: result.rows };
       }
-      const result = await this.pool.query(query, params);
-      return { items: result.rows };
+      return { error: "Either userId or shareId must be provided." };
     } catch (error) {
       console.error("Error fetching study page data:", error);
       return { error: "Failed to fetch study page data." };
@@ -375,31 +404,61 @@ export class PostgresDatabase implements Database {
   }
 
   // Exercise methods
-  async getDictationPageData(userId: string, studySessionItems?: string[]) {
+  async getDictationPageData(options: { userId?: string; shareId?: string; studySessionItems?: string[] }) {
     try {
-      const baseQuery = `
-        SELECT
-          ti.id as text_item_id,
-          ti.content,
-          w.*
-        FROM
-          text_items ti
-        LEFT JOIN
-          words w ON ti.word_id = w.id
-      `;
-      let query: string;
-      let params: any[];
+      const { userId, shareId, studySessionItems } = options;
 
-      if (studySessionItems && studySessionItems.length > 0) {
-        query = `${baseQuery} WHERE ti.user_id = $1 AND ti.content = ANY($2)`;
-        params = [userId, studySessionItems];
-      } else {
-        query = `${baseQuery} WHERE ti.user_id = $1 ORDER BY ti.created_at DESC`;
-        params = [userId];
+      if (shareId) {
+        let query = `
+          SELECT
+            ti.id as text_item_id,
+            ti.content,
+            w.*
+          FROM
+            shared_set_items ssi
+          JOIN
+            text_items ti ON ssi.text_item_id = ti.id
+          LEFT JOIN
+            words w ON ti.word_id = w.id
+          WHERE
+            ssi.shared_set_id = $1
+        `;
+        const params: any[] = [shareId];
+
+        if (studySessionItems && studySessionItems.length > 0) {
+          query += ` AND ti.content = ANY($2)`;
+          params.push(studySessionItems);
+        }
+
+        const result = await this.pool.query(query, params);
+        return { items: result.rows };
+      } else if (userId) {
+        const baseQuery = `
+          SELECT
+            ti.id as text_item_id,
+            ti.content,
+            w.*
+          FROM
+            text_items ti
+          LEFT JOIN
+            words w ON ti.word_id = w.id
+        `;
+        let query: string;
+        let params: any[];
+
+        if (studySessionItems && studySessionItems.length > 0) {
+          query = `${baseQuery} WHERE ti.user_id = $1 AND ti.content = ANY($2)`;
+          params = [userId, studySessionItems];
+        } else {
+          query = `${baseQuery} WHERE ti.user_id = $1 ORDER BY ti.created_at DESC`;
+          params = [userId];
+        }
+
+        const result = await this.pool.query(query, params);
+        return { items: result.rows };
       }
 
-      const result = await this.pool.query(query, params);
-      return { items: result.rows };
+      return { error: "Either userId or shareId must be provided." };
     } catch (error) {
       console.error("Error fetching dictation page data:", error);
       return { error: "Failed to fetch dictation page data." };

@@ -19,7 +19,7 @@ export default function StudyPage() {
             if (studySessionString) {
                 const studySession = JSON.parse(studySessionString);
                 if (studySession.type === 'recitation') {
-                    const result = await getStudyPageData(studySession.items);
+                    const result = await getStudyPageData({ studySessionItems: studySession.items });
                     if (result.error) {
                         console.error('Error fetching study session items:', result.error);
                         redirect('/auth/login');
@@ -29,7 +29,7 @@ export default function StudyPage() {
                     }
                     localStorage.removeItem('studySession'); // Clear after use
                 } else {
-                    const result = await getStudyPageData();
+                    const result = await getStudyPageData({});
                     if (result.error) {
                         console.error('Error fetching due items:', result.error);
                         redirect('/auth/login');
@@ -39,7 +39,7 @@ export default function StudyPage() {
                     }
                 }
             } else {
-                const result = await getStudyPageData();
+                const result = await getStudyPageData({});
                 if (result.error) {
                     console.error('Error fetching due items:', result.error);
                     redirect('/auth/login');

@@ -487,43 +487,78 @@ export class SupabaseDatabase implements Database {
     }
   }
 
-  async getDictationPageData(userId: string, studySessionItems?: string[]) {
+  async getDictationPageData(options: { userId?: string; shareId?: string; studySessionItems?: string[] }) {
     if (!isSupabaseConfigured) {
-      return { error: "Supabase is not configured" }
+      return { error: "Supabase is not configured" };
     }
+    const { userId, shareId, studySessionItems } = options;
 
     const cookieStore = await cookies()
     const supabase = createServerActionClient({ cookies: () => cookieStore })
 
     try {
-      let query = supabase
-        .from('text_items')
-        .select(`
-          id,
-          content,
-          words (*)
-        `)
-        .eq('user_id', userId);
+      if (shareId) {
+        let query = supabase
+          .from('shared_set_items')
+          .select(`
+            text_items (
+              id,
+              content,
+              words (*)
+            )
+          `)
+          .eq('shared_set_id', shareId);
+        
+        if (studySessionItems && studySessionItems.length > 0) {
+          query = query.in('text_items.content', studySessionItems);
+        }
 
-      if (studySessionItems && studySessionItems.length > 0) {
-        query = query.in('content', studySessionItems);
-      } else {
-        query = query.order('created_at', { ascending: false });
+        const { data, error } = await query;
+
+        if (error) {
+          console.error("Error fetching shared dictation page data:", error);
+          return { error: "Failed to fetch shared dictation page data." };
+        }
+
+        const flattenedItems = data.map(item => ({
+          ...item.text_items,
+          ...(item.text_items.words || {})
+        }));
+
+        return { items: flattenedItems };
+
+      } else if (userId) {
+        let query = supabase
+          .from('text_items')
+          .select(`
+            id,
+            content,
+            words (*)
+          `)
+          .eq('user_id', userId);
+
+        if (studySessionItems && studySessionItems.length > 0) {
+          query = query.in('content', studySessionItems);
+        } else {
+          query = query.order('created_at', { ascending: false });
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error("Error fetching dictation page data:", error);
+          return { error: "Failed to fetch dictation page data." };
+        }
+        
+        const flattenedItems = data.map(item => ({
+          ...item,
+          ...(item.words || {})
+        }));
+
+        return { items: flattenedItems };
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching dictation page data:", error);
-        return { error: "Failed to fetch dictation page data." };
-      }
-      
-      const flattenedItems = data.map(item => ({
-        ...item,
-        ...(item.words || {})
-      }));
-
-      return { items: flattenedItems };
+      return { error: "Either userId or shareId must be provided." };
     } catch (error) {
       console.error("Error fetching dictation page data:", error);
       return { error: "Failed to fetch dictation page data." };

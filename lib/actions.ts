@@ -153,26 +153,40 @@ export async function deleteDocument(documentId: string) {
   return await db.deleteDocument(documentId, user.id)
 }
 
-export async function getStudyPageData(studySessionItems?: string[]) {
-  const user = await getUser()
-  const db = createDatabase()
-  const { items, error } = await db.getStudyPageData(user.id, studySessionItems)
-  if (error) {
-    return { error }
+export async function getStudyPageData(options: { shareId?: string, studySessionItems?: string[] }) {
+  const db = createDatabase();
+  if (options.shareId) {
+    const { items, error } = await db.getStudyPageData({ shareId: options.shareId, studySessionItems: options.studySessionItems });
+    if (error) {
+      return { error };
+    }
+    return { items };
+  } else {
+    const user = await getUser();
+    const { items, error } = await db.getStudyPageData({ userId: user.id, studySessionItems: options.studySessionItems });
+    if (error) {
+      return { error };
+    }
+    return { items, user };
   }
-
-  return { items, user }
 }
 
-export async function getDictationPageData(studySessionItems?: string[]) {
-  const user = await getUser()
-  const db = createDatabase()
-  const { items, error } = await db.getDictationPageData(user.id, studySessionItems)
-  if (error) {
-    return { error }
+export async function getDictationPageData(options: { shareId?: string, studySessionItems?: string[] }) {
+  const db = createDatabase();
+  if (options.shareId) {
+    const { items, error } = await db.getDictationPageData({ shareId: options.shareId, studySessionItems: options.studySessionItems });
+    if (error) {
+      return { error };
+    }
+    return { items };
+  } else {
+    const user = await getUser();
+    const { items, error } = await db.getDictationPageData({ userId: user.id, studySessionItems: options.studySessionItems });
+    if (error) {
+      return { error };
+    }
+    return { items, user };
   }
-
-  return { items, user }
 }
 
 export async function getPageSession() {
