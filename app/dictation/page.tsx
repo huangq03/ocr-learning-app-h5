@@ -8,7 +8,7 @@ import { getDictationPageData, getPageSession } from '@/lib/actions';
 
 export default function DictationPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [textItems, setTextItems] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -25,7 +25,7 @@ export default function DictationPage() {
             return;
           }
           setUser(session.user as User);
-          setTextItems(studySession.items); // Use enriched items directly
+          setItems(studySession.items); // Use enriched items directly
           localStorage.removeItem('studySession'); // Clear after use
         } else {
           // This path is unlikely, but keep it as a fallback
@@ -35,7 +35,7 @@ export default function DictationPage() {
             redirect('/auth/login');
           } else {
             setUser(result.user);
-            setTextItems(result.items || []);
+            setItems(result.items || []);
           }
         }
       } else {
@@ -45,7 +45,7 @@ export default function DictationPage() {
           redirect('/auth/login');
         } else {
           setUser(result.user);
-          setTextItems(result.items || []);
+          setItems(result.items || []);
         }
       }
       setIsLoading(false);
@@ -64,7 +64,7 @@ export default function DictationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100">
-      <DictationInterface user={user} textItems={textItems} />
+      <DictationInterface user={user} items={items} />
     </div>
   );
 }

@@ -13,7 +13,7 @@ import { playAudio } from "@/lib/audio-player"
 
 interface DictationInterfaceProps {
   user?: User
-  textItems: any[]
+  items: any[]
   shareId?: string
 }
 
@@ -29,9 +29,9 @@ interface SessionResult {
   completion_time_seconds: number
 }
 
-export default function DictationInterface({ user, textItems, shareId }: DictationInterfaceProps) {
+export default function DictationInterface({ user, items, shareId }: DictationInterfaceProps) {
   const { t, i18n } = useTranslation();
-  const [selections, setSelections] = useState(textItems)
+  const [selections, setSelections] = useState(items)
   const [currentSelectionIndex, setCurrentSelectionIndex] = useState(-1)
   const [userInput, setUserInput] = useState("")
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
@@ -398,7 +398,7 @@ export default function DictationInterface({ user, textItems, shareId }: Dictati
   }
 
   if (selections.length === 0) {
-    return <p className="text-center p-8">No text items available for dictation.</p>
+    return <p className="text-center p-8">No items available for dictation.</p>
   }
 
   if (showSummary) {

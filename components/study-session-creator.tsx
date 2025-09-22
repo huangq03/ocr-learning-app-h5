@@ -46,7 +46,7 @@ export default function StudySessionCreator({ document }: { document: Document }
       return;
     }
 
-    const studySession = { type, items: insertedItems, documentId: document.id };
+    const studySession = { type, items: selectedItems, documentId: document.id };
     localStorage.setItem('studySession', JSON.stringify(studySession));
     if (type === 'dictation') {
       router.push('/dictation');
