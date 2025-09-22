@@ -4,15 +4,11 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { BookOpen, Headphones } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import DictationInterface from '@/components/dictation-interface';
 import StudyInterface from '@/components/study-interface';
 import { DocumentItemsCard } from '@/components/document-items-card';
+import { getStudyPageData, getDictationPageData } from '@/lib/actions';
 
 interface TextItem {
   id: string;
@@ -31,18 +27,20 @@ export default function SharedSetPage() {
   const { t } = useTranslation();
   const params = useParams();
   const { toast } = useToast();
-  const id = params.id as string;
+  const shareId = params.id as string;
 
   const [sharedSet, setSharedSet] = useState<SharedSet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [view, setView] = useState<ViewState>('');
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [sessionItems, setSessionItems] = useState<any[]>([]);
+  const [isSessionLoading, setIsSessionLoading] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetch(`/api/shares/${id}`)
+    if (shareId) {
+      fetch(`/api/shares/${shareId}`)
         .then(res => {
           if (!res.ok) throw new Error(t('share.pageErrorFetch'));
           return res.json();
@@ -56,17 +54,32 @@ export default function SharedSetPage() {
           setLoading(false);
         });
     }
-  }, [id, t]);
+  }, [shareId, t]);
 
-  const handleStartSession = (type: 'recitation' | 'dictation') => {
+  const handleStartSession = async (type: 'recitation' | 'dictation') => {
     if (selectedItems.length === 0) {
       toast({ title: <span className="text-white">{t('selectItemsAlert')}</span>, variant: 'destructive' });
       return;
     }
-    setView(type);
+
+    setIsSessionLoading(true);
+    let data;
+    if (type === 'dictation') {
+      data = await getDictationPageData({ shareId: shareId, studySessionItems: selectedItems });
+    } else {
+      data = await getStudyPageData({ shareId: shareId, studySessionItems: selectedItems });
+    }
+
+    if (data.error) {
+      setError(data.error);
+    } else {
+      setSessionItems(data.items || []);
+      setView(type);
+    }
+    setIsSessionLoading(false);
   };
 
-  if (loading) {
+  if (loading || isSessionLoading) {
     return <div className="container mx-auto p-4 text-center">{t('share.pageLoading')}</div>;
   }
 
@@ -79,11 +92,11 @@ export default function SharedSetPage() {
   }
 
   if (view === 'dictation') {
-    return <DictationInterface textItems={selectedItems} shareId={id} />
+    return <DictationInterface items={sessionItems} shareId={shareId} />
   }
 
   if (view === 'recitation') {
-    return <StudyInterface initialItems={selectedItems} shareId={id} />
+    return <StudyInterface initialItems={sessionItems} shareId={shareId} />
   }
 
   return (
