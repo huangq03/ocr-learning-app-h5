@@ -24,6 +24,7 @@ interface StartScreenProps {
   mode: 'typing' | 'paper'
   setMode: (mode: 'typing' | 'paper') => void
   onStart: () => void
+  onBack?: () => void
   isStartingSession?: boolean
 }
 
