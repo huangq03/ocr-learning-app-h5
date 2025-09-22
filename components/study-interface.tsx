@@ -58,6 +58,7 @@ interface StudyInterfaceProps {
     initialItems: any[];
     user?: User;
     shareId?: string;
+    onBack?: () => void;
 }
 
 interface SessionStats {
@@ -67,7 +68,7 @@ interface SessionStats {
     easy: number;
 }
 
-export default function StudyInterface({ initialItems, user, shareId }: StudyInterfaceProps) {
+export default function StudyInterface({ initialItems, user, shareId, onBack }: StudyInterfaceProps) {
     const { t, i18n } = useTranslation();
 
     const router = useRouter();
@@ -188,7 +189,7 @@ export default function StudyInterface({ initialItems, user, shareId }: StudyInt
     return (
       <TooltipProvider>
         <div className="p-4 max-w-2xl mx-auto overflow-hidden">
-            <Button variant="outline" onClick={() => router.back()} className="mb-4">
+            <Button variant="outline" onClick={onBack ? onBack : () => router.back()} className="mb-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {t('backButton')}
             </Button>

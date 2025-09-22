@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Volume2, CheckCircle, XCircle } from "lucide-react"
+import { Volume2, CheckCircle, ArrowLeft } from "lucide-react"
 import { useTranslation } from 'react-i18next'
 import { playPronunciation } from '@/lib/audio-player';
 
@@ -24,6 +24,7 @@ interface DictationItemViewProps {
   onCheck: () => void
   itemCounter: string
   isLastItem: boolean
+  onBack?: () => void
 }
 
 export function DictationItemView({
@@ -41,7 +42,8 @@ export function DictationItemView({
   onNext,
   onCheck,
   itemCounter,
-  isLastItem
+  isLastItem,
+  onBack
 }: DictationItemViewProps) {
   const { t } = useTranslation()
 
@@ -60,6 +62,10 @@ export function DictationItemView({
     <div className="p-4 max-w-2xl mx-auto relative overflow-hidden">
       <Card className={`p-6 relative transition-transform duration-300 ease-in-out ${getAnimationClass('none')}`}>
         <div className="flex justify-between items-center mb-4">
+          <Button variant="outline" onClick={onBack} disabled={!onBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {t('backButton')}
+          </Button>
           <h2 className="text-2xl font-bold">{t('dictationTitle')}</h2>
         </div>
         

@@ -15,6 +15,7 @@ interface DictationInterfaceProps {
   user?: User
   items: any[]
   shareId?: string
+  onBack: () => void
 }
 
 type DictationMode = 'typing' | 'paper';
@@ -29,7 +30,7 @@ interface SessionResult {
   completion_time_seconds: number
 }
 
-export default function DictationInterface({ user, items, shareId }: DictationInterfaceProps) {
+export default function DictationInterface({ user, items, shareId, onBack }: DictationInterfaceProps) {
   const { t, i18n } = useTranslation();
   const [selections, setSelections] = useState(items)
   const [currentSelectionIndex, setCurrentSelectionIndex] = useState(-1)
@@ -392,6 +393,7 @@ export default function DictationInterface({ user, items, shareId }: DictationIn
         mode={mode}
         setMode={setMode}
         onStart={handleStartSession}
+        onBack={onBack}
         isStartingSession={isStartingSession}
       />
     )
@@ -426,6 +428,7 @@ export default function DictationInterface({ user, items, shareId }: DictationIn
       onCheck={handleCheck}
       itemCounter={itemCounter}
       isLastItem={isLastItem}
+      onBack={onBack}
     />
   )
 }

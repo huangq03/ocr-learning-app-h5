@@ -35,6 +35,7 @@ export function StartScreen({
   mode,
   setMode,
   onStart,
+  onBack,
   isStartingSession
 }: StartScreenProps) {
   const { t, i18n } = useTranslation()
@@ -42,7 +43,7 @@ export function StartScreen({
 
   return (
     <div className="p-4 max-w-2xl mx-auto relative">
-      <Button variant="outline" onClick={() => router.back()} className="mb-4">
+      <Button variant="outline" onClick={onBack ? onBack : () => router.back()} className="mb-4">
         <ArrowLeft className="w-4 h-4 mr-2" />
         {t('backButton')}
       </Button>

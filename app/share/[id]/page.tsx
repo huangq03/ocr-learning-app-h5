@@ -91,12 +91,16 @@ export default function SharedSetPage() {
     return <div className="container mx-auto p-4 text-center">{t('share.pageNotFound')}</div>;
   }
 
+  const handleBack = () => {
+    setView('');
+  }
+
   if (view === 'dictation') {
-    return <DictationInterface items={sessionItems} shareId={shareId} />
+    return <DictationInterface items={sessionItems} shareId={shareId} onBack={handleBack} />
   }
 
   if (view === 'recitation') {
-    return <StudyInterface initialItems={sessionItems} shareId={shareId} />
+    return <StudyInterface initialItems={sessionItems} shareId={shareId} onBack={handleBack} />
   }
 
   return (
