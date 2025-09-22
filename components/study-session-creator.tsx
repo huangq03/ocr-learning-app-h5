@@ -92,6 +92,7 @@ export default function StudySessionCreator({ document }: { document: Document }
         </Button>
         <DocumentItemsCard
           title={t('createStudySessionTitle')}
+          plainItems={document?.recognized_text?.items || []}
           document={document}
           handleStartSession={handleStartSession}
           onAddToStudyPlan={handleAddToStudyPlan}
