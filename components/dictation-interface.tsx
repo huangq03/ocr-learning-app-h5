@@ -428,6 +428,7 @@ export default function DictationInterface({ user, items, shareId, onBack }: Dic
       onCheck={handleCheck}
       itemCounter={itemCounter}
       isLastItem={isLastItem}
+      isFirstItem={currentSelectionIndex === 0}
       onBack={onBack}
     />
   )

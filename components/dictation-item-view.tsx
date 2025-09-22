@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -43,8 +44,10 @@ export function DictationItemView({
   onCheck,
   itemCounter,
   isLastItem,
+  isFirstItem,
   onBack
 }: DictationItemViewProps) {
+  const router = useRouter()
   const { t } = useTranslation()
 
   const getAnimationClass = (direction: 'left' | 'right' | 'none') => {
@@ -62,7 +65,7 @@ export function DictationItemView({
     <div className="p-4 max-w-2xl mx-auto relative overflow-hidden">
       <Card className={`p-6 relative transition-transform duration-300 ease-in-out ${getAnimationClass('none')}`}>
         <div className="flex justify-between items-center mb-4">
-          <Button variant="outline" onClick={onBack} disabled={!onBack}>
+          <Button variant="outline" onClick={onBack ? onBack : () => router.back()}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t('backButton')}
           </Button>
@@ -171,7 +174,7 @@ export function DictationItemView({
                 </>
               ) : (
                 <div className="flex justify-between w-full">
-                  <Button onClick={onPrevious} size="lg" variant="outline" disabled={false}>{t('previousButton')}</Button>
+                  <Button onClick={onPrevious} size="lg" variant="outline" style={{ visibility: isFirstItem ? 'hidden' : 'visible' }}>{t('previousButton')}</Button>
                   <Button onClick={onNext} size="lg">
                     {isLastItem ? t('finishButton') : t('nextButton')}
                   </Button>
