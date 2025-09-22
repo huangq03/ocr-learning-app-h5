@@ -45,19 +45,20 @@ interface Item {
 interface Props {
   title?: string;
   document?: Document;
+  plainItems ?: String[];
   handleStartSession: (type: 'recitation' | 'dictation') => void;
   onAddToStudyPlan?: (items: Item[]) => void;
   isLoading?: boolean;
 }
 
-function DocumentItemsCard({ title, document, handleStartSession, onAddToStudyPlan, isLoading = false }: Props) {
+function DocumentItemsCard({ title, document, plainItems, handleStartSession, onAddToStudyPlan, isLoading = false }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { toast } = useToast();
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [enrichedData, setEnrichedData] = useState<Map<string, WordData>>(new Map());
 
-  const items = (document?.recognized_text?.items || []).sort((a, b) => {
+  const items = (plainItems || []).sort((a, b) => {
     const cleaned_text = document?.recognized_text?.cleaned_text || '';
     const indexA = cleaned_text.indexOf(a);
     const indexB = cleaned_text.indexOf(b);
@@ -109,10 +110,6 @@ function DocumentItemsCard({ title, document, handleStartSession, onAddToStudyPl
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <Button variant="outline" onClick={() => router.back()} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          {t('backButton')}
-        </Button>
         <Card>
           <CardHeader>
             {document ? (
