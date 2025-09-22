@@ -164,10 +164,10 @@ export async function getStudyPageData(studySessionItems?: string[]) {
   return { items, user }
 }
 
-export async function getDictationPageData() {
+export async function getDictationPageData(studySessionItems?: string[]) {
   const user = await getUser()
   const db = createDatabase()
-  const { items, error } = await db.getDictationPageData(user.id)
+  const { items, error } = await db.getDictationPageData(user.id, studySessionItems)
   if (error) {
     return { error }
   }

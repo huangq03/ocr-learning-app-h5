@@ -24,7 +24,7 @@ export interface Database {
   saveSelectionsAndCreateReviews: (documentId: string, selections: any[], userId: string) => Promise<{ success?: boolean; error?: string }>
 
   // Exercise methods
-  getDictationPageData: (userId: string) => Promise<{ items: any[]; error?: string }>
+  getDictationPageData: (userId: string, studySessionItems?: string[]) => Promise<any>
   saveExerciseResult: (result: any, exerciseType: 'dictation' | 'recitation') => Promise<{ success?: boolean; error?: string }>
 
   // Items methods

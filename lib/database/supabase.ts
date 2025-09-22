@@ -487,7 +487,7 @@ export class SupabaseDatabase implements Database {
     }
   }
 
-  async getDictationPageData(userId: string) {
+  async getDictationPageData(userId: string, studySessionItems?: string[]) {
     if (!isSupabaseConfigured) {
       return { error: "Supabase is not configured" }
     }
@@ -496,15 +496,22 @@ export class SupabaseDatabase implements Database {
     const supabase = createServerActionClient({ cookies: () => cookieStore })
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('text_items')
         .select(`
           id,
           content,
           words (*)
         `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .eq('user_id', userId);
+
+      if (studySessionItems && studySessionItems.length > 0) {
+        query = query.in('content', studySessionItems);
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching dictation page data:", error);

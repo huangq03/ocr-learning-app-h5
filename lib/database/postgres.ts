@@ -273,7 +273,6 @@ export class PostgresDatabase implements Database {
 
   async getStudyPageData(userId: string, studySessionItems?: string[]) {
     try {
-      let result: QueryResult;
       const baseQuery = `
         SELECT
           srs.id, -- This is the schedule ID
@@ -297,16 +296,18 @@ export class PostgresDatabase implements Database {
         LEFT JOIN
           words w ON ti.word_id = w.id
       `;
+      let query: string;
+      let params: any[];
 
       if (studySessionItems && studySessionItems.length > 0) {
-        const placeholders = studySessionItems.map(i => `'${i.content}'`).join(",");
-        const query = `${baseQuery} WHERE srs.user_id = $1 AND ti.content IN (${placeholders})`;
-        result = await this.pool.query(query, [userId]);
+        query = `${baseQuery} WHERE srs.user_id = $1 AND ti.content = ANY($2)`;
+        params = [userId, studySessionItems];
       } else {
         const today = new Date().toISOString().split("T")[0];
-        const query = `${baseQuery} WHERE srs.user_id = $1 AND srs.is_active = TRUE AND srs.next_review_date <= $2`;
-        result = await this.pool.query(query, [userId, today]);
+        query = `${baseQuery} WHERE srs.user_id = $1 AND srs.is_active = TRUE AND srs.next_review_date <= $2`;
+        params = [userId, today];
       }
+      const result = await this.pool.query(query, params);
       return { items: result.rows };
     } catch (error) {
       console.error("Error fetching study page data:", error);
@@ -374,9 +375,9 @@ export class PostgresDatabase implements Database {
   }
 
   // Exercise methods
-  async getDictationPageData(userId: string) {
+  async getDictationPageData(userId: string, studySessionItems?: string[]) {
     try {
-      const result = await this.pool.query(`
+      const baseQuery = `
         SELECT
           ti.id as text_item_id,
           ti.content,
@@ -385,11 +386,19 @@ export class PostgresDatabase implements Database {
           text_items ti
         LEFT JOIN
           words w ON ti.word_id = w.id
-        WHERE
-          ti.user_id = $1
-        ORDER BY
-          ti.created_at DESC;
-      `, [userId]);
+      `;
+      let query: string;
+      let params: any[];
+
+      if (studySessionItems && studySessionItems.length > 0) {
+        query = `${baseQuery} WHERE ti.user_id = $1 AND ti.content = ANY($2)`;
+        params = [userId, studySessionItems];
+      } else {
+        query = `${baseQuery} WHERE ti.user_id = $1 ORDER BY ti.created_at DESC`;
+        params = [userId];
+      }
+
+      const result = await this.pool.query(query, params);
       return { items: result.rows };
     } catch (error) {
       console.error("Error fetching dictation page data:", error);
