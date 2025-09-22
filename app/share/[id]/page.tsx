@@ -25,7 +25,7 @@ interface SharedSet {
   items: TextItem[];
 }
 
-type ViewState = 'recitation' | 'dictation';
+type ViewState = 'recitation' | 'dictation' | '';
 
 export default function SharedSetPage() {
   const { t } = useTranslation();
@@ -37,7 +37,7 @@ export default function SharedSetPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [view, setView] = useState<ViewState>('recitation');
+  const [view, setView] = useState<ViewState>('');
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
   useEffect(() => {

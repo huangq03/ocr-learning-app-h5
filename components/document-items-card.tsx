@@ -45,9 +45,9 @@ interface Item {
 interface Props {
   title?: string;
   document?: Document;
-  plainItems : String[];
-  selectedItems : WordData[];
-  setSelectedItems?: Dispatch<SetStateAction<[]>>;
+  plainItems: String[];
+  selectedItems: WordData[];
+  setSelectedItems: Dispatch<SetStateAction<any[]>>;
   handleStartSession: (type: 'recitation' | 'dictation') => void;
   onAddToStudyPlan?: (items: Item[]) => void;
   isLoading?: boolean;
