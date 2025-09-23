@@ -124,7 +124,7 @@ export default function DictationInterface({ user, items, shareId, onBack }: Dic
       const characterAccuracy = calculateAccuracy(currentSelection.content, userInput.trim())
 
       result = {
-        text_item_id: currentSelection.id,
+        text_item_id: currentSelection.text_item_id,
         original_text: currentSelection.content,
         user_input: userInput.trim(),
         attempts: attempts,
@@ -135,7 +135,7 @@ export default function DictationInterface({ user, items, shareId, onBack }: Dic
     } else {
       // For paper mode, we don't have actual user input to compare
       result = {
-        text_item_id: currentSelection.id,
+        text_item_id: currentSelection.text_item_id,
         original_text: currentSelection.content,
         user_input: "[Written on paper]",
         attempts: 1,
@@ -213,7 +213,7 @@ export default function DictationInterface({ user, items, shareId, onBack }: Dic
       const characterAccuracy = calculateAccuracy(currentSelection.content, userInput.trim());
 
       result = {
-        text_item_id: currentSelection.id,
+        text_item_id: currentSelection.text_item_id,
         original_text: currentSelection.content,
         user_input: userInput.trim(),
         attempts: newAttempts,
@@ -223,7 +223,7 @@ export default function DictationInterface({ user, items, shareId, onBack }: Dic
       };
     } else {
       result = {
-        text_item_id: currentSelection.id,
+        text_item_id: currentSelection.text_item_id,
         original_text: currentSelection.content,
         user_input: "[Written on paper]",
         attempts: 1,
