@@ -78,6 +78,7 @@ export default function StudyInterface({ initialItems, user, shareId, onBack }: 
     const [sessionStats, setSessionStats] = useState<SessionStats>({ again: 0, hard: 0, good: 0, easy: 0 });
     const [isAnimating, setIsAnimating] = useState(false);
     const [animationClass, setAnimationClass] = useState('transform translate-x-full');
+    const [isExplanationExpanded, setIsExplanationExpanded] = useState(false);
 
     useEffect(() => {
         // Slide in the first card from the right
@@ -86,6 +87,10 @@ export default function StudyInterface({ initialItems, user, shareId, onBack }: 
         }, 100); // Small delay to ensure the transition is applied
         return () => clearTimeout(timer);
     }, []);
+
+     useEffect(() => {
+        setIsExplanationExpanded(false);
+     }, [currentIndex]);
 
     const handleRating = async (quality: number) => {
         if (isAnimating) return;
@@ -247,18 +252,31 @@ export default function StudyInterface({ initialItems, user, shareId, onBack }: 
                         <p className="text-lg text-gray-600">{currentItem.context}</p>
                         <p className="text-md text-gray-500 italic">{currentItem.user_definition}</p>
 
-                        {currentItem.explanation && (
-                            <div className="mt-4 pt-4 border-t text-left">
+                        {currentItem.explanation && (() => {
+                            const explanations = JSON.parse(currentItem.explanation).filter(exp => exp.content && exp.content.trim() !== '');
+                            const EXPLANATION_LIMIT = 2;
+                            const shouldTruncate = explanations.length > EXPLANATION_LIMIT;
+                            const itemsToShow = isExplanationExpanded ? explanations : explanations.slice(0, EXPLANATION_LIMIT);
+
+                            return (
+                                <div className="mt-4 pt-4 border-t text-left">
                                 <ul className="space-y-2">
-                                    {JSON.parse(currentItem.explanation).map((exp, index) => (
+                                    {itemsToShow.map((exp, index) => (
                                         <li key={index} className="text-sm">
                                             <span className="font-semibold text-purple-700 mr-2">{exp.pro}</span>
                                             <span>{exp.content}</span>
                                         </li>
                                     ))}
                                 </ul>
+
+                                {shouldTruncate && (
+                                    <Button variant="link" className="p-0 h-auto mt-2 text-purple-700" onClick={() => setIsExplanationExpanded(!isExplanationExpanded)}>
+                                        {isExplanationExpanded ? t('showLess') : t('showMore')}
+                                    </Button>
+                                )}
                             </div>
-                        )}
+                            );
+                          })()}
                     </div>
                 </CardContent>
                 <CardFooter className="flex flex-col items-center">

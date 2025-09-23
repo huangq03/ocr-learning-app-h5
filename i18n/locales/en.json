@@ -116,6 +116,8 @@
   "startingSessionMessage": "Starting your dictation session...",
   "welcomeMessage": "Welcome! Add your first document to start learning.",
   "addFirstDocument": "Add Your First Document",
+  "showMore": "Show more",
+  "showLess": "Show less",
   "dashboard": {
     "title": "Dashboard",
     "description": "Welcome to your dashboard.",
