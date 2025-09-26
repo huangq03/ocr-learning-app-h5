@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import { Providers } from "./providers"
+import Footer from '@/components/footer';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ocr-learning-app.com'),
@@ -64,6 +65,7 @@ html {
       </head>
       <body>
         <Providers>{children}</Providers>
+        <Footer />
       </body>
     </html>
   )

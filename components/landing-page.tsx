@@ -112,12 +112,6 @@ export default function LandingPage({ session }: { session: any }) {
           </div>
         </section>
       </main>
-
-      <footer className="py-8 bg-white border-t">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500">
-          <p>{t('landingPage.footerText', { year: currentYear })}</p>
-        </div>
-      </footer>
     </div>
   );
 }
