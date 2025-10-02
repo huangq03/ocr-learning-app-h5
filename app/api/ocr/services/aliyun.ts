@@ -10,7 +10,8 @@ export async function runAliyunOcr(imageBuffer: Buffer): Promise<string> {
     const config = new $OpenApi.Config({
         accessKeyId,
         accessKeySecret,
-        endpoint: 'ocr-api.cn-hangzhou.aliyuncs.com'
+        endpoint: 'ocr-api.cn-hangzhou.aliyuncs.com',
+        timeout: 10000
     });
 
     const client = new Ocr20210707(config);
