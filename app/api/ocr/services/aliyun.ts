@@ -11,7 +11,8 @@ export async function runAliyunOcr(imageBuffer: Buffer): Promise<string> {
         accessKeyId,
         accessKeySecret,
         endpoint: 'ocr-api.cn-hangzhou.aliyuncs.com',
-        timeout: 10000
+        readTimeout: 50000,
+        connectTimeout: 50000
     });
 
     const client = new Ocr20210707(config);
