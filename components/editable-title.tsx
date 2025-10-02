@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EditableTitleProps {
   documentId: string;
@@ -20,6 +21,7 @@ export function EditableTitle({ documentId, initialTitle }: EditableTitleProps) 
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(initialTitle);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleSave = async () => {
     if (title && title !== initialTitle) {
@@ -67,7 +69,7 @@ export function EditableTitle({ documentId, initialTitle }: EditableTitleProps) 
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)} className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)} className={isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 transition-opacity'}>
               <Edit className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
